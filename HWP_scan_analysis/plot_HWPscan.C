@@ -1,11 +1,12 @@
 #include <dirent.h>
 
+void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
-void plot_HWPscan(TString folder, double hwp_start=0, double hwp_step=5){
+	int Nangles = hwp_angles.size();
 
-
-	TGraph** g_traces = new TGraph* [100];
-	TGraph* g_scan = new TGraph();
+	TGraph** g_traces = new TGraph* [Nangles];
+	TGraph** g_traces_norm = new TGraph* [Nangles];
+	TGraphErrors* g_scan = new TGraphErrors();
 
 	DIR* dir = opendir(folder.Data());
 	struct dirent* dirfile;
@@ -22,10 +23,25 @@ void plot_HWPscan(TString folder, double hwp_start=0, double hwp_step=5){
 	sort(files.begin(),files.end());
 
 	int Nfiles = files.size();
-	for (int fi=0; fi<Nfiles; fi++){
+
+	if (Nfiles != Nangles){
+		cout<<"Errors! Looking for "<<Nangles<<" HWP angles, but found "<<Nfiles<<" files!\n";
+		return;
+	}
+
+
+	double baseline_fit_start = 0.1;
+	double baseline_fit_end = 0.5;
+	double blumlein_fit_start = 0.7;
+	double blumlein_fit_end = 0.85; 
+
+	TF1* f_baseline = new TF1("f_baseline","[0]",0,2);
+	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",0,2);
+
+	for (int fi=0; fi<Nangles; fi++){
 
 		TString fname = files[fi];
-		if (fi%10==0) cout<<"Reading file "<<fname<<"\n";
+		cout<<"Reading file "<<fname<<" (angle "<<hwp_angles[fi]<<")\n";
 
 		vector<pair<double,double>> trace;
 
@@ -68,8 +84,6 @@ void plot_HWPscan(TString folder, double hwp_start=0, double hwp_step=5){
 
 			if (file.eof()) break;
 
-			//file>>time>>comma>>A>>comma>>B>>comma>>C>>comma>>avgC;
-			//file>>time>>comma>>C>>comma>>avgC;
 			trace.push_back(make_pair(time,avgC));
 		}
 		file.close();
@@ -81,33 +95,87 @@ void plot_HWPscan(TString folder, double hwp_start=0, double hwp_step=5){
 			g_traces[fi]->AddPoint(time,avgC);
 		}
 
-		double miny = 1e6;
-		double maxy = -1e6;
+		f_baseline->SetParameter(0,0);
+		TFitResultPtr fit_baseline = g_traces[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
+
+		f_blumlein->SetParameters(50.0,blumlein_fit_start,1.0);
+		TFitResultPtr fit_blumlein = g_traces[fi]->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
+
+		double HWPangle = hwp_angles[fi];
+		double baseline = fit_baseline->Parameter(0);
+		double peak = fit_blumlein->Parameter(0);
+		double baseline_err = fit_baseline->ParError(0);
+		double peak_err = fit_blumlein->ParError(0);
+
+		g_scan->AddPoint(HWPangle,peak-baseline);
+		int ipoint = g_scan->GetN()-1;
+		g_scan->SetPointError(ipoint,0,peak_err+baseline_err);
+
+
+		g_traces_norm[fi] = new TGraph();
 		for (auto p : trace){
 			time = p.first;
 			avgC = p.second;
-
-			if (avgC < miny) miny = avgC;
-			if (avgC > maxy) maxy = avgC;
+			g_traces_norm[fi]->AddPoint(time,avgC-baseline);
 		}
-
-		double HWPangle = hwp_start + fi*hwp_step;
-		double peak = maxy-miny;
-		g_scan->AddPoint(HWPangle,peak);
 	}
 
 	new TCanvas();
+	g_scan->Sort();
+	g_scan->SetName("HWPscan");
+	g_scan->SetTitle("HWP scan");
 	g_scan->GetXaxis()->SetTitle("HWP angle [#circ]");
-	g_scan->GetYaxis()->SetTitle("Signal amplitude [V]");
+	g_scan->GetYaxis()->SetTitle("Blumlein amplitude [mV]");
 	g_scan->SetMarkerStyle(20);
 	g_scan->Draw("APL");
 
 	gStyle->SetPalette(kRainBow);
 	new TCanvas();
-	for (int i=0; i<Nfiles; i++){
+	for (int i=0; i<Nangles; i++){
+		g_traces[i]->SetName(Form("trace_%.1f",hwp_angles[i]));
+		g_traces[i]->SetTitle(Form("Trace (hwp = %.1f)",hwp_angles[i]));
+		g_traces[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces[i]->GetXaxis()->SetTitle("Time [ms]");
-		g_traces[i]->GetYaxis()->SetTitle("Trace [V]");
-		g_traces[i]->SetLineWidth(2);
+		g_traces[i]->GetYaxis()->SetTitle("Trace [mV]");
 		g_traces[i]->Draw(i==0?"AL PLC":"L PLC");
 	}
+
+	new TCanvas();
+	for (int i=0; i<Nangles; i++){
+		g_traces_norm[i]->SetName(Form("trace_norm_%.1f",hwp_angles[i]));
+		g_traces_norm[i]->SetTitle(Form("Normalized trace (hwp = %.1f)",hwp_angles[i]));
+		g_traces_norm[i]->GetYaxis()->SetRangeUser(-70,70);
+		g_traces_norm[i]->GetXaxis()->SetTitle("Time [ms]");
+		g_traces_norm[i]->GetYaxis()->SetTitle("Trace [mV]");
+		g_traces_norm[i]->Draw(i==0?"AL PLC":"L PLC");
+	}
+
+	TString outname = Form("%s_output.root",folder.Data());
+	outname.ReplaceAll("../","");
+	outname.ReplaceAll("/","__");
+	outname.ReplaceAll(" ","_");
+	cout<<"Creating "<<outname<<"\n";
+	TFile* fout = new TFile(outname,"recreate");
+
+	for (int i=0; i<Nangles; i++){
+		g_traces[i]->Write();
+	}
+	g_scan->Write();
+	fout->Write();
+	fout->Close();
+
+
+}
+
+
+
+
+
+void plot_HWPscan(TString folder, int N, double hwp_start=0, double hwp_step=5){
+
+	vector<double> hwp_angles;
+	for (int i=0; i<N; i++){
+		hwp_angles.push_back(hwp_start+i*hwp_step);
+	}
+	plot_HWPscan(folder, hwp_angles);
 }
