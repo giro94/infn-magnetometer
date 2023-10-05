@@ -5,8 +5,11 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	int Nangles = hwp_angles.size();
 
 	TGraph** g_traces = new TGraph* [Nangles];
+	TGraph** g_baselines = new TGraph* [Nangles];
 	TGraph** g_traces_norm = new TGraph* [Nangles];
 	TGraphErrors* g_scan = new TGraphErrors();
+	TGraph* g_stddev = new TGraph();
+	TGraph* g_snr = new TGraph();
 
 	DIR* dir = opendir(folder.Data());
 	struct dirent* dirfile;
@@ -89,10 +92,15 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		file.close();
 
 		g_traces[fi] = new TGraph();
+		g_baselines[fi] = new TGraph();
 		for (auto p : trace){
 			time = p.first;
 			avgC = p.second;
 			g_traces[fi]->AddPoint(time,avgC);
+
+			if (time >= baseline_fit_start && time < baseline_fit_end){
+				g_baselines[fi]->AddPoint(time,avgC);
+			}
 		}
 
 		f_baseline->SetParameter(0,0);
@@ -106,8 +114,13 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double peak = fit_blumlein->Parameter(0);
 		double baseline_err = fit_baseline->ParError(0);
 		double peak_err = fit_blumlein->ParError(0);
+		double amplitude = abs(peak-baseline);
+		double baseline_stddev = g_baselines[fi]->GetRMS(2);
+		double SNR = amplitude/baseline_stddev;
 
-		g_scan->AddPoint(HWPangle,peak-baseline);
+		g_stddev->AddPoint(HWPangle,baseline_stddev);
+		g_snr->AddPoint(HWPangle,SNR);
+		g_scan->AddPoint(HWPangle,amplitude);
 		int ipoint = g_scan->GetN()-1;
 		g_scan->SetPointError(ipoint,0,peak_err+baseline_err);
 
@@ -119,6 +132,24 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 			g_traces_norm[fi]->AddPoint(time,avgC-baseline);
 		}
 	}
+
+	new TCanvas();
+	g_snr->Sort();
+	g_snr->SetName("HWPscan_SNR");
+	g_snr->SetTitle("HWP scan SNR");
+	g_snr->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_snr->GetYaxis()->SetTitle("Signal/Noise");
+	g_snr->SetMarkerStyle(20);
+	g_snr->Draw("APL");
+
+	new TCanvas();
+	g_stddev->Sort();
+	g_stddev->SetName("HWPscan_stddev");
+	g_stddev->SetTitle("HWP scan StdDev");
+	g_stddev->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_stddev->GetYaxis()->SetTitle("Baseline StdDev [mV]");
+	g_stddev->SetMarkerStyle(20);
+	g_stddev->Draw("APL");
 
 	new TCanvas();
 	g_scan->Sort();
@@ -161,6 +192,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_traces[i]->Write();
 	}
 	g_scan->Write();
+	g_stddev->Write();
+	g_snr->Write();
 	fout->Write();
 	fout->Close();
 
