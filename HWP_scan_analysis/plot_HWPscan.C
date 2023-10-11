@@ -2,6 +2,8 @@
 
 void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
+	bool do_sort = true;
+
 	int Nangles = hwp_angles.size();
 
 	TGraph** g_traces = new TGraph* [Nangles];
@@ -35,8 +37,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 	double baseline_fit_start = 0.1;
 	double baseline_fit_end = 0.5;
-	double blumlein_fit_start = 0.7;
-	double blumlein_fit_end = 0.85; 
+	double blumlein_fit_start = 0.65;
+	double blumlein_fit_end = 0.90; 
 
 	TF1* f_baseline = new TF1("f_baseline","[0]",0,2);
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",0,2);
@@ -106,7 +108,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baseline = g_traces[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
-		f_blumlein->SetParameters(50.0,blumlein_fit_start,1.0);
+		f_blumlein->SetParameters(60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-1000.0);
 		TFitResultPtr fit_blumlein = g_traces[fi]->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
 
 		double HWPangle = hwp_angles[fi];
@@ -134,31 +136,35 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	}
 
 	new TCanvas();
-	g_snr->Sort();
+	if (do_sort) g_snr->Sort();
 	g_snr->SetName("HWPscan_SNR");
 	g_snr->SetTitle("HWP scan SNR");
 	g_snr->GetXaxis()->SetTitle("HWP angle [#circ]");
 	g_snr->GetYaxis()->SetTitle("Signal/Noise");
 	g_snr->SetMarkerStyle(20);
+	g_snr->SetLineStyle(kDashed);
 	g_snr->Draw("APL");
+	gPad->SetGridx();
 
 	new TCanvas();
-	g_stddev->Sort();
+	if (do_sort) g_stddev->Sort();
 	g_stddev->SetName("HWPscan_stddev");
 	g_stddev->SetTitle("HWP scan StdDev");
 	g_stddev->GetXaxis()->SetTitle("HWP angle [#circ]");
 	g_stddev->GetYaxis()->SetTitle("Baseline StdDev [mV]");
 	g_stddev->SetMarkerStyle(20);
 	g_stddev->Draw("APL");
+	gPad->SetGridx();
 
 	new TCanvas();
-	g_scan->Sort();
+	if (do_sort) g_scan->Sort();
 	g_scan->SetName("HWPscan");
 	g_scan->SetTitle("HWP scan");
 	g_scan->GetXaxis()->SetTitle("HWP angle [#circ]");
 	g_scan->GetYaxis()->SetTitle("Blumlein amplitude [mV]");
 	g_scan->SetMarkerStyle(20);
 	g_scan->Draw("APL");
+	gPad->SetGridx();
 
 	gStyle->SetPalette(kRainBow);
 	new TCanvas();
@@ -180,6 +186,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_traces_norm[i]->GetYaxis()->SetTitle("Trace [mV]");
 		g_traces_norm[i]->Draw(i==0?"AL PLC":"L PLC");
 	}
+
 
 	TString outname = Form("%s_output.root",folder.Data());
 	outname.ReplaceAll("../","");

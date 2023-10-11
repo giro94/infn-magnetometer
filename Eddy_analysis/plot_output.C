@@ -37,9 +37,9 @@ TH1F* RescaleAxis(TH1* input, Double_t Scale) {
 
 
 
-void plot_output(){
+void plot_output(TString filename="output.root"){
 
-	TFile* f = TFile::Open("output.root");
+	TFile* f = TFile::Open(filename);
 
 	TProfile** kicks = new TProfile*[8];
 	for (int i=0; i<8; i++){
@@ -48,6 +48,12 @@ void plot_output(){
 	TProfile* kick_average = (TProfile*)f->Get("trace_avg");
 	TProfile* trace = (TProfile*)f->Get("trace");
 
+	for (int bn=1; bn<=trace->GetNbinsX(); bn++){
+		if (trace->GetBinContent(bn) < -50){
+			trace->SetBinContent(bn,0);
+		}
+	}
+
 	gStyle->SetOptStat(0);
 
 	TCanvas* can = new TCanvas("can","",1800,900);
@@ -55,21 +61,21 @@ void plot_output(){
 	for (int i=0; i<8; i++){
 		can->cd(i+1);
 		kicks[i]->Draw("HIST L");
-		kicks[i]->GetXaxis()->SetRangeUser(0.0,1.0);
-		kicks[i]->GetYaxis()->SetRangeUser(-20,10);
+		kicks[i]->GetXaxis()->SetRangeUser(0,1);//0.0,(i==7?22.0:8.0));
+		kicks[i]->GetYaxis()->SetRangeUser(-20,20);
 		gPad->SetGridy();
 	}
 	can->cd(9);
 	kick_average->Draw("HIST L");
-	kick_average->GetXaxis()->SetRangeUser(0.0,1.0);
-	kick_average->GetYaxis()->SetRangeUser(-20,10);
+	kick_average->GetXaxis()->SetRangeUser(0,1);
+	kick_average->GetYaxis()->SetRangeUser(-20,20);
 	gPad->SetGridy();
 	can->SaveAs("all_kicks.png");
 
 	TCanvas* can2 = new TCanvas("can2","",2500,500);
 	trace->SetMarkerStyle(6);
 	trace->Draw("P");
-	trace->GetXaxis()->SetRangeUser(10,100);
+	trace->GetXaxis()->SetRangeUser(0,100);
 	trace->GetYaxis()->SetRangeUser(-60,60);
 	gPad->SetGridy();
 	can2->SaveAs("longtrace.png");
@@ -78,11 +84,9 @@ void plot_output(){
 	TCanvas* can3 = new TCanvas("can3","",2500,500);
 	kick_average->SetMarkerStyle(6);
 	kick_average->Draw("P");
-	kick_average->GetYaxis()->SetRangeUser(-20,10);
+	kick_average->GetYaxis()->SetRangeUser(-20,20);
 	gPad->SetGridy();
 	can3->SaveAs("average.png");
-
-	TFile* fout = new TFile("output_fft.root","recreate");
 
 	TCanvas* can_FFT = new TCanvas("can_FFT","",1800,900);
 	can_FFT->Divide(3,3);
@@ -97,7 +101,7 @@ void plot_output(){
 
 		can_FFT->cd(i+1);
 		double fft_xmin = 0.1; //ms from kick
-		double fft_xmax = 1.0; 
+		double fft_xmax = (i==7?22.0:8.0); 
     	TH1 *fft_histogram = 0;
     	TVirtualFFT::SetTransform(0);
     	TH1F* fftResidualInit = SetupFFT(this_kick, fft_xmin, fft_xmax);
@@ -109,13 +113,33 @@ void plot_output(){
     	fftResidual->Scale(1.0 / fftResidual->Integral());
     	fftResidual->GetXaxis()->SetRangeUser(0, fftResidual->GetXaxis()->GetXmax()/2.);
     	fftResidual->Draw("HIST");
-    	fftResidual->GetXaxis()->SetRangeUser(2,1000);
+    	fftResidual->GetXaxis()->SetRangeUser(0.2,1000);
     	gPad->SetLogx();
-    	fftResidual->GetXaxis()->SetRangeUser(2,1000);
+    	fftResidual->GetXaxis()->SetRangeUser((i==7?0.07:0.2),1000);
+    	fftResidual->GetYaxis()->SetRangeUser(0,0.006);
 	}
 	can_FFT->SaveAs("FFT.png");
 
 
-    fout->Write();
-    fout->Close();
+	new TCanvas();
+	double fft_xmin = 0;
+	double fft_xmax = 100; 
+    TH1 *fft_histogram = 0;
+    TVirtualFFT::SetTransform(0);
+    TH1F* fftResidualInit = SetupFFT(trace, fft_xmin, fft_xmax);
+    fft_histogram = fftResidualInit->FFT(fft_histogram,"MAG");
+    TH1F* fftResidual = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
+    fftResidual->SetTitle("FFT trace;Frequency (kHz);Magnitude [Arb Units]");
+    fftResidual->SetStats(0);
+    fftResidual->SetName("residualFFT_trace");
+    fftResidual->Scale(1.0 / fftResidual->Integral());
+    fftResidual->GetXaxis()->SetRangeUser(0, fftResidual->GetXaxis()->GetXmax()/2.);
+    fftResidual->Draw("HIST");
+    fftResidual->GetXaxis()->SetRangeUser(0.01,1000);
+    gPad->SetLogx();
+    fftResidual->GetXaxis()->SetRangeUser(0.01,1000);
+    fftResidual->GetYaxis()->SetRangeUser(0,0.006);
+	gPad->SaveAs("FFT_trace.png");
+
+
 }

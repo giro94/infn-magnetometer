@@ -37,20 +37,22 @@ TH1F* RescaleAxis(TH1* input, Double_t Scale) {
 }
 
 
-void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field_26Aug2022", TString output_folder = "./"){
+void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field_26Aug2022", TString output_folder = "./", int Nfilesmax = -1){
 
 	bool SaveFigs = true;
 
-	int Npoints=195315;
+	int Npoints= 195315; 
 	float tstart = 0.;
 	float tend = 100.;
 	float dt = (tend-tstart)/Npoints;
 
 	float t_before = -0.5;
-	float t_after = 3.0;
+	float t_after = 8.0;
 	int Nkickbins = (t_after-t_before)/dt;
+	float t_after8 = 22.0;
+	int Nkickbins8 = (t_after8-t_before)/dt;
 
-	double first_kick_guess = 14.0;
+	double first_kick_guess = 4.5;
 	double kick_dt_guess = 10.0;
 	double kick_trigger = -200.0;
 
@@ -62,7 +64,11 @@ void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_kick%d",i+1);
 		TString htitle = Form("Trace Kick %d;Time [ms];Voltage [mV]",i+1);
-		g_trace_kicks[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+		if (i==7){
+			g_trace_kicks[i] = new TProfile(hname,htitle,Nkickbins8,t_before,t_after8);
+		} else {
+			g_trace_kicks[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+		}
 	}
 	TProfile* g_trace_avg = (TProfile*)g_trace_kicks[0]->Clone("trace_avg");
 	g_trace_avg->Reset();
@@ -87,6 +93,8 @@ void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field
 
 	int Nfiles = files.size();
 	for (int fi=0; fi<Nfiles; fi++){
+
+		if (Nfilesmax > 0 && fi >= Nfilesmax) break;
 
 		TString fname = files[fi];
 		if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
@@ -164,7 +172,7 @@ void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field
 							for (int k=0; k<trace.size(); k++){
 								double t_time = trace[k].first;
 								double t_avgC = trace[k].second;
-								if (t_time >= kick_time + t_before && t_time < kick_time + t_after){
+								if (t_time >= kick_time + t_before && t_time < kick_time + (i==7?t_after8:t_after)){
 									g_trace_kicks[i]->Fill(t_time-kick_time,t_avgC);
 								}
 							}

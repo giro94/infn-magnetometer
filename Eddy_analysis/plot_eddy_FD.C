@@ -1,10 +1,10 @@
 #include <dirent.h>
 
 
-void plot_eddy_simple(TString folder){
+void plot_eddy_FD(TString folder){
 
 
-	TProfile* p_trace = new TProfile("p_trace","",195315,0,100);
+	TProfile* p_trace = new TProfile("p_trace","",17859,0,2);
 	TGraph* g_trace = new TGraph();
 
 	TGraph* g_trend_ABdiff = new TGraph();
@@ -43,7 +43,7 @@ void plot_eddy_simple(TString folder){
 
 
 		TString file_datetime = fname;
-		file_datetime.ReplaceAll("SD_","");
+		file_datetime.ReplaceAll("FD_","");
 		file_datetime.ReplaceAll(".csv","");
 		std::tm tm{};
 		std::istringstream iss(file_datetime.Data());
@@ -66,7 +66,7 @@ void plot_eddy_simple(TString folder){
 		while(ss.good()){
 			string substr;
 			getline(ss,substr,',');
-			if (substr.find("average(C)") != string::npos){
+			if (substr.find("average(B-A)") != string::npos){
 				avgCpos = Nvar;
 			} else if (substr.find("A") != string::npos){
 				Apos = Nvar;
@@ -145,7 +145,7 @@ void plot_eddy_simple(TString folder){
 			g_trace->AddPoint(time,avgC);
 		}
 
-		TFitResultPtr res = g_trace->Fit("pol0","QNS","",2.0,12.0);
+		TFitResultPtr res = g_trace->Fit("pol0","QNS","",0,0.5);
 		if (res>=0){
 			double baseline = res->Parameter(0);
 			for (auto p : trace){
@@ -172,6 +172,36 @@ void plot_eddy_simple(TString folder){
 	p_trace->GetYaxis()->SetTitle("Trace [mV]");
 	p_trace->SetMarkerStyle(8);
 	p_trace->Draw("HIST");
+
+
+	double baseline_fit_start = 0.1;
+	double baseline_fit_end = 0.5;
+	double blumlein_fit_start = 0.65;
+	double blumlein_fit_end = 0.90; 
+
+	TF1* f_baseline = new TF1("f_baseline","[0]",0,2);
+	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",0,2);
+
+	f_baseline->SetRange(baseline_fit_start,baseline_fit_end);
+	f_blumlein->SetRange(blumlein_fit_start,blumlein_fit_end);
+
+	f_baseline->SetParameter(0,0);
+	TFitResultPtr fit_baseline = p_trace->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
+	f_baseline->Draw("SAME");
+
+	f_blumlein->SetParameters(0.5,0.5*(blumlein_fit_start+blumlein_fit_end),-1000.0);
+	TFitResultPtr fit_blumlein = p_trace->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
+	f_blumlein->Draw("SAME");
+
+	double baseline = fit_baseline->Parameter(0);
+	double peak = fit_blumlein->Parameter(0);
+	double baseline_err = fit_baseline->ParError(0);
+	double peak_err = fit_blumlein->ParError(0);
+	double amplitude = abs(peak-baseline);
+	double amplitude_err = sqrt(peak_err*peak_err+baseline_err*baseline_err);
+
+	cout<<"Blumlein amplitude: "<<amplitude<<" +- "<<amplitude_err<<" mV\n";
+
 
 	new TCanvas();
 	g_trend_ABdiff->SetTitle("B-A;File;B-A [V]");
