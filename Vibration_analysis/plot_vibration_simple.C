@@ -37,7 +37,7 @@ TH1F* RescaleAxis(TH1* input, Double_t Scale) {
 }
 
 
-void plot_vibration_simple(TString folder){
+void plot_vibration_simple(TString folder, int N=-1){
 
 	TProfile* p_traceX = new TProfile("p_traceX","",29906,0,100);
 	TProfile* p_traceY = new TProfile("p_traceY","",29906,0,100);
@@ -60,6 +60,7 @@ void plot_vibration_simple(TString folder){
 	sort(files.begin(),files.end());
 
 	int Nfiles = files.size();
+	if (N>0) Nfiles = N;
 	for (int fi=0; fi<Nfiles; fi++){
 
 		TString fname = files[fi];

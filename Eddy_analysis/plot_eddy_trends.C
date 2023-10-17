@@ -1,7 +1,7 @@
 #include <dirent.h>
 
 
-void plot_eddy_simple(TString folder){
+void plot_eddy_trends(TString folder){
 
 
 	TProfile* p_trace = new TProfile("p_trace","",195315,0,100);
@@ -157,13 +157,13 @@ void plot_eddy_simple(TString folder){
 	}
 
 
-	g_trend_ABdiff->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M:%S");
+	g_trend_ABdiff->GetXaxis()->SetTimeFormat("%H:%M");
 	g_trend_ABdiff->GetXaxis()->SetTimeOffset(0);
 	g_trend_ABdiff->GetXaxis()->SetTimeDisplay(1);
-	g_trend_Cstddev->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M:%S");
+	g_trend_Cstddev->GetXaxis()->SetTimeFormat("%H:%M");
 	g_trend_Cstddev->GetXaxis()->SetTimeOffset(0);
 	g_trend_Cstddev->GetXaxis()->SetTimeDisplay(1);
-	g_trend_avgCstddev->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M:%S");
+	g_trend_avgCstddev->GetXaxis()->SetTimeFormat("%H:%M");
 	g_trend_avgCstddev->GetXaxis()->SetTimeOffset(0);
 	g_trend_avgCstddev->GetXaxis()->SetTimeDisplay(1);
 

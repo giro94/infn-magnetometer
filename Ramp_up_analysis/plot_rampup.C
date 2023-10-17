@@ -107,6 +107,7 @@ void plot_rampup(TString folder, TString current_filename=""){
 
 		TString file_datetime = fname;
 		file_datetime.ReplaceAll("FD_","");
+		file_datetime.ReplaceAll("Ramp_","");
 		file_datetime.ReplaceAll(".csv","");
 		std::tm t{};
 		std::istringstream iss(file_datetime.Data());

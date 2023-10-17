@@ -2,7 +2,7 @@
 
 void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
-	bool do_sort = true;
+	bool do_sort = false;
 
 	int Nangles = hwp_angles.size();
 
