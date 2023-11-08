@@ -1,8 +1,10 @@
 #include <dirent.h>
 
 
-void plot_eddy_trends(TString folder){
+void plot_eddy_trends(TString folder, TString filename_out){
 
+
+	TFile* fout = new TFile(filename_out,"recreate");
 
 	TProfile* p_trace = new TProfile("p_trace","",195315,0,100);
 	TGraph* g_trace = new TGraph();
@@ -187,4 +189,8 @@ void plot_eddy_trends(TString folder){
 	g_trend_avgCstddev->SetTitle("avgC stddev before kick1;File;avgC stddev [mV]");
 	g_trend_avgCstddev->SetMarkerStyle(20);
 	g_trend_avgCstddev->Draw("APL");
+
+
+	fout->Write();
+	fout->Close();
 }
