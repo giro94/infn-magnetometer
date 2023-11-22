@@ -111,6 +111,13 @@ vector<vector<double>> readFileTraces(TString filepath, int Nvars){
 
 void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -1){
 
+	if (ROOT_VERSION_CODE < ROOT_VERSION(6,24,0)){
+		cout<<"ERROR! You are using a ROOT version older than 6.24/06\n";
+		cout<<"If you are on gm2ita, please execute:\n\n";
+		cout<<"  source /opt/cernroot/bin/thisroot.sh\n\n";
+		return;
+	}
+
 	double firstkick_max = 20.0;
 	double kick_dt_guess = 10.0;
 	double kick_trigger = -200.0;
