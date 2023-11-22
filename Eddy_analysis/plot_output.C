@@ -64,6 +64,12 @@ void plot_output(TString filename="output.root"){
 	TGraph* g_trend_SNR = (TGraph*)f->Get("g_trend_SNR");
 
 
+	TGraph* g_correlation_AB_blumlein = (TGraph*)f->Get("g_correlation_AB_blumlein");
+	TGraph* g_correlation_ABdiff_blumlein = (TGraph*)f->Get("g_correlation_ABdiff_blumlein");
+	TGraph* g_correlation_AB_SNR = (TGraph*)f->Get("g_correlation_AB_SNR");
+	TGraph* g_correlation_ABdiff_SNR = (TGraph*)f->Get("g_correlation_ABdiff_SNR");
+
+
 	for (int bn=1; bn<=trace->GetNbinsX(); bn++){
 		if (trace->GetBinContent(bn) < -50){
 			trace->SetBinContent(bn,0);
@@ -163,6 +169,28 @@ void plot_output(TString filename="output.root"){
 	g_trend_SNR->Draw("APLZ");
 
 
+	TText* t_text = new TText();
+	t_text->SetTextAlign(31);
+	TCanvas* g_corr = new TCanvas();
+	g_corr->Divide(2,2);
+	g_corr->cd(1);
+	g_correlation_AB_blumlein->SetMarkerStyle(20);
+	g_correlation_AB_blumlein->Draw("AP");
+	t_text->DrawTextNDC(0.89,0.85,Form("Correlation: %.1f%%",g_correlation_AB_blumlein->GetCorrelationFactor()*100));
+	g_corr->cd(2);
+	g_correlation_ABdiff_blumlein->SetMarkerStyle(20);
+	g_correlation_ABdiff_blumlein->Draw("AP");
+	t_text->DrawTextNDC(0.89,0.85,Form("Correlation: %.1f%%",g_correlation_ABdiff_blumlein->GetCorrelationFactor()*100));
+	g_corr->cd(3);
+	g_correlation_AB_SNR->SetMarkerStyle(20);
+	g_correlation_AB_SNR->Draw("AP");
+	t_text->DrawTextNDC(0.89,0.85,Form("Correlation: %.1f%%",g_correlation_AB_SNR->GetCorrelationFactor()*100));
+	g_corr->cd(4);
+	g_correlation_ABdiff_SNR->SetMarkerStyle(20);
+	g_correlation_ABdiff_SNR->Draw("AP");
+	t_text->DrawTextNDC(0.89,0.85,Form("Correlation: %.1f%%",g_correlation_ABdiff_SNR->GetCorrelationFactor()*100));
+
+
 
 
 
@@ -199,7 +227,7 @@ void plot_output(TString filename="output.root"){
 	}
 	//can_FFT->SaveAs("FFT.png");
 
-
+/*
 	new TCanvas();
 	double fft_xmin = 0;
 	double fft_xmax = 100; 
@@ -219,6 +247,6 @@ void plot_output(TString filename="output.root"){
     fftResidual->GetXaxis()->SetRangeUser(0.01,1000);
     fftResidual->GetYaxis()->SetRangeUser(0,0.006);
 	//gPad->SaveAs("FFT_trace.png");
-
+*/
 
 }

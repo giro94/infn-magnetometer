@@ -163,6 +163,11 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TGraphErrors* g_trend_blumlein = new TGraphErrors();
 	TGraph* g_trend_SNR = new TGraph();
 
+	TGraph* g_correlation_AB_blumlein = new TGraph();
+	TGraph* g_correlation_ABdiff_blumlein = new TGraph();
+	TGraph* g_correlation_AB_SNR = new TGraph();
+	TGraph* g_correlation_ABdiff_SNR = new TGraph();
+
 	TGraph* g_blumlein_temp = new TGraph();
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",-0.5,0.0);
 	double blumlein_fit_start = -0.4;
@@ -180,7 +185,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
-		//Reading first file to get trace info
+		//Reading file
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
 		vector<double> trace_time = traces[0];
 		vector<double> trace_A = traces[headers[2]];
@@ -251,16 +256,24 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		}
 		double blumlein = peak - avgC_baseline;
 		double blumerr = sqrt(peakerr*peakerr + avgC_baselineerr*avgC_baselineerr);
+		double AB = A_avg + B_avg;
+		double ABdiff = B_avg - A_avg;
+		double SNR = blumlein/avgC_stddev;
 
 		g_trend_A->AddPoint(datetime.Convert(),A_avg);
 		g_trend_B->AddPoint(datetime.Convert(),B_avg);
-		g_trend_ABdiff->AddPoint(datetime.Convert(),B_avg-A_avg);
+		g_trend_ABdiff->AddPoint(datetime.Convert(),ABdiff);
 		g_trend_baseline->AddPoint(datetime.Convert(),avgC_baseline);
 		g_trend_baseline->SetPointError(g_trend_baseline->GetN()-1,0,avgC_baselineerr);
 		g_trend_stddev->AddPoint(datetime.Convert(),avgC_stddev);
 		g_trend_blumlein->AddPoint(datetime.Convert(),blumlein);
 		g_trend_blumlein->SetPointError(g_trend_blumlein->GetN()-1,0,blumerr);
-		g_trend_SNR->AddPoint(datetime.Convert(),blumlein/avgC_stddev);
+		g_trend_SNR->AddPoint(datetime.Convert(),SNR);
+
+		g_correlation_AB_blumlein->AddPoint(AB,blumlein);
+		g_correlation_ABdiff_blumlein->AddPoint(ABdiff,blumlein);
+		g_correlation_AB_SNR->AddPoint(AB,SNR);
+		g_correlation_ABdiff_SNR->AddPoint(ABdiff,SNR);
 
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){
@@ -312,6 +325,10 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_stddev->SetName("g_trend_stddev");
 	g_trend_blumlein->SetName("g_trend_blumlein");
 	g_trend_SNR->SetName("g_trend_SNR");
+	g_correlation_AB_blumlein->SetName("g_correlation_AB_blumlein");
+	g_correlation_ABdiff_blumlein->SetName("g_correlation_ABdiff_blumlein");
+	g_correlation_AB_SNR->SetName("g_correlation_AB_SNR");
+	g_correlation_ABdiff_SNR->SetName("g_correlation_ABdiff_SNR");
 
 	g_trend_A->SetTitle("Trend of channel A;Time;A [V]");
 	g_trend_B->SetTitle("Trend of channel B;Time;B [V]");
@@ -320,6 +337,10 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_stddev->SetTitle("Trend of avgC StdDev;Time;StdDev [mV]");
 	g_trend_blumlein->SetTitle("Trend of blumlein peak;Time;Blumlein [mV]");
 	g_trend_SNR->SetTitle("Trend of SNR;Time;Blumlein / StdDev");
+	g_correlation_AB_blumlein->SetTitle("Correlation blumlein vs A+B;A+B [V];Blumlein [mV]");
+	g_correlation_ABdiff_blumlein->SetTitle("Correlation blumlein vs B-A;B-A [V];Blumlein [mV]");
+	g_correlation_AB_SNR->SetTitle("Correlation SNR vs A+B;A+B [V];Blumlein SNR");
+	g_correlation_ABdiff_SNR->SetTitle("Correlation SNR vs B-A;B-A [V];Blumlein SNR");
 
 	g_trend_A->GetXaxis()->SetTimeFormat("%H:%M");
 	g_trend_A->GetXaxis()->SetTimeOffset(0);
@@ -351,6 +372,10 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_blumlein->Write();
 	g_trend_SNR->Write();
 
+	g_correlation_AB_blumlein->Write();
+	g_correlation_ABdiff_blumlein->Write();
+	g_correlation_AB_SNR->Write();
+	g_correlation_ABdiff_SNR->Write();
 
 	fout->Write();
 	fout->Close();
