@@ -1,6 +1,6 @@
 #include <dirent.h>
 
-void plot_rampup(TString folder, TString current_filename=""){
+void plot_rampup(TString folder, TString output_file, TString current_filename=""){
 
 	TGraph* g_trace = new TGraph();
 	TGraph* g_traceA = new TGraph();
@@ -201,12 +201,8 @@ void plot_rampup(TString folder, TString current_filename=""){
 	g_rampupA->Draw("APL");
 	g_rampupB->Draw("PL");
 
-	TString outname = Form("%s_output.root",folder.Data());
-	outname.ReplaceAll("../","");
-	outname.ReplaceAll("/","__");
-	outname.ReplaceAll(" ","_");
-	cout<<"Creating "<<outname<<"\n";
-	TFile* fout = new TFile(outname,"recreate");
+	cout<<"Creating "<<output_file<<"\n";
+	TFile* fout = new TFile(output_file,"recreate");
 	g_rampup->Write();
 	g_rampupA->Write();
 	g_rampupB->Write();
