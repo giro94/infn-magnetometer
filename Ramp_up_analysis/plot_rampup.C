@@ -143,9 +143,9 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 
 			if (file.eof()) break;
 
-			g_trace->AddPoint(time,avgAB);
-			g_traceA->AddPoint(time,A);
-			g_traceB->AddPoint(time,B);
+			g_trace->SetPoint(g_trace->GetN(),time,avgAB);
+			g_traceA->SetPoint(g_traceA->GetN(),time,A);
+			g_traceB->SetPoint(g_traceB->GetN(),time,B);
 		}
 		file.close();
 
@@ -161,11 +161,10 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		double Bval = fit_flatB->Parameter(0);
 		double Berr = fit_flatB->ParError(0);
 
-
-		g_rampup->AddPoint(current,ABval);
-		g_rampupA->AddPoint(current,Aval);
-		g_rampupB->AddPoint(current,Bval);
 		int ipoint = g_rampup->GetN()-1;
+		g_rampup->SetPoint(ipoint,current,ABval);
+		g_rampupA->SetPoint(ipoint,current,Aval);
+		g_rampupB->SetPoint(ipoint,current,Bval);
 		g_rampup->SetPointError(ipoint,0,ABerr);
 		g_rampupA->SetPointError(ipoint,0,Aerr);
 		g_rampupB->SetPointError(ipoint,0,Berr);
