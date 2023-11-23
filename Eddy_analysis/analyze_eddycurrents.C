@@ -242,7 +242,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			}
 
 			if (trace_time[i] > first_kick_guess-0.5 && trace_time[i] < first_kick_guess){
-				g_blumlein_temp->AddPoint(trace_time[i]-first_kick_guess,trace_avgC[i]);
+				g_blumlein_temp->SetPoint(g_blumlein_temp->GetN(),trace_time[i]-first_kick_guess,trace_avgC[i]);
 			}
 		}
 
@@ -267,20 +267,20 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		double ABdiff = B_avg - A_avg;
 		double SNR = blumlein/avgC_stddev;
 
-		g_trend_A->AddPoint(datetime.Convert(),A_avg);
-		g_trend_B->AddPoint(datetime.Convert(),B_avg);
-		g_trend_ABdiff->AddPoint(datetime.Convert(),ABdiff);
-		g_trend_baseline->AddPoint(datetime.Convert(),avgC_baseline);
+		g_trend_A->SetPoint(g_trend_A->GetN(),datetime.Convert(),A_avg);
+		g_trend_B->SetPoint(g_trend_B->GetN(),datetime.Convert(),B_avg);
+		g_trend_ABdiff->SetPoint(g_trend_ABdiff->GetN(),datetime.Convert(),ABdiff);
+		g_trend_baseline->SetPoint(g_trend_baseline->GetN(),datetime.Convert(),avgC_baseline);
 		g_trend_baseline->SetPointError(g_trend_baseline->GetN()-1,0,avgC_baselineerr);
-		g_trend_stddev->AddPoint(datetime.Convert(),avgC_stddev);
-		g_trend_blumlein->AddPoint(datetime.Convert(),blumlein);
+		g_trend_stddev->SetPoint(g_trend_stddev->GetN(),datetime.Convert(),avgC_stddev);
+		g_trend_blumlein->SetPoint(g_trend_blumlein->GetN(),datetime.Convert(),blumlein);
 		g_trend_blumlein->SetPointError(g_trend_blumlein->GetN()-1,0,blumerr);
-		g_trend_SNR->AddPoint(datetime.Convert(),SNR);
+		g_trend_SNR->SetPoint(g_trend_SNR->GetN(),datetime.Convert(),SNR);
 
-		g_correlation_AB_blumlein->AddPoint(AB,blumlein);
-		g_correlation_ABdiff_blumlein->AddPoint(ABdiff,blumlein);
-		g_correlation_AB_SNR->AddPoint(AB,SNR);
-		g_correlation_ABdiff_SNR->AddPoint(ABdiff,SNR);
+		g_correlation_AB_blumlein->SetPoint(g_correlation_AB_blumlein->GetN(),AB,blumlein);
+		g_correlation_ABdiff_blumlein->SetPoint(g_correlation_ABdiff_blumlein->GetN(),ABdiff,blumlein);
+		g_correlation_AB_SNR->SetPoint(g_correlation_AB_SNR->GetN(),AB,SNR);
+		g_correlation_ABdiff_SNR->SetPoint(g_correlation_ABdiff_SNR->GetN(),ABdiff,SNR);
 
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){
