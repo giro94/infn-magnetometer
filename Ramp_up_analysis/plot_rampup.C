@@ -7,7 +7,6 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 	TGraph* g_rampupB = new TGraph();
 
 
-
 	map<int,double> map_time_current;
 	bool know_current_info = false;
 
@@ -56,7 +55,6 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 	
 	vector<TString> files;
 	while((dirfile = readdir(dir)) != NULL){
-		if (dirfile->d_type != DT_REG) continue;
 		TString fname = dirfile->d_name;
 		if (!fname.EndsWith("csv")) continue;
 		files.push_back(fname);
@@ -112,7 +110,7 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		if (iss.fail()) {
 			cout<<file_datetime<<"\n";
 		    throw std::runtime_error{"failed to parse time string"};
-		}   
+		}
 		int time_stamp = mktime(&t);
 
 		double current = fi;
