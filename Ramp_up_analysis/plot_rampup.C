@@ -2,12 +2,9 @@
 
 void plot_rampup(TString folder, TString output_file, TString current_filename=""){
 
-	TGraph* g_trace = new TGraph();
-	TGraph* g_traceA = new TGraph();
-	TGraph* g_traceB = new TGraph();
 	TGraphErrors* g_rampup = new TGraphErrors();
-	TGraphErrors* g_rampupA = new TGraphErrors();
-	TGraphErrors* g_rampupB = new TGraphErrors();
+	TGraph* g_rampupA = new TGraph();
+	TGraph* g_rampupB = new TGraph();
 
 
 
@@ -126,9 +123,12 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		
 		double time, A, B, C, avgAB;
 		char comma;
-		g_trace->Set(0);
-		g_traceA->Set(0);
-		g_traceB->Set(0);
+
+		double A_avg = 0;
+		double B_avg = 0;
+		double ABdiff_avg = 0;
+		double ABdiff_avg_squared = 0;
+		double Npoints = 0;
 		while (!file.eof()){
 			double var=0;
 			for (int i=0; i<Nvar; i++){
@@ -143,31 +143,26 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 
 			if (file.eof()) break;
 
-			g_trace->SetPoint(g_trace->GetN(),time,avgAB);
-			g_traceA->SetPoint(g_traceA->GetN(),time,A);
-			g_traceB->SetPoint(g_traceB->GetN(),time,B);
+			A_avg += A;
+			B_avg += B;
+			ABdiff_avg += avgAB;
+			ABdiff_avg_squared += avgAB*avgAB;
+
+			Npoints += 1;
 		}
 		file.close();
 
+		A_avg /= Npoints;
+		B_avg /= Npoints;
+		ABdiff_avg /= Npoints;
+		ABdiff_avg_squared /= Npoints;
+		double ABerr = sqrt(ABdiff_avg_squared - ABdiff_avg*ABdiff_avg);
 
-		TFitResultPtr fit_flat = g_trace->Fit("pol0","QNS");
-		TFitResultPtr fit_flatA = g_traceA->Fit("pol0","QNS");
-		TFitResultPtr fit_flatB = g_traceB->Fit("pol0","QNS");
-
-		double ABval = fit_flat->Parameter(0);
-		double ABerr = fit_flat->ParError(0);
-		double Aval = fit_flatA->Parameter(0);
-		double Aerr = fit_flatA->ParError(0);
-		double Bval = fit_flatB->Parameter(0);
-		double Berr = fit_flatB->ParError(0);
-
-		int ipoint = g_rampup->GetN()-1;
-		g_rampup->SetPoint(ipoint,current,ABval);
-		g_rampupA->SetPoint(ipoint,current,Aval);
-		g_rampupB->SetPoint(ipoint,current,Bval);
+		int ipoint = g_rampup->GetN();
+		g_rampup->SetPoint(ipoint,current,ABdiff_avg);
 		g_rampup->SetPointError(ipoint,0,ABerr);
-		g_rampupA->SetPointError(ipoint,0,Aerr);
-		g_rampupB->SetPointError(ipoint,0,Berr);
+		g_rampupA->SetPoint(ipoint,current,A_avg);
+		g_rampupB->SetPoint(ipoint,current,B_avg);
 
 	}
 
