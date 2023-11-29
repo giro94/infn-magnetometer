@@ -142,6 +142,9 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	float t_after8 = 22.0;
 	int Nkickbins8 = (t_after8-t_before)/dt;
 
+	double SNR_th1 = 10.0;
+	double SNR_th2 = 15.0;
+
 	TFile* fout = new TFile(output_file,"recreate");
 
 	TProfile* g_fulltrace = new TProfile("trace","Trace;Time [ms];Voltage [mV]",Nlines,tstart,tend);
@@ -152,6 +155,32 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		g_trace_kicks[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
 	}
 	TProfile* g_trace_kick8long = new TProfile("trace_kick8long","Trace Kick 8;Time [ms];Voltage [mV]",Nkickbins8,t_before,t_after8);
+
+	TProfile* g_fulltrace_SNR0 = new TProfile("trace_SNR0",Form("Trace (SNR < %.1f);Time [ms];Voltage [mV]",SNR_th1),Nlines,tstart,tend);
+	TProfile* g_fulltrace_SNR1 = new TProfile("trace_SNR1",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th1),Nlines,tstart,tend);
+	TProfile* g_fulltrace_SNR2 = new TProfile("trace_SNR2",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart,tend);
+	TProfile** g_trace_kicks_SNR0 = new TProfile*[8];
+	TProfile** g_trace_kicks_SNR1 = new TProfile*[8];
+	TProfile** g_trace_kicks_SNR2 = new TProfile*[8];
+	for (int i=0; i<8; i++){
+		TString hname = Form("trace_SNR0_kick%d",i+1);
+		TString htitle = Form(Form("Trace (SNR < %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1),i+1);
+		g_trace_kicks_SNR0[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+		
+		hname = Form("trace_SNR1_kick%d",i+1);
+		htitle = Form(Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1),i+1);
+		g_trace_kicks_SNR1[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+		
+		hname = Form("trace_SNR2_kick%d",i+1);
+		htitle = Form(Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th2),i+1);
+		g_trace_kicks_SNR2[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+	}
+	TProfile* g_trace_kick8long_SNR0 = new TProfile("trace_SNR0_kick8long",Form("Trace (SNR < %.1f) Kick 8;Time [ms];Voltage [mV]",SNR_th1),Nkickbins8,t_before,t_after8);
+	TProfile* g_trace_kick8long_SNR1 = new TProfile("trace_SNR1_kick8long",Form("Trace (SNR > %.1f) Kick 8;Time [ms];Voltage [mV]",SNR_th1),Nkickbins8,t_before,t_after8);
+	TProfile* g_trace_kick8long_SNR2 = new TProfile("trace_SNR2_kick8long",Form("Trace (SNR > %.1f) Kick 8;Time [ms];Voltage [mV]",SNR_th2),Nkickbins8,t_before,t_after8);
+
+
+
 	
 	TProfile** g_trace_trend = new TProfile*[10];
 	for (int i=0; i<10; i++){
@@ -287,6 +316,9 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){
 			g_fulltrace->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
+			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
+			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
+			if (SNR > SNR_th2) g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
 
 			int Nfi_10p = Nfiles / 10;
 			int fi_p = (fi-fi%Nfi_10p)/Nfi_10p;
@@ -308,9 +340,15 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 							for (int k=0; k<trace_time.size(); k++){
 								if (trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after){
 									g_trace_kicks[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR < SNR_th1) g_trace_kicks_SNR0[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR > SNR_th1) g_trace_kicks_SNR1[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR > SNR_th2) g_trace_kicks_SNR2[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
 								}
 								if (i==7 && trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after8){
 									g_trace_kick8long->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR < SNR_th1) g_trace_kick8long_SNR0->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR > SNR_th1) g_trace_kick8long_SNR1->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+									if (SNR > SNR_th2) g_trace_kick8long_SNR2->Fill(trace_time[k]-kick_time,trace_avgC[k]);
 								}
 							}
 							break;
