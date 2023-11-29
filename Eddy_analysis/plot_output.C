@@ -153,6 +153,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		g_trace_trend[i]->Draw("SAME HIST PLC");
 	}
 	gPad->BuildLegend(0.905,0.14,0.995,0.86);
+	g_trace_trend[0]->SetTitle("Trace trend");
 	if(savePlots)gPad->SaveAs(Form("%s/trend_traces.png",outfolder.Data()));
 
 	TLine* line = new TLine();
@@ -172,6 +173,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	g_trend_ABdiff->Draw("PLZ");
 	gPad->SetGridy();
 	gPad->BuildLegend(0.3,0.4,0.7,0.6);
+	g_trend_A->SetTitle("A B channels trend");
 	if(savePlots)gPad->SaveAs(Form("%s/trend_AB_diff.png",outfolder.Data()));
 
 	new TCanvas();
@@ -185,6 +187,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	g_trend_blumlein->Draw("PLZ");
 	gPad->SetGridy();
 	gPad->BuildLegend(0.2,0.75,0.8,0.85);
+	g_trend_baseline->SetTitle("Blumlein and baseline trend");
 	line->DrawLine(g_trend_blumlein->GetXaxis()->GetXmin(),0,g_trend_blumlein->GetXaxis()->GetXmax(),0);
 	if(savePlots)gPad->SaveAs(Form("%s/trend_blumlein.png",outfolder.Data()));
 
@@ -374,6 +377,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		trace_SNR1->Draw("SAME HIST PLC");
 		trace_SNR2->Draw("SAME HIST PLC");
 		gPad->BuildLegend(0.905,0.14,0.995,0.86);
+		trace_SNR0->SetTitle("Full trace");
 		if(savePlots)gPad->SaveAs(Form("%s/SNR_traces.png",outfolder.Data()));
 	
 
@@ -390,6 +394,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		kicks_SNR1[0]->Draw("SAME HIST PLC");
 		kicks_SNR2[0]->Draw("SAME HIST PLC");
 		gPad->BuildLegend(0.6,0.78,0.88,0.88);
+		kicks_SNR0[0]->SetTitle("Kick 1");
 		can_kick_SNR->cd(2);
 		kick8long_SNR0->GetYaxis()->SetRangeUser(-300,100);
 		kick8long_SNR1->GetYaxis()->SetRangeUser(-300,100);
@@ -398,6 +403,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		kick8long_SNR1->Draw("SAME HIST PLC");
 		kick8long_SNR2->Draw("SAME HIST PLC");
 		gPad->BuildLegend(0.6,0.78,0.88,0.88);
+		kick8long_SNR0->SetTitle("Kick 8");
 		if(savePlots)can_kick_SNR->SaveAs(Form("%s/SNR_kicks.png",outfolder.Data()));
 
 	}
