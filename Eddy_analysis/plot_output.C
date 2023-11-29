@@ -194,9 +194,15 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	g_trend_stddev->Draw("APLZ");
 	if(savePlots)gPad->SaveAs(Form("%s/trend_StdDev.png",outfolder.Data()));
 
+	TLine* lineSNR = new TLine();
 	new TCanvas();
 	g_trend_SNR->SetLineWidth(2);
 	g_trend_SNR->Draw("APLZ");
+	lineSNR->SetLineColor(kRed);
+	lineSNR->SetLineWidth(2);
+	lineSNR->SetLineStyle(kDashed);
+	lineSNR->DrawLine(g_trend_SNR->GetXaxis()->GetXmin(),10,g_trend_SNR->GetXaxis()->GetXmax(),10);
+	lineSNR->DrawLine(g_trend_SNR->GetXaxis()->GetXmin(),15,g_trend_SNR->GetXaxis()->GetXmax(),15);
 	if(savePlots)gPad->SaveAs(Form("%s/trend_SNR.png",outfolder.Data()));
 
 
@@ -383,7 +389,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		kicks_SNR0[0]->Draw("SAME HIST PLC");
 		kicks_SNR1[0]->Draw("SAME HIST PLC");
 		kicks_SNR2[0]->Draw("SAME HIST PLC");
-		gPad->BuildLegend(0.905,0.14,0.995,0.86);
+		gPad->BuildLegend(0.6,0.78,0.88,0.88);
 		can_kick_SNR->cd(2);
 		kick8long_SNR0->GetYaxis()->SetRangeUser(-300,100);
 		kick8long_SNR1->GetYaxis()->SetRangeUser(-300,100);
@@ -391,8 +397,71 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		kick8long_SNR0->Draw("SAME HIST PLC");
 		kick8long_SNR1->Draw("SAME HIST PLC");
 		kick8long_SNR2->Draw("SAME HIST PLC");
-		gPad->BuildLegend(0.905,0.14,0.995,0.86);
+		gPad->BuildLegend(0.6,0.78,0.88,0.88);
 		if(savePlots)can_kick_SNR->SaveAs(Form("%s/SNR_kicks.png",outfolder.Data()));
+
+	}
+
+
+
+	//Save csv files
+	if(savePlots){
+		ofstream fileout_fulltrace;
+		fileout_fulltrace.open(Form("%s/fulltrace.csv",outfolder.Data()),ofstream::trunc);
+		fileout_fulltrace<<"Time [ms],Value [mV],Error [mV]\n";
+		for (int bn=1; bn<=trace->GetNbinsX(); bn++){
+			fileout_fulltrace<<trace->GetBinCenter(bn)<<','<<trace->GetBinContent(bn)<<','<<trace->GetBinError(bn)<<'\n';
+		}
+		fileout_fulltrace.close();
+
+		for (int i=0; i<8; i++){
+			ofstream fileout_kick;
+			fileout_kick.open(Form("%s/trace_kick%d.csv",outfolder.Data(),i+1),ofstream::trunc);
+			fileout_kick<<"Time [ms],Value [mV],Error [mV]\n";
+			for (int bn=1; bn<=kicks[i]->GetNbinsX(); bn++){
+				fileout_kick<<kicks[i]->GetBinCenter(bn)<<','<<kicks[i]->GetBinContent(bn)<<','<<kicks[i]->GetBinError(bn)<<'\n';
+			}
+			fileout_kick.close();
+		}
+
+		ofstream fileout_kick8long;
+		fileout_kick8long.open(Form("%s/trace_kick8long.csv",outfolder.Data()),ofstream::trunc);
+		fileout_kick8long<<"Time [ms],Value [mV],Error [mV]\n";
+		for (int bn=1; bn<=kick8long->GetNbinsX(); bn++){
+			fileout_kick8long<<kick8long->GetBinCenter(bn)<<','<<kick8long->GetBinContent(bn)<<','<<kick8long->GetBinError(bn)<<'\n';
+		}
+		fileout_kick8long.close();
+
+		if (haveSNRplots){
+			ofstream fileout_fulltrace;
+			fileout_fulltrace.open(Form("%s/fulltrace_SNR15.csv",outfolder.Data()),ofstream::trunc);
+			fileout_fulltrace<<"Time [ms],Value [mV],Error [mV]\n";
+			for (int bn=1; bn<=trace_SNR2->GetNbinsX(); bn++){
+				fileout_fulltrace<<trace_SNR2->GetBinCenter(bn)<<','<<trace_SNR2->GetBinContent(bn)<<','<<trace_SNR2->GetBinError(bn)<<'\n';
+			}
+			fileout_fulltrace.close();
+		
+			for (int i=0; i<8; i++){
+				ofstream fileout_kick;
+				fileout_kick.open(Form("%s/trace_SNR15_kick%d.csv",outfolder.Data(),i+1),ofstream::trunc);
+				fileout_kick<<"Time [ms],Value [mV],Error [mV]\n";
+				for (int bn=1; bn<=kicks_SNR2[i]->GetNbinsX(); bn++){
+					fileout_kick<<kicks_SNR2[i]->GetBinCenter(bn)<<','<<kicks_SNR2[i]->GetBinContent(bn)<<','<<kicks_SNR2[i]->GetBinError(bn)<<'\n';
+				}
+				fileout_kick.close();
+			}
+
+			ofstream fileout_kick8long;
+			fileout_kick8long.open(Form("%s/trace_SNR15_kick8long.csv",outfolder.Data()),ofstream::trunc);
+			fileout_kick8long<<"Time [ms],Value [mV],Error [mV]\n";
+			for (int bn=1; bn<=kick8long_SNR2->GetNbinsX(); bn++){
+				fileout_kick8long<<kick8long_SNR2->GetBinCenter(bn)<<','<<kick8long_SNR2->GetBinContent(bn)<<','<<kick8long_SNR2->GetBinError(bn)<<'\n';
+			}
+			fileout_kick8long.close();
+
+		}
+
+
 
 	}
 
