@@ -313,17 +313,23 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		g_correlation_AB_SNR->SetPoint(g_correlation_AB_SNR->GetN(),AB,SNR);
 		g_correlation_ABdiff_SNR->SetPoint(g_correlation_ABdiff_SNR->GetN(),ABdiff,SNR);
 
+		///////////////////////////////////////
+		//Correct the trace (subtract baseline)
+		for (int i=0; i<trace_avgC.size(); i++){
+			trace_avgC[i] -= avgC_baseline;
+		}
+
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){
-			g_fulltrace->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
-			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
-			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
-			if (SNR > SNR_th2) g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
+			g_fulltrace->Fill(trace_time[i],trace_avgC[i]);
+			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i]);
+			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i]);
+			if (SNR > SNR_th2) g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
 
 			int Nfi_10p = Nfiles / 10;
 			int fi_p = (fi-fi%Nfi_10p)/Nfi_10p;
 			if (fi_p<10){
-				g_trace_trend[fi_p]->Fill(trace_time[i],trace_avgC[i] - avgC_baseline);
+				g_trace_trend[fi_p]->Fill(trace_time[i],trace_avgC[i]);
 			}
 		}
 
