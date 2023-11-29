@@ -266,13 +266,13 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			A_avg += trace_A[i];
 			B_avg += trace_B[i];
 
-			if (trace_time[i] < first_kick_guess-0.5){
+			if (trace_time[i] < first_kick_guess-0.55){
 				avgC_baseline += trace_avgC[i];
 				avgC_squared += trace_avgC[i]*trace_avgC[i];
 				Nlines_baseline++;
 			}
 
-			if (trace_time[i] > first_kick_guess-0.5 && trace_time[i] < first_kick_guess){
+			if (trace_time[i] > first_kick_guess-0.55 && trace_time[i] < first_kick_guess){
 				g_blumlein_temp->SetPoint(g_blumlein_temp->GetN(),trace_time[i]-first_kick_guess,trace_avgC[i]);
 			}
 		}
@@ -328,7 +328,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		}
 
 		for (int i=0; i<8; i++){
-			double this_guess = first_kick_guess+i*kick_dt_guess-0.5;
+			double this_guess = first_kick_guess+i*kick_dt_guess-0.4;
 
 			for (int j=0; j<trace_time.size(); j++){
 				if (trace_time[j] > this_guess){
