@@ -164,15 +164,15 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TProfile** g_trace_kicks_SNR2 = new TProfile*[8];
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_SNR0_kick%d",i+1);
-		TString htitle = Form(Form("Trace (SNR < %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1),i+1);
+		TString htitle = Form("Trace (SNR < %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1,i+1);
 		g_trace_kicks_SNR0[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
 		
 		hname = Form("trace_SNR1_kick%d",i+1);
-		htitle = Form(Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1),i+1);
+		htitle = Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1,i+1);
 		g_trace_kicks_SNR1[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
 		
 		hname = Form("trace_SNR2_kick%d",i+1);
-		htitle = Form(Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th2),i+1);
+		htitle = Form("Trace (SNR > %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th2,i+1);
 		g_trace_kicks_SNR2[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
 	}
 	TProfile* g_trace_kick8long_SNR0 = new TProfile("trace_SNR0_kick8long",Form("Trace (SNR < %.1f) Kick 8;Time [ms];Voltage [mV]",SNR_th1),Nkickbins8,t_before,t_after8);
