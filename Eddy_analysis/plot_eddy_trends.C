@@ -135,16 +135,16 @@ void plot_eddy_trends(TString folder, TString filename_out){
 		avgavgC2_ /= Nlines;
 		avgCstddev = sqrt(avgavgC2_ - avgavgC_*avgavgC_);
 		
-		g_trend_ABdiff->AddPoint(datetime.Convert(),avgB-avgA);
-		g_trend_Cstddev->AddPoint(datetime.Convert(),Cstddev);
-		g_trend_avgCstddev->AddPoint(datetime.Convert(),avgCstddev);
+		g_trend_ABdiff->SetPoint(g_trend_ABdiff->GetN(),datetime.Convert(),avgB-avgA);
+		g_trend_Cstddev->SetPoint(g_trend_Cstddev->GetN(),datetime.Convert(),Cstddev);
+		g_trend_avgCstddev->SetPoint(g_trend_avgCstddev->GetN(),datetime.Convert(),avgCstddev);
 
 
 		g_trace->Set(0);
 		for (auto p : trace){
 			time = p.first;
 			avgC = p.second;
-			g_trace->AddPoint(time,avgC);
+			g_trace->SetPoint(g_trace->GetN(),time,avgC);
 		}
 
 		TFitResultPtr res = g_trace->Fit("pol0","QNS","",2.0,12.0);
