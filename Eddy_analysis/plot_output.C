@@ -198,7 +198,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 
 
 
-	TH1F** h1_fft_kicks = new TH1F* [9];
+	TH1D** h1_fft_kicks = new TH1D* [9];
 
 
 	TCanvas* can_FFT = new TCanvas("can_FFT","",1800,900);
@@ -217,7 +217,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		double fft_xmax = 8.0; 
     	TH1 *fft_histogram = 0;
     	TVirtualFFT::SetTransform(0);
-    	TH1F* fftResidualInit = SetupFFT(this_kick, fft_xmin, fft_xmax);
+    	TH1D* fftResidualInit = SetupFFT(this_kick, fft_xmin, fft_xmax);
     	fft_histogram = fftResidualInit->FFT(fft_histogram,"MAG");
     	h1_fft_kicks[i] = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
     	h1_fft_kicks[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
@@ -266,9 +266,9 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	double fft_xmax = 100; 
     TH1 *fft_histogram = 0;
     TVirtualFFT::SetTransform(0);
-    TH1F* fftResidualInit = SetupFFT(trace, fft_xmin, fft_xmax);
+    TH1D* fftResidualInit = SetupFFT(trace, fft_xmin, fft_xmax);
     fft_histogram = fftResidualInit->FFT(fft_histogram,"MAG");
-    TH1F* fftResidual = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
+    TH1D* fftResidual = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
     fftResidual->SetTitle("FFT trace;Frequency (kHz);Magnitude [Arb Units]");
     fftResidual->SetStats(0);
     fftResidual->SetName("residualFFT_trace");
