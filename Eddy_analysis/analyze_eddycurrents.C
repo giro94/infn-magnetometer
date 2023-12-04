@@ -1,5 +1,6 @@
 #include <dirent.h>
 
+
 vector<TString> getListOfFiles(TString folder){
 	vector<TString> files;
 
@@ -147,6 +148,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 	TFile* fout = new TFile(output_file,"recreate");
 
+	TH2F* h2_fulltrace = new TH2F("h2_fulltrace","Trace;Time [ms];Voltage [mV]",Nlines,tstart,tend,200,-100,100);
 	TProfile* g_fulltrace = new TProfile("trace","Trace;Time [ms];Voltage [mV]",Nlines,tstart,tend);
 	TProfile** g_trace_kicks = new TProfile*[8];
 	for (int i=0; i<8; i++){
@@ -156,6 +158,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	}
 	TProfile* g_trace_kick8long = new TProfile("trace_kick8long","Trace Kick 8;Time [ms];Voltage [mV]",Nkickbins8,t_before,t_after8);
 
+	TH2F* h2_fulltrace_SNR2 = new TH2F("h2_fulltrace_SNR2",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart,tend,200,-100,100);
 	TProfile* g_fulltrace_SNR0 = new TProfile("trace_SNR0",Form("Trace (SNR < %.1f);Time [ms];Voltage [mV]",SNR_th1),Nlines,tstart,tend);
 	TProfile* g_fulltrace_SNR1 = new TProfile("trace_SNR1",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th1),Nlines,tstart,tend);
 	TProfile* g_fulltrace_SNR2 = new TProfile("trace_SNR2",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart,tend);
@@ -321,11 +324,14 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){
+			h2_fulltrace->Fill(trace_time[i],trace_avgC[i]);
 			g_fulltrace->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i]);
-			if (SNR > SNR_th2) g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
-
+			if (SNR > SNR_th2){
+				h2_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
+				g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
+			}
 			int Nfi_10p = Nfiles / 10;
 			int fi_p = (fi-fi%Nfi_10p)/Nfi_10p;
 			if (fi_p<10){

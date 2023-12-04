@@ -1,40 +1,6 @@
 #include <dirent.h>
+#include "analysis_tools.C"
 
-TH1F* SetupFFT(TProfile* h, double xmin, double xmax){
-    double timeTot = xmax - xmin;
-    double binW = h->GetBinWidth(1);
-    int nBins = timeTot / binW;
-    TH1F* hout = new TH1F("","",nBins, xmin, xmin + (nBins*binW));
-    
-    int binCount = 0;
-    for (int i(0); i < h->GetXaxis()->GetNbins(); i++){
-        if (h->GetBinCenter(i) < xmin ) continue;
-        if (binCount > nBins) break;
-        binCount++;
-        double cont = h->GetBinContent(i);
-        double err = h->GetBinError(i);
-        hout->SetBinContent(binCount, cont);
-        hout->SetBinError(binCount, err);
-    }
-    return hout;
-}
-
-TH1F* RescaleAxis(TH1* input, Double_t Scale) {
-    int bins = input->GetNbinsX();
-    TAxis* xaxis = input->GetXaxis();
-    double* ba = new double[bins+1];
-    xaxis->GetLowEdge(ba);
-    ba[bins] = ba[bins-1] + xaxis->GetBinWidth(bins);
-    for (int i = 0; i < bins+1; i++) {
-        ba[i] *= Scale;
-    }
-    TH1F* out = new TH1F(input->GetName(), input->GetTitle(), bins, ba);
-    for (int i = 0; i <= bins; i++) {
-        out->SetBinContent(i, input->GetBinContent(i));
-        out->SetBinError(i, input->GetBinError(i));
-    }
-    return out;
-}
 
 
 void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field_26Aug2022", TString output_folder = "./", int Nfilesmax = -1){

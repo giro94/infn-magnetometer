@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include "analysis_tools.C"
 
 
 void plot_eddy_trends(TString folder, TString filename_out){
