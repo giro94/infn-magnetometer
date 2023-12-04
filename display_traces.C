@@ -1,4 +1,6 @@
-void display_traces(TString fname){
+#include "Eddy_analysis/FFT_tools.C"
+
+void display_traces(TString fname, TString foutname=""){
 
 	cout<<"Reading file \""<<fname<<"\n";
 	ifstream file;
@@ -6,6 +8,11 @@ void display_traces(TString fname){
 	if (!file.is_open()){
 		cout<<"cannot open "<<fname<<"\n";
 		return;
+	}
+
+	bool saveOutput = false;
+	if (foutname != ""){
+		saveOutput = true;
 	}
 
 	vector<int> colors = {1,2,3,4,9,6};
@@ -27,6 +34,11 @@ void display_traces(TString fname){
 		cout<<"\""<<varnames[i]<<"\" ";
 	}
 	cout<<"\n";
+
+	TFile* fout;
+	if (saveOutput){
+		fout = new TFile(foutname,"recreate");
+	}
 
 	TGraph** g_traces = new TGraph* [Nvar-1];
 	for (int i=0; i<Nvar-1; i++){
@@ -93,6 +105,15 @@ void display_traces(TString fname){
 	new TCanvas("","",1800,800);
 	for (int i=0; i<Nvar-1; i++){
 		g_traces[i]->Draw(i==0?"AL":"L");
+	}
+
+	if (saveOutput){
+		for (int i=0; i<Nvar-1; i++){
+			g_traces[i]->Write();
+		}
+
+		fout->Write();
+		fout->Close();
 	}
 
 
