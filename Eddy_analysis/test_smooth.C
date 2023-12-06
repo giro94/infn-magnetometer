@@ -83,15 +83,15 @@ void test_smooth(TString input_file, TString output_file=""){
 	TH1D* kick8long_lowpass = lowpass(kick8long,lowpass_freq);
 	kick8long_lowpass->SetTitle(Form("%s (Lowpass %.1f kHz)",kick8long->GetTitle(),lowpass_freq));	
 
-	TH1D* trace_ra1020 = runningAverage(runningAverage(trace,10,true),20,true);
-	trace_ra1020->SetTitle(Form("%s (RunningAvg %d)",trace->GetTitle(),1020));	
-	TH1D** kicks_ra1020 = new TH1D*[8];
+	TH1D* trace_ra51015 = runningAverage(runningAverage(runningAverage(trace,5,true),10,true),15,true);
+	trace_ra51015->SetTitle(Form("%s (RunningAvg %d)",trace->GetTitle(),51015));	
+	TH1D** kicks_ra51015 = new TH1D*[8];
 	for (int i=0; i<8; i++){
-		kicks_ra1020[i] = runningAverage(runningAverage(kicks[i],10,true),20,true);
-		kicks_ra1020[i]->SetTitle(Form("%s (RunningAvg %d)",kicks[i]->GetTitle(),1020));	
+		kicks_ra51015[i] = runningAverage(runningAverage(runningAverage(kicks[i],5,true),10,true),15,true);
+		kicks_ra51015[i]->SetTitle(Form("%s (RunningAvg %d)",kicks[i]->GetTitle(),51015));	
 	}
-	TH1D* kick8long_ra1020 = runningAverage(runningAverage(kick8long,10,true),20,true);
-	kick8long_ra1020->SetTitle(Form("%s (RunningAvg %d)",kick8long->GetTitle(),1020));	
+	TH1D* kick8long_ra51015 = runningAverage(runningAverage(runningAverage(kick8long,5,true),10,true),15,true);
+	kick8long_ra51015->SetTitle(Form("%s (RunningAvg %d)",kick8long->GetTitle(),51015));	
 
 
 	new TCanvas();
@@ -99,17 +99,17 @@ void test_smooth(TString input_file, TString output_file=""){
 	trace_smooth->SetLineWidth(2);
 	trace_rebin->SetLineWidth(2);
 	trace_lowpass->SetLineWidth(2);
-	trace_ra1020->SetLineWidth(2);
+	trace_ra51015->SetLineWidth(2);
 	trace->SetLineColor(kBlue);
 	trace_smooth->SetLineColor(kRed);
 	trace_rebin->SetLineColor(kOrange);
 	trace_lowpass->SetLineColor(kGreen+2);
-	trace_ra1020->SetLineColor(kViolet);
+	trace_ra51015->SetLineColor(kViolet);
 	trace->Draw("HIST");
 	trace_smooth->Draw("HIST SAME");
 	trace_rebin->Draw("HIST SAME");
 	trace_lowpass->Draw("HIST SAME");
-	trace_ra1020->Draw("HIST SAME");
+	trace_ra51015->Draw("HIST SAME");
 
 
 	for (int i=0; i<8; i++){
@@ -117,7 +117,7 @@ void test_smooth(TString input_file, TString output_file=""){
 		kicks_smooth[i]->GetYaxis()->SetRangeUser(-60,60);
 		kicks_rebin[i]->GetYaxis()->SetRangeUser(-60,60);
 		kicks_lowpass[i]->GetYaxis()->SetRangeUser(-60,60);
-		kicks_ra1020[i]->GetYaxis()->SetRangeUser(-60,60);
+		kicks_ra51015[i]->GetYaxis()->SetRangeUser(-60,60);
 	}
 
 	TCanvas* can_kicks = new TCanvas("can_kicks","",1600,800);
@@ -127,34 +127,34 @@ void test_smooth(TString input_file, TString output_file=""){
 	kicks_smooth[0]->SetLineWidth(2);
 	kicks_rebin[0]->SetLineWidth(2);
 	kicks_lowpass[0]->SetLineWidth(2);
-	kicks_ra1020[0]->SetLineWidth(2);
+	kicks_ra51015[0]->SetLineWidth(2);
 	kicks[0]->SetLineColor(kBlue);
 	kicks_smooth[0]->SetLineColor(kRed);
 	kicks_rebin[0]->SetLineColor(kOrange);
 	kicks_lowpass[0]->SetLineColor(kGreen+2);
-	kicks_ra1020[0]->SetLineColor(kViolet);
+	kicks_ra51015[0]->SetLineColor(kViolet);
 	kicks[0]->Draw("HIST");
 	kicks_smooth[0]->Draw("HIST SAME");
 	kicks_rebin[0]->Draw("HIST SAME");
 	kicks_lowpass[0]->Draw("HIST SAME");
-	kicks_ra1020[0]->Draw("HIST SAME");
+	kicks_ra51015[0]->Draw("HIST SAME");
 	gPad->BuildLegend(0.3,0.8,0.9,0.9);
 	can_kicks->cd(2);
 	kicks[7]->SetLineWidth(2);
 	kicks_smooth[7]->SetLineWidth(2);
 	kicks_rebin[7]->SetLineWidth(2);
 	kicks_lowpass[7]->SetLineWidth(2);
-	kicks_ra1020[7]->SetLineWidth(2);
+	kicks_ra51015[7]->SetLineWidth(2);
 	kicks[7]->SetLineColor(kBlue);
 	kicks_smooth[7]->SetLineColor(kRed);
 	kicks_rebin[7]->SetLineColor(kOrange);
 	kicks_lowpass[7]->SetLineColor(kGreen+2);
-	kicks_ra1020[7]->SetLineColor(kViolet);
+	kicks_ra51015[7]->SetLineColor(kViolet);
 	kicks[7]->Draw("HIST");
 	kicks_smooth[7]->Draw("HIST SAME");
 	kicks_rebin[7]->Draw("HIST SAME");
 	kicks_lowpass[7]->Draw("HIST SAME");
-	kicks_ra1020[7]->Draw("HIST SAME");
+	kicks_ra51015[7]->Draw("HIST SAME");
 	gPad->BuildLegend(0.3,0.8,0.9,0.9);
 
 
@@ -162,25 +162,25 @@ void test_smooth(TString input_file, TString output_file=""){
 	TH1D* kick1_zoom_smooth = (TH1D*)kicks_smooth[0]->Clone("kick1_zoom_smooth");
 	TH1D* kick1_zoom_rebin = (TH1D*)kicks_rebin[0]->Clone("kick1_zoom_rebin");
 	TH1D* kick1_zoom_lowpass = (TH1D*)kicks_lowpass[0]->Clone("kick1_zoom_lowpass");
-	TH1D* kick1_zoom_ra1020 = (TH1D*)kicks_ra1020[0]->Clone("kick1_zoom_ra1020");
+	TH1D* kick1_zoom_ra51015 = (TH1D*)kicks_ra51015[0]->Clone("kick1_zoom_ra51015");
 
 	TH1D* kick8_zoom = (TH1D*)kicks[7]->Clone("kick8_zoom");
 	TH1D* kick8_zoom_smooth = (TH1D*)kicks_smooth[7]->Clone("kick8_zoom_smooth");
 	TH1D* kick8_zoom_rebin = (TH1D*)kicks_rebin[7]->Clone("kick8_zoom_rebin");
 	TH1D* kick8_zoom_lowpass = (TH1D*)kicks_lowpass[7]->Clone("kick8_zoom_lowpass");
-	TH1D* kick8_zoom_ra1020 = (TH1D*)kicks_ra1020[7]->Clone("kick8_zoom_ra1020");
+	TH1D* kick8_zoom_ra51015 = (TH1D*)kicks_ra51015[7]->Clone("kick8_zoom_ra51015");
 
 	double trace_offset = 25;
 	for (int bn=1; bn<=kick1_zoom->GetNbinsX(); bn++){
 		kick1_zoom_smooth->SetBinContent(bn,kick1_zoom_smooth->GetBinContent(bn) - trace_offset);
 		kick1_zoom_rebin->SetBinContent(bn,kick1_zoom_rebin->GetBinContent(bn) - 2*trace_offset);
 		kick1_zoom_lowpass->SetBinContent(bn,kick1_zoom_lowpass->GetBinContent(bn) - 3*trace_offset);
-		kick1_zoom_ra1020->SetBinContent(bn,kick1_zoom_ra1020->GetBinContent(bn) - 4*trace_offset);
+		kick1_zoom_ra51015->SetBinContent(bn,kick1_zoom_ra51015->GetBinContent(bn) - 4*trace_offset);
 
 		kick8_zoom_smooth->SetBinContent(bn,kick8_zoom_smooth->GetBinContent(bn) - trace_offset);
 		kick8_zoom_rebin->SetBinContent(bn,kick8_zoom_rebin->GetBinContent(bn) - 2*trace_offset);
 		kick8_zoom_lowpass->SetBinContent(bn,kick8_zoom_lowpass->GetBinContent(bn) - 3*trace_offset);
-		kick8_zoom_ra1020->SetBinContent(bn,kick8_zoom_ra1020->GetBinContent(bn) - 4*trace_offset);
+		kick8_zoom_ra51015->SetBinContent(bn,kick8_zoom_ra51015->GetBinContent(bn) - 4*trace_offset);
 	}
 
 	double x_zoom_from = 0.0;
@@ -189,23 +189,23 @@ void test_smooth(TString input_file, TString output_file=""){
 	kick1_zoom_smooth->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick1_zoom_rebin->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick1_zoom_lowpass->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
-	kick1_zoom_ra1020->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
+	kick1_zoom_ra51015->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick8_zoom->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick8_zoom_smooth->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick8_zoom_rebin->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 	kick8_zoom_lowpass->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
-	kick8_zoom_ra1020->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
+	kick8_zoom_ra51015->GetXaxis()->SetRangeUser(x_zoom_from,x_zoom_to);
 
 	kick1_zoom->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick1_zoom_smooth->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick1_zoom_rebin->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick1_zoom_lowpass->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
-	kick1_zoom_ra1020->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
+	kick1_zoom_ra51015->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick8_zoom->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick8_zoom_smooth->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick8_zoom_rebin->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 	kick8_zoom_lowpass->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
-	kick8_zoom_ra1020->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
+	kick8_zoom_ra51015->GetYaxis()->SetRangeUser(-5*trace_offset,trace_offset);
 
 	TCanvas* can_kicks_zoom = new TCanvas("can_kicks_zoom","",1800,900);
 	can_kicks_zoom->Divide(2,1);
@@ -214,14 +214,14 @@ void test_smooth(TString input_file, TString output_file=""){
 	kick1_zoom_smooth->Draw("HIST SAME");
 	kick1_zoom_rebin->Draw("HIST SAME");
 	kick1_zoom_lowpass->Draw("HIST SAME");
-	kick1_zoom_ra1020->Draw("HIST SAME");
+	kick1_zoom_ra51015->Draw("HIST SAME");
 	gPad->BuildLegend(0.3,0.8,0.9,0.9);
 	can_kicks_zoom->cd(2);
 	kick8_zoom->Draw("HIST");
 	kick8_zoom_smooth->Draw("HIST SAME");
 	kick8_zoom_rebin->Draw("HIST SAME");
 	kick8_zoom_lowpass->Draw("HIST SAME");
-	kick8_zoom_ra1020->Draw("HIST SAME");
+	kick8_zoom_ra51015->Draw("HIST SAME");
 	gPad->BuildLegend(0.3,0.8,0.9,0.9);
 
 
@@ -254,7 +254,7 @@ void test_smooth(TString input_file, TString output_file=""){
 		kicks_smooth[i]->GetYaxis()->SetRangeUser(-60,60);
 		kicks_rebin[i]->GetYaxis()->SetRangeUser(-60,60);
 		kicks_lowpass[i]->GetYaxis()->SetRangeUser(-60,60);
-		kicks_ra1020[i]->GetYaxis()->SetRangeUser(-60,60);
+		kicks_ra51015[i]->GetYaxis()->SetRangeUser(-60,60);
 	}
 
 
@@ -270,9 +270,9 @@ void test_smooth(TString input_file, TString output_file=""){
 	TGraphErrors* g_off_lowpass = new TGraphErrors();
 	TGraphErrors* g_amp_lowpass = new TGraphErrors();
 	TGraphErrors* g_tau_lowpass = new TGraphErrors();
-	TGraphErrors* g_off_ra1020 = new TGraphErrors();
-	TGraphErrors* g_amp_ra1020 = new TGraphErrors();
-	TGraphErrors* g_tau_ra1020 = new TGraphErrors();
+	TGraphErrors* g_off_ra51015 = new TGraphErrors();
+	TGraphErrors* g_amp_ra51015 = new TGraphErrors();
+	TGraphErrors* g_tau_ra51015 = new TGraphErrors();
 	g_off->SetTitle("Offset;Kick;Offset [mV]");
 	g_amp->SetTitle("Amplitude;Kick;Amplitude [mV]");
 	g_tau->SetTitle("Lifetime;Kick;Lifetime [#mus]");
@@ -285,9 +285,9 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_off_lowpass->SetTitle("Offset (Lowpass);Kick;Offset [mV]");
 	g_amp_lowpass->SetTitle("Amplitude (Lowpass);Kick;Amplitude [mV]");
 	g_tau_lowpass->SetTitle("Lifetime (Lowpass);Kick;Lifetime [#mus]");
-	g_off_ra1020->SetTitle("Offset (RA 1020);Kick;Offset [mV]");
-	g_amp_ra1020->SetTitle("Amplitude (RA 1020);Kick;Amplitude [mV]");
-	g_tau_ra1020->SetTitle("Lifetime (RA 1020);Kick;Lifetime [#mus]");
+	g_off_ra51015->SetTitle("Offset (RA 51015);Kick;Offset [mV]");
+	g_amp_ra51015->SetTitle("Amplitude (RA 51015);Kick;Amplitude [mV]");
+	g_tau_ra51015->SetTitle("Lifetime (RA 51015);Kick;Lifetime [#mus]");
 	g_off->SetMarkerStyle(20);
 	g_amp->SetMarkerStyle(20);
 	g_tau->SetMarkerStyle(20);
@@ -300,9 +300,9 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_off_lowpass->SetMarkerStyle(20);
 	g_amp_lowpass->SetMarkerStyle(20);
 	g_tau_lowpass->SetMarkerStyle(20);
-	g_off_ra1020->SetMarkerStyle(20);
-	g_amp_ra1020->SetMarkerStyle(20);
-	g_tau_ra1020->SetMarkerStyle(20);
+	g_off_ra51015->SetMarkerStyle(20);
+	g_amp_ra51015->SetMarkerStyle(20);
+	g_tau_ra51015->SetMarkerStyle(20);
 	g_off->SetMarkerColor(kBlue);
 	g_amp->SetMarkerColor(kBlue);
 	g_tau->SetMarkerColor(kBlue);
@@ -315,9 +315,9 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_off_lowpass->SetMarkerColor(kGreen+2);
 	g_amp_lowpass->SetMarkerColor(kGreen+2);
 	g_tau_lowpass->SetMarkerColor(kGreen+2);
-	g_off_ra1020->SetMarkerColor(kViolet);
-	g_amp_ra1020->SetMarkerColor(kViolet);
-	g_tau_ra1020->SetMarkerColor(kViolet);
+	g_off_ra51015->SetMarkerColor(kViolet);
+	g_amp_ra51015->SetMarkerColor(kViolet);
+	g_tau_ra51015->SetMarkerColor(kViolet);
 
 
 	TF1* f_exp = new TF1("f_exp","[2]-[0]*exp(-x/[1])",0.02,0.7);
@@ -359,26 +359,26 @@ void test_smooth(TString input_file, TString output_file=""){
 		g_tau_lowpass->SetPointError(g_tau_lowpass->GetN()-1,0,1000*fit_kick_lowpass->ParError(1));
 
 		f_exp->SetParameters(10,60,0);
-		TFitResultPtr fit_kick_ra1020 = kicks_ra1020[i]->Fit(f_exp,"NS","",0.02,0.7);
-		g_off_ra1020->SetPoint(g_off_ra1020->GetN(),i+1,fit_kick_ra1020->Parameter(2));
-		g_off_ra1020->SetPointError(g_off_ra1020->GetN()-1,0,fit_kick_ra1020->ParError(2));
-		g_amp_ra1020->SetPoint(g_amp_ra1020->GetN(),i+1,fit_kick_ra1020->Parameter(0));
-		g_amp_ra1020->SetPointError(g_amp_ra1020->GetN()-1,0,fit_kick_ra1020->ParError(0));
-		g_tau_ra1020->SetPoint(g_tau_ra1020->GetN(),i+1,1000*fit_kick_ra1020->Parameter(1));
-		g_tau_ra1020->SetPointError(g_tau_ra1020->GetN()-1,0,1000*fit_kick_ra1020->ParError(1));
+		TFitResultPtr fit_kick_ra51015 = kicks_ra51015[i]->Fit(f_exp,"NS","",0.02,0.7);
+		g_off_ra51015->SetPoint(g_off_ra51015->GetN(),i+1,fit_kick_ra51015->Parameter(2));
+		g_off_ra51015->SetPointError(g_off_ra51015->GetN()-1,0,fit_kick_ra51015->ParError(2));
+		g_amp_ra51015->SetPoint(g_amp_ra51015->GetN(),i+1,fit_kick_ra51015->Parameter(0));
+		g_amp_ra51015->SetPointError(g_amp_ra51015->GetN()-1,0,fit_kick_ra51015->ParError(0));
+		g_tau_ra51015->SetPoint(g_tau_ra51015->GetN(),i+1,1000*fit_kick_ra51015->Parameter(1));
+		g_tau_ra51015->SetPointError(g_tau_ra51015->GetN()-1,0,1000*fit_kick_ra51015->ParError(1));
 
 		//kicks[i]->Add(f_exp,-1);
 		//kicks_smooth[i]->Add(f_exp,-1);
 		//kicks_rebin[i]->Add(f_exp,-1);
 		//kicks_lowpass[i]->Add(f_exp,-1);
-		//kicks_ra1020[i]->Add(f_exp,-1);
+		//kicks_ra51015[i]->Add(f_exp,-1);
 	}
 
 	TH1D** h1_fft_kicks = new TH1D* [8];
 	TH1D** h1_fft_kicks_smooth = new TH1D* [8];
 	TH1D** h1_fft_kicks_rebin = new TH1D* [8];
 	TH1D** h1_fft_kicks_lowpass = new TH1D* [8];
-	TH1D** h1_fft_kicks_ra1020 = new TH1D* [8];
+	TH1D** h1_fft_kicks_ra51015 = new TH1D* [8];
 	double fft_xmin = 0.1; //ms from kick
 	double fft_xmax = 8.0; 
 	double dt = kicks[0]->GetBinWidth(1);
@@ -435,17 +435,17 @@ void test_smooth(TString input_file, TString output_file=""){
 		h1_fft_kicks_lowpass[i]->GetYaxis()->SetRangeUser(0,0.01);
 	}
 	for (int i=0; i<8; i++){
-		TH1 *fft_histogram_ra1020 = 0;
+		TH1 *fft_histogram_ra51015 = 0;
 		TVirtualFFT::SetTransform(0);
-		TH1D* fftResidualInit_ra1020 = SetupFFT(kicks_ra1020[i], fft_xmin, fft_xmax);
-		fft_histogram_ra1020 = fftResidualInit_ra1020->FFT(fft_histogram_ra1020,"MAG");
-		h1_fft_kicks_ra1020[i] = RescaleAxis(fft_histogram_ra1020, 1./(fft_xmax - fft_xmin));
-		h1_fft_kicks_ra1020[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
-		h1_fft_kicks_ra1020[i]->SetStats(0);
-		h1_fft_kicks_ra1020[i]->SetName(Form("residualFFT_%d",i));
-		h1_fft_kicks_ra1020[i]->Scale(1.0 / h1_fft_kicks_ra1020[i]->Integral());
-		h1_fft_kicks_ra1020[i]->GetXaxis()->SetRangeUser(1./(fft_xmax-fft_xmin),0.5/dt);
-		h1_fft_kicks_ra1020[i]->GetYaxis()->SetRangeUser(0,0.01);
+		TH1D* fftResidualInit_ra51015 = SetupFFT(kicks_ra51015[i], fft_xmin, fft_xmax);
+		fft_histogram_ra51015 = fftResidualInit_ra51015->FFT(fft_histogram_ra51015,"MAG");
+		h1_fft_kicks_ra51015[i] = RescaleAxis(fft_histogram_ra51015, 1./(fft_xmax - fft_xmin));
+		h1_fft_kicks_ra51015[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
+		h1_fft_kicks_ra51015[i]->SetStats(0);
+		h1_fft_kicks_ra51015[i]->SetName(Form("residualFFT_%d",i));
+		h1_fft_kicks_ra51015[i]->Scale(1.0 / h1_fft_kicks_ra51015[i]->Integral());
+		h1_fft_kicks_ra51015[i]->GetXaxis()->SetRangeUser(1./(fft_xmax-fft_xmin),0.5/dt);
+		h1_fft_kicks_ra51015[i]->GetYaxis()->SetRangeUser(0,0.01);
 	}
 
 	TCanvas* can = new TCanvas("can","",1400,800);
@@ -459,7 +459,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	can->cd(4);
 	kicks_lowpass[0]->Draw("HIST");
 	can->cd(5);
-	kicks_ra1020[0]->Draw("HIST");
+	kicks_ra51015[0]->Draw("HIST");
 	can->cd(6);
 	h1_fft_kicks[0]->Draw("HIST");
 	gPad->SetLogx();
@@ -473,7 +473,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	h1_fft_kicks_lowpass[0]->Draw("HIST");
 	gPad->SetLogx();
 	can->cd(10);
-	h1_fft_kicks_ra1020[0]->Draw("HIST");
+	h1_fft_kicks_ra51015[0]->Draw("HIST");
 	gPad->SetLogx();
 
 
@@ -488,7 +488,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	can8->cd(4);
 	kicks_lowpass[7]->Draw("HIST");
 	can8->cd(5);
-	kicks_ra1020[7]->Draw("HIST");
+	kicks_ra51015[7]->Draw("HIST");
 	can8->cd(6);
 	h1_fft_kicks[7]->Draw("HIST");
 	gPad->SetLogx();
@@ -502,7 +502,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	h1_fft_kicks_lowpass[7]->Draw("HIST");
 	gPad->SetLogx();
 	can8->cd(10);
-	h1_fft_kicks_ra1020[7]->Draw("HIST");
+	h1_fft_kicks_ra51015[7]->Draw("HIST");
 	gPad->SetLogx();
 
 	TCanvas* can_fits = new TCanvas("can_fits","",1500,500);
@@ -513,7 +513,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_off_smooth->Draw("PZ");
 	g_off_rebin->Draw("PZ");
 	g_off_lowpass->Draw("PZ");
-	g_off_ra1020->Draw("PZ");
+	g_off_ra51015->Draw("PZ");
 	gPad->SetGridy();
 	gPad->BuildLegend(0.5,0.7,0.9,0.9);
 	can_fits->cd(2);
@@ -522,7 +522,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_amp_smooth->Draw("PZ");
 	g_amp_rebin->Draw("PZ");
 	g_amp_lowpass->Draw("PZ");
-	g_amp_ra1020->Draw("PZ");
+	g_amp_ra51015->Draw("PZ");
 	gPad->SetGridy();
 	gPad->BuildLegend(0.5,0.7,0.9,0.9);
 	can_fits->cd(3);
@@ -531,7 +531,7 @@ void test_smooth(TString input_file, TString output_file=""){
 	g_tau_smooth->Draw("PZ");
 	g_tau_rebin->Draw("PZ");
 	g_tau_lowpass->Draw("PZ");
-	g_tau_ra1020->Draw("PZ");
+	g_tau_ra51015->Draw("PZ");
 	gPad->SetGridy();
 	gPad->BuildLegend(0.5,0.7,0.9,0.9);
 

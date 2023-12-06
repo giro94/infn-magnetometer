@@ -62,6 +62,24 @@ TH1D* RescaleAxis(TH1* h_in, double scale, double offset=0) {
     return h_out;
 }
 
+TH1D* doFFT(TH1D* h_in, double xmin, double xmax, TString hname=""){
+    double dt = h_in->GetBinWidth(1);
+    TH1 *fft_histogram = 0;
+    TVirtualFFT::SetTransform(0);
+    TH1D* h_in_fftInit = SetupFFT(h_in, xmin, xmax);
+    fft_histogram = h_in_fftInit->FFT(fft_histogram,"MAG");
+    TH1D* h_out = RescaleAxis(fft_histogram, 1./(xmax - xmin));
+    h_out->SetTitle(Form("%s FFT;Frequency (kHz);Magnitude [Arb Units]",h_in->GetTitle()));
+    h_out->SetStats(0);
+    h_out->SetName(hname=="" ? Form("%s_FFT",h_in->GetName()) : hname);
+    h_out->Scale(1.0 / h_out->Integral());
+    h_out->GetXaxis()->SetRangeUser(1./(xmax-xmin),0.5/dt);
+    delete fft_histogram;
+    delete h_in_fftInit;
+    return h_out;
+}
+
+
 TH1D* lowpass(TH1D* hist, double freq_cutoff, double xmin=-1, double xmax=-1){
 
     if (xmin == -1) xmin = hist->GetXaxis()->GetXmin();

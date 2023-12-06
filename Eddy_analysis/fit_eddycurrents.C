@@ -93,29 +93,11 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 	double fft_xmax = 8.0; 
 	double dt = kicks[0]->GetBinWidth(1);
 	for (int i=0; i<8; i++){
-		TH1 *fft_histogram = 0;
-		TVirtualFFT::SetTransform(0);
-		TH1D* fftResidualInit = SetupFFT(kicks[i], fft_xmin, fft_xmax);
-		fft_histogram = fftResidualInit->FFT(fft_histogram,"MAG");
-		h1_fft_kicks[i] = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
-		h1_fft_kicks[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
-		h1_fft_kicks[i]->SetStats(0);
-		h1_fft_kicks[i]->SetName(Form("residualFFT_%d",i));
-		h1_fft_kicks[i]->Scale(1.0 / h1_fft_kicks[i]->Integral());
-		h1_fft_kicks[i]->GetXaxis()->SetRangeUser(1./(fft_xmax-fft_xmin),0.5/dt);
+		h1_fft_kicks[i] = doFFT(kicks[i],fft_xmin,fft_xmax);
 		h1_fft_kicks[i]->GetYaxis()->SetRangeUser(0,0.01);
 	}
 	for (int i=0; i<8; i++){
-		TH1 *fft_histogram_ra = 0;
-		TVirtualFFT::SetTransform(0);
-		TH1D* fftResidualInit_ra = SetupFFT(kicks_ra[i], fft_xmin, fft_xmax);
-		fft_histogram_ra = fftResidualInit_ra->FFT(fft_histogram_ra,"MAG");
-		h1_fft_kicks_ra[i] = RescaleAxis(fft_histogram_ra, 1./(fft_xmax - fft_xmin));
-		h1_fft_kicks_ra[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
-		h1_fft_kicks_ra[i]->SetStats(0);
-		h1_fft_kicks_ra[i]->SetName(Form("residualFFT_%d",i));
-		h1_fft_kicks_ra[i]->Scale(1.0 / h1_fft_kicks_ra[i]->Integral());
-		h1_fft_kicks_ra[i]->GetXaxis()->SetRangeUser(1./(fft_xmax-fft_xmin),0.5/dt);
+		h1_fft_kicks_ra[i] = doFFT(kicks_ra[i],fft_xmin,fft_xmax);
 		h1_fft_kicks_ra[i]->GetYaxis()->SetRangeUser(0,0.01);
 	}
 
@@ -161,9 +143,13 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 
 	TH1D** kicks_fit_exp = new TH1D* [8];
 	TH1D** kicks_fit_exp_res = new TH1D* [8];
+	TH1D** kicks_fit_exp17 = new TH1D* [8];
+	TH1D** kicks_fit_exp17_res = new TH1D* [8];
 	for (int i=0; i<8; i++){
 		kicks_fit_exp[i] = (TH1D*)kicks_ra[i]->Clone(Form("kick%d_fit_exp",i+1));
 		kicks_fit_exp_res[i] = (TH1D*)kicks_ra[i]->Clone(Form("kick%d_fit_exp_res",i+1));
+		kicks_fit_exp17[i] = (TH1D*)kicks_ra[i]->Clone(Form("kick%d_fit_exp17",i+1));
+		kicks_fit_exp17_res[i] = (TH1D*)kicks_ra[i]->Clone(Form("kick%d_fit_exp17_res",i+1));
 		
 		kicks_fit_exp[i]->SetLineColor(kBlue);
 		kicks_fit_exp_res[i]->SetLineColor(kBlue);
@@ -173,6 +159,15 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 		kicks_fit_exp_res[i]->GetXaxis()->SetRangeUser(0,0.8);
 		kicks_fit_exp[i]->GetYaxis()->SetRangeUser(-20,20);
 		kicks_fit_exp_res[i]->GetYaxis()->SetRangeUser(-20,20);
+
+		kicks_fit_exp17[i]->SetLineColor(kBlue);
+		kicks_fit_exp17_res[i]->SetLineColor(kBlue);
+		kicks_fit_exp17[i]->SetLineWidth(1);
+		kicks_fit_exp17_res[i]->SetLineWidth(1);
+		kicks_fit_exp17[i]->GetXaxis()->SetRangeUser(0,0.8);
+		kicks_fit_exp17_res[i]->GetXaxis()->SetRangeUser(0,0.8);
+		kicks_fit_exp17[i]->GetYaxis()->SetRangeUser(-20,20);
+		kicks_fit_exp17_res[i]->GetYaxis()->SetRangeUser(-20,20);
 	}
 
 
@@ -181,6 +176,10 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 	TCanvas* can_fits1_res = new TCanvas("can_fits1_res","",800,800);
 	can_fits1_res->Divide(2,4);
 
+	TCanvas* can_fits2 = new TCanvas("can_fits2","",800,800);
+	can_fits2->Divide(2,4);
+	TCanvas* can_fits2_res = new TCanvas("can_fits2_res","",800,800);
+	can_fits2_res->Divide(2,4);
 
 	TGraphErrors* g_off = new TGraphErrors();
 	TGraphErrors* g_amp = new TGraphErrors();
@@ -198,15 +197,19 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 	TF1* f_exp = new TF1("f_exp","[2]-[0]*exp(-x/[1])",0.02,0.7);
 	f_exp->SetParameters(10,0.07,0);
 
-	TF1* f_exp_17 = new TF1("f_exp_17","[2]-[0]*exp(-x/[1])*(",0.02,0.7);
-	f_exp_17->SetParameters(10,0.07,0);
+	TF1* f_exp_17 = new TF1("f_exp_17","[2]-[0]*exp(-x/[1])+[3]*exp(-x/[4])*sin([5]*x+[6])",0.02,0.7);
+	f_exp_17->SetParameters(10,0.07,0,2,0.3,95,0);
+	f_exp_17->SetParLimits(3,0.5,5);
+	f_exp_17->SetParLimits(4,0.1,0.5);
+	f_exp_17->SetParLimits(5,70,120);
 
 	for (int i=0; i<8; i++){
+		cout<<"Fitting kick "<<i+1<<"\n";
+		
 		can_fits1->cd(i+1);
 		kicks_fit_exp[i]->Draw();
 		kicks_fit_exp[i]->GetYaxis()->SetRangeUser(-20,20);
 
-		cout<<"Fitting kick "<<i+1<<"\n";
 		f_exp->SetParameters(10,0.07,0);
 		f_exp->FixParameter(2,0.0);
 		TFitResultPtr fit_kick = kicks_fit_exp[i]->Fit(f_exp,"S","",0.02,0.7);
@@ -221,22 +224,75 @@ void fit_eddycurrents(TString input_file, TString output_file=""){
 		can_fits1_res->cd(i+1);
 		kicks_fit_exp_res[i]->Draw();
 		kicks_fit_exp_res[i]->GetYaxis()->SetRangeUser(-20,20);
+		
+		can_fits2->cd(i+1);
+		kicks_fit_exp17[i]->Draw();
+		kicks_fit_exp17[i]->GetYaxis()->SetRangeUser(-20,20);
+
+		f_exp_17->SetParameters(fit_kick->Parameter(0),fit_kick->Parameter(1),fit_kick->Parameter(2));
+		TFitResultPtr fit_kick17 = kicks_fit_exp17[i]->Fit(f_exp_17,"S","",0.02,0.7);
+		g_off->SetPoint(g_off->GetN(),i+1,fit_kick17->Parameter(2));
+		g_off->SetPointError(g_off->GetN()-1,0,fit_kick17->ParError(2));
+		g_amp->SetPoint(g_amp->GetN(),i+1,fit_kick17->Parameter(0));
+		g_amp->SetPointError(g_amp->GetN()-1,0,fit_kick17->ParError(0));
+		g_tau->SetPoint(g_tau->GetN(),i+1,1000*fit_kick17->Parameter(1));
+		g_tau->SetPointError(g_tau->GetN()-1,0,1000*fit_kick17->ParError(1));
+
+		kicks_fit_exp17_res[i]->Add(f_exp_17,-1);
+		can_fits2_res->cd(i+1);
+		kicks_fit_exp17_res[i]->Draw();
+		kicks_fit_exp17_res[i]->GetYaxis()->SetRangeUser(-20,20);
 	}
 
 
-	TCanvas* can_fit_res1 = new TCanvas("can_fit_res1","",1500,500);
-	can_fit_res1->Divide(3,1);
-	can_fit_res1->cd(1);
+	TCanvas* can_fit_values = new TCanvas("can_fit_values","",1500,500);
+	can_fit_values->Divide(3,1);
+	can_fit_values->cd(1);
 	g_off->GetYaxis()->SetRangeUser(-1,1);
 	g_off->Draw("APZ");
 	gPad->SetGridy();
-	can_fit_res1->cd(2);
+	can_fit_values->cd(2);
 	g_amp->GetYaxis()->SetRangeUser(0,25);
 	g_amp->Draw("APZ");
 	gPad->SetGridy();
-	can_fit_res1->cd(3);
+	can_fit_values->cd(3);
 	g_tau->GetYaxis()->SetRangeUser(20,100);
 	g_tau->Draw("APZ");
 	gPad->SetGridy();
 
+
+	TCanvas* can_fit1_res_fft = new TCanvas("can_fit1_res_fft","",800,800);
+	can_fit1_res_fft->Divide(2,2);
+	can_fit1_res_fft->cd(1);
+	kicks_fit_exp[0]->Draw();
+	can_fit1_res_fft->cd(2);
+	TH1D* fft_kicks_fit_exp = doFFT(kicks_fit_exp[0],0.1,0.7);
+	fft_kicks_fit_exp->GetYaxis()->SetRangeUser(0,0.03);
+	fft_kicks_fit_exp->Draw("HIST");
+	gPad->SetLogx();
+	can_fit1_res_fft->cd(3);
+	kicks_fit_exp_res[0]->Draw();
+	can_fit1_res_fft->cd(4);
+	TH1D* fft_kicks_fit_exp_res = doFFT(kicks_fit_exp_res[0],0.1,0.7);
+	fft_kicks_fit_exp_res->GetYaxis()->SetRangeUser(0,0.03);
+	fft_kicks_fit_exp_res->Draw("HIST");
+	gPad->SetLogx();
+
+
+	TCanvas* can_fit2_res_fft = new TCanvas("can_fit2_res_fft","",800,800);
+	can_fit2_res_fft->Divide(2,2);
+	can_fit2_res_fft->cd(1);
+	kicks_fit_exp17[0]->Draw();
+	can_fit2_res_fft->cd(2);
+	TH1D* fft_kicks_fit_exp17 = doFFT(kicks_fit_exp17[0],0.1,0.7);
+	fft_kicks_fit_exp17->GetYaxis()->SetRangeUser(0,0.03);
+	fft_kicks_fit_exp17->Draw("HIST");
+	gPad->SetLogx();
+	can_fit2_res_fft->cd(3);
+	kicks_fit_exp17_res[0]->Draw();
+	can_fit2_res_fft->cd(4);
+	TH1D* fft_kicks_fit_exp17_res = doFFT(kicks_fit_exp17_res[0],0.1,0.7);
+	fft_kicks_fit_exp17_res->GetYaxis()->SetRangeUser(0,0.03);
+	fft_kicks_fit_exp17_res->Draw("HIST");
+	gPad->SetLogx();
 }
