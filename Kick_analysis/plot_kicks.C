@@ -13,7 +13,9 @@ void plot_kicks(TString folder, TString output_file=""){
 
 
 	TGraph** g_kicks = new TGraph* [Nfiles];
-
+	TGraph** g_kicks_aligned = new TGraph* [Nfiles];
+	TGraph** g_kicks_normalized = new TGraph* [Nfiles];
+	TGraph** g_kicks_diff = new TGraph* [Nfiles];
 
 	double baseline_fit_start = 0.0;
 	double baseline_fit_end = 1.0;
@@ -28,7 +30,9 @@ void plot_kicks(TString folder, TString output_file=""){
 		g_peaks[i] = new TGraphErrors();
 	}
 	TGraphErrors* g_peaks_time = new TGraphErrors();
-
+	TGraphErrors* g_A_time = new TGraphErrors();
+	TGraphErrors* g_B_time = new TGraphErrors();
+	TGraphErrors* g_power_time = new TGraphErrors();
 
 	for (int fi=0; fi<Nfiles; fi++){
 		
@@ -74,7 +78,33 @@ void plot_kicks(TString folder, TString output_file=""){
 		double peak_err = fit_peak->ParError(0);
 		double amplitude = abs(peak-baseline);
 		double amplitude_err = sqrt(peak_err*peak_err+baseline_err*baseline_err);
+		double peak_time = fit_peak->Parameter(1);
 
+		g_kicks_aligned[fi] = new TGraph();
+		for (int j=0; j<N; j++){
+			double x = g_kicks[fi]->GetPointX(j) - peak_time;
+			double y = g_kicks[fi]->GetPointY(j) - baseline;
+			g_kicks_aligned[fi]->SetPoint(j,x,y);
+		}
+
+		g_kicks_normalized[fi] = new TGraph();
+		for (int j=0; j<N; j++){
+			double x = g_kicks[fi]->GetPointX(j) - peak_time;
+			double y = (g_kicks[fi]->GetPointY(j) - baseline) / amplitude; 
+			g_kicks_normalized[fi]->SetPoint(j,x,y);
+		}
+
+		g_kicks_diff[fi] = new TGraph();
+		for (int j=0; j<N; j++){
+			double x = g_kicks_normalized[fi]->GetPointX(j);
+			double y = g_kicks_normalized[fi]->GetPointY(j);
+			double yref = 0;
+			if (x >= g_kicks_normalized[0]->GetPointX(0) && x <= g_kicks_normalized[0]->GetPointX(N-1)){
+				yref = g_kicks_normalized[0]->Eval(x); 
+			}
+
+			g_kicks_diff[fi]->SetPoint(j,x,y-yref);
+		}
 
 		int repetition_idx = (fi-fi%8)/8;
 		int kick_idx = fi%8;
@@ -84,17 +114,68 @@ void plot_kicks(TString folder, TString output_file=""){
 		g_peaks_time->SetPoint(fi,datetime.Convert(),amplitude);
 		g_peaks_time->SetPointError(fi,0,amplitude_err);
 
+
+		double Aavg = 0;
+		double Bavg = 0;
+		for (int i=0; i<trace_A.size(); i++){
+			Aavg += trace_A[i];
+			Bavg += trace_B[i];
+		}
+		Aavg /= trace_A.size();
+		Bavg /= trace_B.size();
+
+		double totalPower = sqrt(Aavg*Aavg+Bavg*Bavg);
+
+		g_A_time->SetPoint(fi,datetime.Convert(),Aavg);
+		g_B_time->SetPoint(fi,datetime.Convert(),Bavg);
+		g_power_time->SetPoint(fi,datetime.Convert(),totalPower);
+
     }
 
-    new TCanvas();
+
+    TCanvas* can_kicks = new TCanvas("can_kicks","",1800,600);
+    can_kicks->Divide(2,1);
+    can_kicks->cd(1);
     for (int i=0; i<Nfiles; i++){
+    	g_kicks[i]->SetTitle("All kicks");
     	g_kicks[i]->GetXaxis()->SetTitle("Time [#mus]");
        	g_kicks[i]->GetYaxis()->SetTitle("Trace [V]");
-    	g_kicks[i]->GetXaxis()->SetRangeUser(0,5);
+    	g_kicks[i]->GetXaxis()->SetRangeUser(0,6);
     	g_kicks[i]->Draw(i==0?"APL":"PL");
     }
+    can_kicks->cd(2);
+    for (int i=0; i<Nfiles; i++){
+    	g_kicks_aligned[i]->SetTitle("Kicks aligned at t=0");
+    	g_kicks_aligned[i]->GetXaxis()->SetTitle("Time [#mus]");
+       	g_kicks_aligned[i]->GetYaxis()->SetTitle("Trace [V]");
+    	g_kicks_aligned[i]->GetXaxis()->SetRangeUser(-1,5);
+    	g_kicks_aligned[i]->Draw(i==0?"APL":"PL");
+    }
 
-    TCanvas* can_amplitudes = new TCanvas("can_amplitudes","",1800,800);
+    TCanvas* can_kicks_norm = new TCanvas("can_kicks_norm","",1800,600);
+    can_kicks_norm->Divide(2,1);
+    can_kicks_norm->cd(1);
+    for (int i=0; i<Nfiles; i++){
+    	g_kicks_normalized[i]->SetTitle("Normalized kicks");
+    	g_kicks_normalized[i]->GetXaxis()->SetTitle("Time [#mus]");
+       	g_kicks_normalized[i]->GetYaxis()->SetTitle("Trace [arb. u.]");
+    	g_kicks_normalized[i]->GetXaxis()->SetRangeUser(-0.5,3.0);
+    	g_kicks_normalized[i]->Draw(i==0?"APL":"PL");
+    }
+	gPad->SetGridy();
+    can_kicks_norm->cd(2);
+    for (int i=0; i<Nfiles; i++){
+    	g_kicks_diff[i]->SetTitle("Normalized difference from first kick");
+    	g_kicks_diff[i]->GetXaxis()->SetTitle("Time [#mus]");
+       	g_kicks_diff[i]->GetYaxis()->SetTitle("Difference");
+    	g_kicks_diff[i]->GetXaxis()->SetRangeUser(-0.5,3.0);
+    	g_kicks_diff[i]->GetYaxis()->SetRangeUser(-0.05,0.05);
+    	g_kicks_diff[i]->Draw(i==0?"APL":"PL");
+    }
+	gPad->SetGridy();
+
+
+    TCanvas* can_amplitudes = new TCanvas("can_amplitudes","",1800,600);
     can_amplitudes->Divide(2,1);
     can_amplitudes->cd(1);
 	g_peaks_time->SetMarkerStyle(20);
@@ -122,8 +203,32 @@ void plot_kicks(TString folder, TString output_file=""){
 
 
 
-
-
-
+	new TCanvas();
+	g_A_time->SetTitle("Channel A");
+	g_B_time->SetTitle("Channel B");
+	g_power_time->SetTitle("#sqrt{A^{2}+B^{2}}");
+	g_A_time->SetLineWidth(2);
+	g_B_time->SetLineWidth(2);
+	g_power_time->SetLineWidth(2);
+	g_A_time->SetLineWidth(2);
+	g_B_time->SetLineWidth(2);
+	g_power_time->SetLineWidth(2);
+	g_A_time->SetLineColor(1);
+	g_B_time->SetLineColor(2);
+	g_power_time->SetLineColor(3);
+	g_A_time->GetXaxis()->SetTimeFormat("%H:%M");
+	g_A_time->GetXaxis()->SetTimeOffset(0);
+	g_A_time->GetXaxis()->SetTimeDisplay(1);
+	g_B_time->GetXaxis()->SetTimeFormat("%H:%M");
+	g_B_time->GetXaxis()->SetTimeOffset(0);
+	g_B_time->GetXaxis()->SetTimeDisplay(1);
+	g_power_time->GetXaxis()->SetTimeFormat("%H:%M");
+	g_power_time->GetXaxis()->SetTimeOffset(0);
+	g_power_time->GetXaxis()->SetTimeDisplay(1);
+	g_A_time->GetYaxis()->SetRangeUser(-0.03,0.03);
+	g_A_time->Draw("APL");
+	g_B_time->Draw("PL");
+	g_power_time->Draw("PL");
+	gPad->BuildLegend();
 
 }
