@@ -1,4 +1,4 @@
-#include "analysis_tools.C"
+#include "../analysis_tools.C"
 
 void fit_eddycurrents(TString input_file, TString output_file=""){
 

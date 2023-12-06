@@ -1,4 +1,4 @@
-#include "analysis_tools.C"
+#include "../analysis_tools.C"
 
 
 void test_smooth(TString input_file, TString output_file=""){

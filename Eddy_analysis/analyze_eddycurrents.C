@@ -1,114 +1,5 @@
-#include <dirent.h>
+#include "../analysis_tools.C"
 
-
-vector<TString> getListOfFiles(TString folder){
-	vector<TString> files;
-
-	cout<<"Reading folder "<<folder<<"\n";
-	DIR* dir = opendir(folder.Data());
-	if (!dir) {
-		cout<<"Cannot open folder "<<folder<<"!\n";
-		throw std::runtime_error{"Cannot open folder"};
-	}
-
-	struct dirent* dirfile;
-	while((dirfile = readdir(dir)) != NULL){
-		if (dirfile->d_type != DT_REG) continue;
-		TString fname = dirfile->d_name;
-		if (!fname.EndsWith("csv")) continue;
-		files.push_back(fname);
-	}
-	sort(files.begin(),files.end());
-
-	return files;
-}
-
-TDatime getFileTime(TString filename){
-	filename.ReplaceAll("SD_","");
-	filename.ReplaceAll(".csv","");
-	std::tm tm{};
-	std::istringstream iss(filename.Data());
-	iss >> std::get_time(&tm, "%m_%d_%Y %H_%M_%S");
-	if (iss.fail()) {
-		cout<<filename<<"\n";
-		cout<<"Can't extract time from file name "<<filename<<"!\n";
-	    throw std::runtime_error{"failed to parse time string"};
-	}
-	return TDatime(tm.tm_year+1900,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
-}
-
-vector<int> getFileLengthAndHeaders(TString filepath){
-	ifstream file;
-	file.open(filepath.Data());
-	if (!file.is_open()){
-		cout<<"cannot open "<<filepath<<"\n";
-		throw std::runtime_error{"Cannot open file"};
-	}
-	char buff[256];
-	file.getline(buff,256); //Header, names
-	stringstream ss(buff);
-	int Nvars = 0;
-	int Apos = -1;
-	int Bpos = -1;
-	int Cpos = -1;
-	int avgCpos = -1;
-	int Nlines = 0;
-	
-	//Read headers
-	while(ss.good()){
-		string substr;
-		getline(ss,substr,',');
-		if (substr.find("average(C)") != string::npos){
-			avgCpos = Nvars;
-		} else if (substr.find("A") != string::npos){
-			Apos = Nvars;
-		} else if (substr.find("B") != string::npos){
-			Bpos = Nvars;
-		} else if (substr.find("C") != string::npos){
-			Cpos = Nvars;
-		}
-		Nvars++;
-	}
-	file.getline(buff,256);
-	file.getline(buff,256);
-	
-	//Count lines
-	while (!file.eof()){
-		file.getline(buff,256);
-		if (file.eof()) break;
-		Nlines++;
-	}
-
-	file.close();
-	return {Nlines,Nvars,Apos,Bpos,Cpos,avgCpos};
-}
-
-vector<vector<double>> readFileTraces(TString filepath, int Nvars){
-	ifstream file;
-	file.open(filepath.Data());
-	if (!file.is_open()){
-		cout<<"cannot open "<<filepath<<"\n";
-		throw std::runtime_error{"Cannot open file"};
-	}
-	char buff[256];
-	file.getline(buff,256); //Header, names
-	file.getline(buff,256); //Header, units
-	file.getline(buff,256); //Header, blank row
-	char comma;
-	vector<vector<double>> vectors;
-	vectors.resize(Nvars);
-	while (!file.eof()){
-		double var=0;
-		for (int i=0; i<Nvars; i++){
-			if (i>0) file>>comma;
-			file>>var;
-			if (file.eof()) break;
-			vectors[i].push_back(var);
-		}
-	}
-	file.close();
-	return vectors;
-}
 
 void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -1){
 
@@ -130,9 +21,10 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	int Nfiles = files.size();
 
 	//Reading first file to get trace info
-	vector<int> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
-	int Nlines = headers[0];
-	int Nvars = headers[1];
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
 
 	float tstart = 0.;
 	float tend = 100.;
@@ -228,12 +120,12 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 		//Reading file
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
-		vector<double> trace_time = traces[0];
-		vector<double> trace_A = traces[headers[2]];
-		vector<double> trace_B = traces[headers[3]];
-		vector<double> trace_C = traces[headers[4]];
-		vector<double> trace_avgC = traces[headers[5]];
-		
+		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> trace_A = traces[map_varnames["Channel A"]];
+		vector<double> trace_B = traces[map_varnames["Channel B"]];
+		vector<double> trace_C = traces[map_varnames["Channel C"]];
+		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
+	
 		if (trace_time.size() != Nlines){
 			cout<<"Warning! File "<<fname<<" has "<<trace_time.size()<<" lines instead of the expected "<<Nlines<<"!\n";
 		}

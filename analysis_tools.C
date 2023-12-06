@@ -1,3 +1,114 @@
+#include <dirent.h>
+
+vector<TString> getListOfFiles(TString folder){
+    vector<TString> files;
+
+    cout<<"Reading folder "<<folder<<"\n";
+    DIR* dir = opendir(folder.Data());
+    if (!dir) {
+        cout<<"Cannot open folder "<<folder<<"!\n";
+        throw std::runtime_error{"Cannot open folder"};
+    }
+
+    struct dirent* dirfile;
+    while((dirfile = readdir(dir)) != NULL){
+        if (dirfile->d_type != DT_REG) continue;
+        TString fname = dirfile->d_name;
+        if (!fname.EndsWith("csv")) continue;
+        files.push_back(fname);
+    }
+    sort(files.begin(),files.end());
+
+    return files;
+}
+
+TDatime getFileTime(TString filename){
+    int idx = filename.Index(TRegexp("_[0-9]"));
+    if (idx >= 0){
+        filename.Remove(0,idx+1);
+    }
+    filename.ReplaceAll(".csv","");
+    std::tm tm{};
+    std::istringstream iss(filename.Data());
+    iss >> std::get_time(&tm, "%m_%d_%Y %H_%M_%S");
+    if (iss.fail()) {
+        cout<<filename<<"\n";
+        cout<<"Can't extract time from file name "<<filename<<"!\n";
+        throw std::runtime_error{"failed to parse time string"};
+    }
+    return TDatime(tm.tm_year+1900,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+}
+
+pair<int,map<TString,int>> getFileLengthAndHeaders(TString filepath){
+    ifstream file;
+    file.open(filepath.Data());
+    if (!file.is_open()){
+        cout<<"cannot open "<<filepath<<"\n";
+        throw std::runtime_error{"Cannot open file"};
+    }
+    char buff[256];
+    file.getline(buff,256); //Header, names
+    stringstream ss(buff);
+    
+    //Read headers
+    int Nvars = 0;
+    map<TString,int> map_varnames;
+    while(ss.good()){
+        string varname;
+        getline(ss,varname,',');
+        varname.erase(remove(varname.begin(),varname.end(),'\r'),varname.end());
+
+        for (string s : {" (2)","_Eddy","_rampup","_HWPscan"}){
+            size_t idx = varname.find(s);
+            if (idx != string::npos){
+                varname.erase(idx, s.size());
+            }
+        }
+        cout<<"Found var \""<<varname<<"\"\n";
+        map_varnames[varname] = Nvars;
+        Nvars++;
+    }
+    file.getline(buff,256);
+    file.getline(buff,256);
+    
+    //Count lines
+    int Nlines = 0;
+    while (!file.eof()){
+        file.getline(buff,256);
+        if (file.eof()) break;
+        Nlines++;
+    }
+
+    file.close();
+    return make_pair(Nlines,map_varnames);
+}
+
+vector<vector<double>> readFileTraces(TString filepath, int Nvars){
+    ifstream file;
+    file.open(filepath.Data());
+    if (!file.is_open()){
+        cout<<"cannot open "<<filepath<<"\n";
+        throw std::runtime_error{"Cannot open file"};
+    }
+    char buff[256];
+    file.getline(buff,256); //Header, names
+    file.getline(buff,256); //Header, units
+    file.getline(buff,256); //Header, blank row
+    char comma;
+    vector<vector<double>> vectors;
+    vectors.resize(Nvars);
+    while (!file.eof()){
+        double var=0;
+        for (int i=0; i<Nvars; i++){
+            if (i>0) file>>comma;
+            file>>var;
+            if (file.eof()) break;
+            vectors[i].push_back(var);
+        }
+    }
+    file.close();
+    return vectors;
+}
 
 TH1D* runningAverage(TH1D* input, int width, bool weighted=false){
 
