@@ -57,6 +57,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TProfile** g_trace_kicks_SNR0 = new TProfile*[8];
 	TProfile** g_trace_kicks_SNR1 = new TProfile*[8];
 	TProfile** g_trace_kicks_SNR2 = new TProfile*[8];
+	TProfile* g_fulltrace_SNR2_timealigned = new TProfile("trace_SNR2_timealigned",Form("Aligned trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart-5,tend-5);
+
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_SNR0_kick%d",i+1);
 		TString htitle = Form("Trace (SNR < %.1f) Kick %d;Time [ms];Voltage [mV]",SNR_th1,i+1);
@@ -231,6 +233,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			}
 		}
 
+		//Fill individual kicks
+		vector<double> kick_timings;
 		for (int i=0; i<8; i++){
 			double this_guess = first_kick_guess+i*kick_dt_guess-0.4;
 
@@ -240,6 +244,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 						if (trace_avgC[j] < kick_trigger){
 							double fraction = (kick_trigger-trace_avgC[j-1])/(trace_avgC[j]-trace_avgC[j-1]);
 							double kick_time = trace_time[j-1] + dt*fraction;
+							kick_timings.push_back(kick_time);
 
 							for (int k=0; k<trace_time.size(); k++){
 								if (trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after){
@@ -261,6 +266,14 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 				}
 			}
 		}
+
+		//Fill the aligned trace
+		for (int i=0; i<trace_time.size(); i++){
+			if (SNR > SNR_th2){
+				g_fulltrace_SNR2_timealigned->Fill(trace_time[i]-kick_timings[0],trace_avgC[i]);
+			}
+		}
+
 		fi++;
 	}
 
