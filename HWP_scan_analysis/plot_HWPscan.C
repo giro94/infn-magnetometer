@@ -1,4 +1,4 @@
-#include <dirent.h>
+#include "../analysis_tools.C"
 
 void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
@@ -13,21 +13,14 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	TGraph* g_stddev = new TGraph();
 	TGraph* g_snr = new TGraph();
 
-	DIR* dir = opendir(folder.Data());
-	struct dirent* dirfile;
-	cout<<"Reading folder "<<folder<<"\n";
-	
-	vector<TString> files;
-	while((dirfile = readdir(dir)) != NULL){
-		if (dirfile->d_type != DT_REG) continue;
-		TString fname = dirfile->d_name;
-		if (!fname.EndsWith("csv")) continue;
-		files.push_back(fname);
-	}
-
-	sort(files.begin(),files.end());
-
+	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
+
+	//Reading first file to get trace info
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
 
 	if (Nfiles != Nangles){
 		cout<<"Errors! Looking for "<<Nangles<<" HWP angles, but found "<<Nfiles<<" files!\n";
@@ -35,81 +28,72 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	}
 
 
-	double baseline_fit_start = 0.1;
-	double baseline_fit_end = 0.5;
-	double blumlein_fit_start = 0.65;
-	double blumlein_fit_end = 0.90; 
+	double baseline_fit_start = -0.9;
+	double baseline_fit_end = -0.5;
+	double blumlein_fit_start = -0.35;
+	double blumlein_fit_end = -0.1;
 
-	TF1* f_baseline = new TF1("f_baseline","[0]",0,2);
-	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",0,2);
+	TF1* f_baseline = new TF1("f_baseline","[0]");
+	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])");
 
 	for (int fi=0; fi<Nangles; fi++){
 
 		TString fname = files[fi];
 		cout<<"Reading file "<<fname<<" (angle "<<hwp_angles[fi]<<")\n";
 
-		vector<pair<double,double>> trace;
+		TDatime datetime = getFileTime(fname);
+		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
-		ifstream file;
-		TString filename = Form("%s/%s",folder.Data(),fname.Data());
-		file.open(filename.Data());
-		if (!file.is_open()){
-			cout<<"cannot open "<<filename<<"\n";
-			return;
-		}
-		char buff[256];
-		file.getline(buff,256); //Header, names
+		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
+		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
 
-		stringstream ss(buff);
-		int Nvar = 0;
-		double Cpos = -1;
-		while(ss.good()){
-			string substr;
-			getline(ss,substr,',');
-			if (substr.find("average(C)") != string::npos){
-				Cpos = Nvar;
+		//Find kick
+		double first_kick_guess = -1;
+		double firstkick_max = 20.0;
+		double kick_trigger = -200.0;
+		for (int i=1; i<trace_time.size(); i++){
+			if (trace_avgC[i-1] > kick_trigger && trace_avgC[i] < kick_trigger){
+				first_kick_guess = trace_time[i];
+				break;
 			}
-			Nvar++;
+		}
+		if (first_kick_guess < 0){
+			cout<<"Warning! Could not find first kick in file "<<fname<<". Skipping...\n";
+			continue;
+		} else if (first_kick_guess > firstkick_max){
+			cout<<"Warning! First kick found at "<<first_kick_guess<<" in file "<<fname<<". Skipping...\n";
+			continue;
 		}
 
-		file.getline(buff,256); //Header, units
-		file.getline(buff,256); //Header, blank row
+		cout<<"Found kick at "<<first_kick_guess<<" ms\n";
 
-		double time, A, B, C, avgC;
-		char comma;
-		while (!file.eof()){
-			double var=0;
-			for (int i=0; i<Nvar; i++){
-				if (i>0) file>>comma;
-				file>>var;
-
-				if (i==0){time = var;}
-				if (i==Cpos){avgC = var;}
-			}
-
-			if (file.eof()) break;
-
-			trace.push_back(make_pair(time,avgC));
-		}
-		file.close();
+		baseline_fit_start = first_kick_guess - 0.9;
+		baseline_fit_end = first_kick_guess - 0.5;
+		blumlein_fit_start = first_kick_guess - 0.35;
+		blumlein_fit_end = first_kick_guess - 0.1;
 
 		g_traces[fi] = new TGraph();
 		g_baselines[fi] = new TGraph();
-		for (auto p : trace){
-			time = p.first;
-			avgC = p.second;
-			g_traces[fi]->AddPoint(time,avgC);
+		for (int i=0; i<trace_time.size(); i++){
+			g_traces[fi]->SetPoint(i,trace_time[i],trace_avgC[i]);
 
-			if (time >= baseline_fit_start && time < baseline_fit_end){
-				g_baselines[fi]->AddPoint(time,avgC);
+			if (trace_time[i] >= baseline_fit_start && trace_time[i] < baseline_fit_end){
+				g_baselines[fi]->SetPoint(i,trace_time[i],trace_avgC[i]);
 			}
 		}
+
 
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baseline = g_traces[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
 		f_blumlein->SetParameters(60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-1000.0);
 		TFitResultPtr fit_blumlein = g_traces[fi]->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
+
+		if (fit_baseline<0 || fit_blumlein<0){
+			cout<<"Bad fit!\n";
+			continue;
+		}
 
 		double HWPangle = hwp_angles[fi];
 		double baseline = fit_baseline->Parameter(0);
@@ -128,14 +112,34 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 
 		g_traces_norm[fi] = new TGraph();
-		for (auto p : trace){
-			time = p.first;
-			avgC = p.second;
-			g_traces_norm[fi]->AddPoint(time,avgC-baseline);
+		for (int i=0; i<trace_time.size(); i++){
+			g_traces_norm[fi]->SetPoint(i,trace_time[i],trace_avgC[i]-baseline);
 		}
 	}
 
-	new TCanvas();
+	TCanvas* can_scan = new TCanvas("can_scan","",1800,600);
+	can_scan->Divide(3,1);
+	can_scan->cd(1);
+	if (do_sort) g_scan->Sort();
+	g_scan->SetName("HWPscan");
+	g_scan->SetTitle("HWP scan");
+	g_scan->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_scan->GetYaxis()->SetTitle("Blumlein amplitude [mV]");
+	g_scan->SetMarkerStyle(20);
+	g_scan->Draw("APL");
+	gPad->SetGridx();
+
+	can_scan->cd(2);
+	if (do_sort) g_stddev->Sort();
+	g_stddev->SetName("HWPscan_stddev");
+	g_stddev->SetTitle("HWP scan StdDev");
+	g_stddev->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_stddev->GetYaxis()->SetTitle("Baseline StdDev [mV]");
+	g_stddev->SetMarkerStyle(20);
+	g_stddev->Draw("APL");
+	gPad->SetGridx();
+
+	can_scan->cd(3);
 	if (do_sort) g_snr->Sort();
 	g_snr->SetName("HWPscan_SNR");
 	g_snr->SetTitle("HWP scan SNR");
@@ -146,25 +150,6 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	g_snr->Draw("APL");
 	gPad->SetGridx();
 
-	new TCanvas();
-	if (do_sort) g_stddev->Sort();
-	g_stddev->SetName("HWPscan_stddev");
-	g_stddev->SetTitle("HWP scan StdDev");
-	g_stddev->GetXaxis()->SetTitle("HWP angle [#circ]");
-	g_stddev->GetYaxis()->SetTitle("Baseline StdDev [mV]");
-	g_stddev->SetMarkerStyle(20);
-	g_stddev->Draw("APL");
-	gPad->SetGridx();
-
-	new TCanvas();
-	if (do_sort) g_scan->Sort();
-	g_scan->SetName("HWPscan");
-	g_scan->SetTitle("HWP scan");
-	g_scan->GetXaxis()->SetTitle("HWP angle [#circ]");
-	g_scan->GetYaxis()->SetTitle("Blumlein amplitude [mV]");
-	g_scan->SetMarkerStyle(20);
-	g_scan->Draw("APL");
-	gPad->SetGridx();
 
 	gStyle->SetPalette(kRainBow);
 	new TCanvas();
