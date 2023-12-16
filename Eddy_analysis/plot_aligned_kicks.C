@@ -149,7 +149,6 @@ void plot_aligned_kicks(TString folder = "HWP-0p5_QWPno_kicker667_nofilter_field
 				}
 			}
 		}
-		fi++;
 	}
 
 

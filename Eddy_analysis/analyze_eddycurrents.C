@@ -113,7 +113,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		if (Nfilesmax > 0 && fi >= Nfilesmax) break;
 
 		TString fname = files[fi];
-		if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+		//if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+		cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
 		vector<pair<double,double>> trace;
 
 		TDatime datetime = getFileTime(fname);
@@ -274,7 +275,6 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			}
 		}
 
-		fi++;
 	}
 
 	for (int i=0; i<8; i++){
