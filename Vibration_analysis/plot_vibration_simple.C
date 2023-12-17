@@ -1,156 +1,100 @@
-#include <dirent.h>
+#include "../analysis_tools.C"
 
-TH1F* SetupFFT(TProfile* h, double xmin, double xmax){
-	double timeTot = xmax - xmin;
-	double binW = h->GetBinWidth(1);
-	int nBins = timeTot / binW;
-	TH1F* hout = new TH1F(Form("%s_FFT",h->GetName()),"",nBins, xmin, xmin + (nBins*binW));
-	
-	int binCount = 0;
-	for (int i(0); i < h->GetXaxis()->GetNbins(); i++){
-		if (h->GetBinCenter(i) < xmin ) continue;
-		if (binCount > nBins) break;
-		binCount++;
-		double cont = h->GetBinContent(i);
-		double err = h->GetBinError(i);
-		hout->SetBinContent(binCount, cont);
-		hout->SetBinError(binCount, err);
+void plot_vibration_simple(TString folder, TString outfolder=""){
+
+
+	bool savePlots = false;
+	if (outfolder != ""){
+		savePlots = true;
 	}
-	return hout;
-}
-
-TH1F* RescaleAxis(TH1* input, Double_t Scale) {
-	int bins = input->GetNbinsX();
-	TAxis* xaxis = input->GetXaxis();
-	double* ba = new double[bins+1];
-	xaxis->GetLowEdge(ba);
-	ba[bins] = ba[bins-1] + xaxis->GetBinWidth(bins);
-	for (int i = 0; i < bins+1; i++) {
-		ba[i] *= Scale;
-	}
-	TH1F* out = new TH1F(input->GetName(), input->GetTitle(), bins, ba);
-	for (int i = 0; i <= bins; i++) {
-		out->SetBinContent(i, input->GetBinContent(i));
-		out->SetBinError(i, input->GetBinError(i));
-	}
-	return out;
-}
-
-
-void plot_vibration_simple(TString folder, int N=-1){
 
 	TProfile* p_traceX = new TProfile("p_traceX","",29906,0,100);
 	TProfile* p_traceY = new TProfile("p_traceY","",29906,0,100);
+	TH1D* p_traceR = new TH1D("p_traceR","",29906,0,100);
+	TProfile* p_traceSum = new TProfile("p_traceSum","",29906,0,100);
 
 	TGraph* g_traceX = new TGraph();
 	TGraph* g_traceY = new TGraph();
 
-	DIR* dir = opendir(folder.Data());
-	struct dirent* dirfile;
-	cout<<"Reading folder "<<folder<<"\n";
-	
-	vector<TString> files;
-	while((dirfile = readdir(dir)) != NULL){
-		if (dirfile->d_type != DT_REG) continue;
-		TString fname = dirfile->d_name;
-		if (!fname.EndsWith("csv")) continue;
-		files.push_back(fname);
-	}
-
-	sort(files.begin(),files.end());
-
+	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
-	if (N>0) Nfiles = N;
+
+	//Reading first file to get trace info
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
+
+
 	for (int fi=0; fi<Nfiles; fi++){
 
 		TString fname = files[fi];
 		if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
 
-		vector<pair<double,double>> traceX;
-		vector<pair<double,double>> traceY;
+		TDatime datetime = getFileTime(fname);
+		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
-		ifstream file;
-		TString filename = Form("%s/%s",folder.Data(),fname.Data());
-		file.open(filename.Data());
-		if (!file.is_open()){
-			cout<<"cannot open "<<filename<<"\n";
-			return;
-		}
-		char buff[256];
-		file.getline(buff,256); //Header, names
-
-		stringstream ss(buff);
-		int Nvar = 0;
-		double Apos = -1;
-		double Bpos = -1;
-		while(ss.good()){
-			string substr;
-			getline(ss,substr,',');
-
-			if (substr.find("average(A)") != string::npos){
-				Apos = Nvar;
-			}
-			if (substr.find("average(B)") != string::npos){
-				Bpos = Nvar;
-			}
-			Nvar++;
-		}
-
-		file.getline(buff,256); //Header, units
-		file.getline(buff,256); //Header, blank row
-
-		double time, A, B, C, avgA, avgB;
-		char comma;
-		while (!file.eof()){
-			double var=0;
-			for (int i=0; i<Nvar; i++){
-				if (i>0) file>>comma;
-				file>>var;
-
-				if (i==0){time = var;}
-				if (i==Apos){avgA = var;}
-				if (i==Bpos){avgB = var;}
-			}
-
-			if (file.eof()) break;
-
-			traceX.push_back(make_pair(time,avgA));
-			traceY.push_back(make_pair(time,avgB));
-		}
-		file.close();
+		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
+		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> traceX = traces[map_varnames["average(A)"]];
+		vector<double> traceY = traces[map_varnames["average(B)"]];
+		vector<double> traceSum = traces[map_varnames["Channel C"]];
 
 		g_traceX->Set(0);
 		g_traceY->Set(0);
-		for (auto p : traceX){
-			time = p.first;
-			avgA = p.second;
-			g_traceX->AddPoint(time,avgA);
-		}
-		for (auto p : traceY){
-			time = p.first;
-			avgB = p.second;
-			g_traceY->AddPoint(time,avgB);
+		for (int i=0; i<trace_time.size(); i++){
+			g_traceX->SetPoint(i,trace_time[i],traceX[i]);
+			g_traceY->SetPoint(i,trace_time[i],traceY[i]);
+
+			p_traceSum->Fill(trace_time[i],traceSum[i]);
 		}
 
-		TFitResultPtr resA = g_traceX->Fit("pol0","QNS","",2.0,12.0);
+
+		TFitResultPtr resA = g_traceX->Fit("pol0","QNS","",0.0,5.0);
 		if (resA>=0){
 			double baseline = resA->Parameter(0);
-			for (auto p : traceX){
-				time = p.first;
-				avgA = p.second;
-				p_traceX->Fill(time,avgA-baseline);
+			for (int i=0; i<trace_time.size(); i++){
+				p_traceX->Fill(trace_time[i],traceX[i]-baseline);
 			}
 		}
-		TFitResultPtr resB = g_traceY->Fit("pol0","QNS","",2.0,12.0);
+		TFitResultPtr resB = g_traceY->Fit("pol0","QNS","",0.0,5.0);
 		if (resB>=0){
 			double baseline = resB->Parameter(0);
-			for (auto p : traceY){
-				time = p.first;
-				avgB = p.second;
-				p_traceY->Fill(time,avgB-baseline);
+			for (int i=0; i<trace_time.size(); i++){
+				p_traceY->Fill(trace_time[i],traceY[i]-baseline);
 			}
 		}
 	}
+
+	//adjust for wrong scale
+	if (p_traceX->GetMaximum() < 0.1) p_traceX->Scale(1000.);
+	if (p_traceY->GetMaximum() < 0.1) p_traceY->Scale(1000.);
+
+	//Calculate total displacement
+	for (int bn=1; bn<=p_traceX->GetNbinsX(); bn++){
+		double R = sqrt(p_traceX->GetBinContent(bn)*p_traceX->GetBinContent(bn)+p_traceY->GetBinContent(bn)*p_traceY->GetBinContent(bn));
+		p_traceR->SetBinContent(bn,p_traceX->GetBinCenter(bn),R);
+	}
+
+	//Find kick position
+	TSpectrum* spectrum = new TSpectrum();
+	spectrum->StaticSearch(p_traceY,2,"nodraw");
+	TList *functions = p_traceY->GetListOfFunctions();
+	TPolyMarker *peaks = (TPolyMarker*)functions->FindObject("TPolyMarker");
+	double* peaks_x = peaks->GetX();
+	vector<double> sorted_peaks;
+	for (int i=0; i<peaks->GetN(); i++){
+		sorted_peaks.push_back(peaks_x[i]);
+	}
+	sort(sorted_peaks.begin(),sorted_peaks.end());
+	double firstkick = sorted_peaks[0];
+	double kick_dt = 10;
+
+	if (abs(firstkick-5)>1 && abs(firstkick-10)>1) firstkick = 1e9;
+
+	TLine* line_kicks = new TLine();
+	line_kicks->SetLineWidth(2);
+	line_kicks->SetLineStyle(kDashed);
 
 	gStyle->SetOptStat(0);
 
@@ -177,58 +121,35 @@ void plot_vibration_simple(TString folder, int N=-1){
 	}
 */	
 
-	new TCanvas();
+	double ymin = -5;
+	double ymax = 5;
+
+	new TCanvas("","",1800,600);
 	p_traceX->SetLineColor(kBlue);
-	p_traceX->SetTitle("X diff");
+	p_traceX->SetTitle("X displacement");
 	p_traceX->GetXaxis()->SetTitle("Time [ms]");
 	p_traceX->GetYaxis()->SetTitle("Trace [mV]");
 	p_traceX->SetMarkerStyle(8);
 	p_traceY->SetLineColor(kRed);
-	p_traceY->SetTitle("Y diff");
+	p_traceY->SetTitle("Y displacement");
 	p_traceY->GetXaxis()->SetTitle("Time [ms]");
 	p_traceY->GetYaxis()->SetTitle("Trace [mV]");
 	p_traceY->SetMarkerStyle(8);
-	p_traceX->GetYaxis()->SetRangeUser(-10,10);
-	p_traceY->GetYaxis()->SetRangeUser(-10,10);
+	p_traceX->GetYaxis()->SetRangeUser(ymin,ymax);
+	p_traceY->GetYaxis()->SetRangeUser(ymin,ymax);
 	p_traceX->Draw("HIST");
 	p_traceY->Draw("HIST SAME");
 	gPad->SetGridy();
-	gPad->BuildLegend();
-
-
-
+	gPad->BuildLegend(0.75,0.75,0.88,0.88);
+	for (int i=0; i<8; i++){
+		line_kicks->DrawLine(firstkick+i*kick_dt,ymin,firstkick+i*kick_dt,ymax);
+	}
+	if(savePlots)gPad->SaveAs(Form("%s/vibrations.png",outfolder.Data()));
 
 	double fft_xmin = 0.0;
 	double fft_xmax = 100.0;
-	TH1 *fft_histogramX = 0;
-	TH1F* fftResidualInitX = 0;
-	TH1F* fftResidualX = 0;
-	TH1 *fft_histogramY = 0;
-	TH1F* fftResidualInitY = 0;
-	TH1F* fftResidualY = 0;
-	TVirtualFFT::SetTransform(0);
-
-
-	fftResidualInitX = SetupFFT(p_traceX, fft_xmin, fft_xmax);
-	fft_histogramX = fftResidualInitX->FFT(fft_histogramX,"MAG");
-	fftResidualX = RescaleAxis(fft_histogramX, 1./(fft_xmax - fft_xmin));
-	fftResidualX->SetTitle(";Frequency (kHz);Magnitude [Arb Units]");
-	fftResidualX->SetStats(0);
-	fftResidualX->SetName(Form("residualFFT X [%.1f,%.1f] ms",fft_xmin, fft_xmax));
-	fftResidualX->SetTitle(Form("FFT X [%.1f,%.1f] ms",fft_xmin, fft_xmax));
-	fftResidualX->Scale(1.0 / fftResidualX->Integral());
-	fftResidualX->GetXaxis()->SetRangeUser(0, fftResidualX->GetXaxis()->GetXmax()/2.);
-
-	fftResidualInitY = SetupFFT(p_traceY, fft_xmin, fft_xmax);
-	fft_histogramY = fftResidualInitY->FFT(fft_histogramY,"MAG");
-	fftResidualY = RescaleAxis(fft_histogramY, 1./(fft_xmax - fft_xmin));
-	fftResidualY->SetTitle(";Frequency (kHz);Magnitude [Arb Units]");
-	fftResidualY->SetStats(0);
-	fftResidualY->SetName(Form("residualFFT Y [%.1f,%.1f] ms",fft_xmin, fft_xmax));
-	fftResidualY->SetTitle(Form("FFT Y [%.1f,%.1f] ms",fft_xmin, fft_xmax));
-	fftResidualY->Scale(1.0 / fftResidualY->Integral());
-	fftResidualY->GetXaxis()->SetRangeUser(0, fftResidualY->GetXaxis()->GetXmax()/2.);
-
+	TH1D* fftResidualX = doFFT(p_traceX, fft_xmin, fft_xmax);
+	TH1D* fftResidualY = doFFT(p_traceY, fft_xmin, fft_xmax);
 
 	new TCanvas();
 	fftResidualX->SetLineColor(kBlue);
@@ -236,11 +157,37 @@ void plot_vibration_simple(TString folder, int N=-1){
 	fftResidualY->Draw("HIST");
 	fftResidualX->Draw("HIST SAME");
 	gPad->SetLogx();
-	fftResidualX->GetXaxis()->SetRangeUser(0.015,250);
-	fftResidualY->GetXaxis()->SetRangeUser(0.015,250);
-	fftResidualX->GetYaxis()->SetRangeUser(0,0.1);
-	fftResidualY->GetYaxis()->SetRangeUser(0,0.1);
 	gPad->SetGridx();
-	gPad->BuildLegend();
+	gPad->BuildLegend(0.6,0.7,0.88,0.88);
+	if(savePlots)gPad->SaveAs(Form("%s/vibrations_FFT.png",outfolder.Data()));
+
+
+
+	new TCanvas("","",900,600);
+	TH1D* p_traceX_zoom1 = (TH1D*)p_traceX->Clone("p_traceX_zoom");
+	TH1D* p_traceY_zoom1 = (TH1D*)p_traceY->Clone("p_traceY_zoom");
+	p_traceX_zoom1->GetXaxis()->SetRangeUser(firstkick,firstkick+1);
+	p_traceY_zoom1->GetXaxis()->SetRangeUser(firstkick,firstkick+1);
+	p_traceX_zoom1->GetYaxis()->SetRangeUser(-0.2,0.2);
+	p_traceY_zoom1->GetYaxis()->SetRangeUser(-0.2,0.2);
+	p_traceX_zoom1->Draw("HIST");
+	p_traceY_zoom1->Draw("HIST SAME");
+	gPad->SetGridy();
+	gPad->BuildLegend(0.6,0.75,0.88,0.88);
+	if(savePlots)gPad->SaveAs(Form("%s/firstkick.png",outfolder.Data()));
+
+
+	TH1D* fftResidualXzoom1 = doFFT(p_traceX_zoom1, 5, 6);
+	TH1D* fftResidualYzoom1 = doFFT(p_traceY_zoom1, 5, 6);
+
+	new TCanvas();
+	fftResidualXzoom1->SetLineColor(kBlue);
+	fftResidualYzoom1->SetLineColor(kRed);
+	fftResidualYzoom1->Draw("HIST");
+	fftResidualXzoom1->Draw("HIST SAME");
+	gPad->SetLogx();
+	gPad->SetGridx();
+	gPad->BuildLegend(0.6,0.7,0.88,0.88);
+	if(savePlots)gPad->SaveAs(Form("%s/firstkick_FFT.png",outfolder.Data()));
 
 }
