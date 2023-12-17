@@ -13,6 +13,11 @@ void plot_kicks(TString folder, TString output_file=""){
 
 
 	TGraph** g_kicks = new TGraph* [Nfiles];
+	TGraph** g_kicksA = new TGraph* [Nfiles];
+	TGraph** g_kicksB = new TGraph* [Nfiles];
+
+	TGraph** g_kicks_linearized = new TGraph* [Nfiles];
+
 	TGraph** g_kicks_aligned = new TGraph* [Nfiles];
 	TGraph** g_kicks_normalized = new TGraph* [Nfiles];
 	TGraph** g_kicks_diff = new TGraph* [Nfiles];
@@ -30,9 +35,12 @@ void plot_kicks(TString folder, TString output_file=""){
 		g_peaks[i] = new TGraphErrors();
 	}
 	TGraphErrors* g_peaks_time = new TGraphErrors();
+	TGraphErrors* g_peaks_time_normalized = new TGraphErrors();
 	TGraphErrors* g_A_time = new TGraphErrors();
 	TGraphErrors* g_B_time = new TGraphErrors();
-	TGraphErrors* g_power_time = new TGraphErrors();
+	TGraphErrors* g_AB_time = new TGraphErrors();
+
+	double I = 0.8/sin(0.4);
 
 	for (int fi=0; fi<Nfiles; fi++){
 		
@@ -47,8 +55,14 @@ void plot_kicks(TString folder, TString output_file=""){
 		vector<double> trace_ABdiff = traces[map_varnames["average(B-A)"]];
 
 		g_kicks[fi] = new TGraph();
+		g_kicksA[fi] = new TGraph();
+		g_kicksB[fi] = new TGraph();
+		g_kicks_linearized[fi] = new TGraph();
 		for (int i=0; i<trace_time.size(); i++){
 			g_kicks[fi]->SetPoint(i, trace_time[i], trace_ABdiff[i]);
+			g_kicksA[fi]->SetPoint(i, trace_time[i], trace_A[i]);
+			g_kicksB[fi]->SetPoint(i, trace_time[i], trace_B[i]);
+			g_kicks_linearized[fi]->SetPoint(i, trace_time[i], asin(trace_ABdiff[i]/I));
 		}      
 
 
@@ -66,11 +80,21 @@ void plot_kicks(TString folder, TString output_file=""){
 
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baseline = g_kicks[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
-		f_baseline->Draw("SAME");
 
 		f_peak->SetParameters(0.8,peak_x,-1000.0);
 		TFitResultPtr fit_peak = g_kicks[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
-		f_peak->Draw("SAME");
+
+		f_baseline->SetParameter(0,0);
+		TFitResultPtr fit_baselineA = g_kicksA[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
+
+		f_peak->SetParameters(-0.8,peak_x,1000.0);
+		TFitResultPtr fit_peakA = g_kicksA[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
+
+		f_baseline->SetParameter(0,0);
+		TFitResultPtr fit_baselineB = g_kicksB[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
+
+		f_peak->SetParameters(0.8,peak_x,-1000.0);
+		TFitResultPtr fit_peakB = g_kicksB[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
 
 		double baseline = fit_baseline->Parameter(0);
 		double peak = fit_peak->Parameter(0);
@@ -79,6 +103,20 @@ void plot_kicks(TString folder, TString output_file=""){
 		double amplitude = abs(peak-baseline);
 		double amplitude_err = sqrt(peak_err*peak_err+baseline_err*baseline_err);
 		double peak_time = fit_peak->Parameter(1);
+
+		double baselineA = fit_baselineA->Parameter(0);
+		double peakA = fit_peakA->Parameter(0);
+		double baselineA_err = fit_baselineA->ParError(0);
+		double peakA_err = fit_peakA->ParError(0);
+		double amplitudeA = abs(peakA-baselineA);
+		double amplitudeA_err = sqrt(peakA_err*peakA_err+baselineA_err*baselineA_err);
+
+		double baselineB = fit_baselineB->Parameter(0);
+		double peakB = fit_peakB->Parameter(0);
+		double baselineB_err = fit_baselineB->ParError(0);
+		double peakB_err = fit_peakB->ParError(0);
+		double amplitudeB = abs(peakB-baselineB);
+		double amplitudeB_err = sqrt(peakB_err*peakB_err+baselineB_err*baselineB_err);
 
 		g_kicks_aligned[fi] = new TGraph();
 		for (int j=0; j<N; j++){
@@ -114,22 +152,19 @@ void plot_kicks(TString folder, TString output_file=""){
 		g_peaks_time->SetPoint(fi,datetime.Convert(),amplitude);
 		g_peaks_time->SetPointError(fi,0,amplitude_err);
 
+		g_A_time->SetPoint(fi,datetime.Convert(),amplitudeA);
+		g_A_time->SetPointError(fi,0,amplitudeA_err);
+		g_B_time->SetPoint(fi,datetime.Convert(),amplitudeB);
+		g_B_time->SetPointError(fi,0,amplitudeB_err);
+		g_AB_time->SetPoint(fi,datetime.Convert(),amplitudeA+amplitudeB);
+		g_peaks_time->SetPointError(fi,0,sqrt(amplitudeA_err*amplitudeA_err+amplitudeB_err*amplitudeB_err));
 
-		double Aavg = 0;
-		double Bavg = 0;
-		for (int i=0; i<trace_A.size(); i++){
-			Aavg += trace_A[i];
-			Bavg += trace_B[i];
-		}
-		Aavg /= trace_A.size();
-		Bavg /= trace_B.size();
+    }
 
-		double totalPower = sqrt(Aavg*Aavg+Bavg*Bavg);
-
-		g_A_time->SetPoint(fi,datetime.Convert(),Aavg);
-		g_B_time->SetPoint(fi,datetime.Convert(),Bavg);
-		g_power_time->SetPoint(fi,datetime.Convert(),totalPower);
-
+    for (int i=0; i<g_peaks_time->GetN(); i++){
+    	double norm_factor = 1.0/g_peaks_time->GetPointY(0);
+    	g_peaks_time_normalized->SetPoint(i,g_peaks_time->GetPointX(i),g_peaks_time->GetPointY(i)*norm_factor);
+    	g_peaks_time_normalized->SetPointError(i,g_peaks_time->GetErrorX(i),g_peaks_time->GetErrorY(i)*norm_factor);
     }
 
 
@@ -202,33 +237,67 @@ void plot_kicks(TString folder, TString output_file=""){
 	gPad->SetGridy();
 
 
+    TCanvas* can_amplitudes2 = new TCanvas("can_amplitudes2","",1800,600);
+	g_peaks_time_normalized->SetMarkerStyle(20);
+	g_peaks_time_normalized->SetTitle("Kick amplitude");
+	g_peaks_time_normalized->GetXaxis()->SetTitle("Time");
+	g_peaks_time_normalized->GetYaxis()->SetTitle("Kick amplitude [arb. u.]");
+	g_peaks_time_normalized->GetXaxis()->SetTimeFormat("%H:%M");
+	g_peaks_time_normalized->GetXaxis()->SetTimeOffset(0);
+	g_peaks_time_normalized->GetXaxis()->SetTimeDisplay(1);
+	g_peaks_time_normalized->GetYaxis()->SetRangeUser(0.7,1.1);
+	g_peaks_time_normalized->Draw("APLZ");
+	gPad->SetGridy();
+
+    TCanvas* can_kicksAB = new TCanvas("can_kicksAB","",800,600);
+    for (int i=0; i<Nfiles; i++){
+    	g_kicksA[i]->SetLineColor(kBlack);
+    	g_kicksA[i]->SetTitle("All kicks");
+    	g_kicksA[i]->GetXaxis()->SetTitle("Time [#mus]");
+       	g_kicksA[i]->GetYaxis()->SetTitle("Trace [V]");
+    	g_kicksA[i]->GetXaxis()->SetRangeUser(0,6);
+    	g_kicksA[i]->GetYaxis()->SetRangeUser(-0.6,0.6);
+    	g_kicksA[i]->Draw(i==0?"APL":"PL");
+    }
+    for (int i=0; i<Nfiles; i++){
+    	g_kicksB[i]->SetLineColor(kBlue);
+    	g_kicksB[i]->SetTitle("All kicks");
+    	g_kicksB[i]->GetXaxis()->SetTitle("Time [#mus]");
+       	g_kicksB[i]->GetYaxis()->SetTitle("Trace [V]");
+    	g_kicksB[i]->GetXaxis()->SetRangeUser(0,6);
+    	g_kicksB[i]->Draw("PL");
+    }
 
 	new TCanvas();
-	g_A_time->SetTitle("Channel A");
-	g_B_time->SetTitle("Channel B");
-	g_power_time->SetTitle("#sqrt{A^{2}+B^{2}}");
+	g_A_time->SetTitle("Peak A");
+	g_B_time->SetTitle("Peak B");
+	g_AB_time->SetTitle("A+B");
 	g_A_time->SetLineWidth(2);
 	g_B_time->SetLineWidth(2);
-	g_power_time->SetLineWidth(2);
+	g_AB_time->SetLineWidth(2);
 	g_A_time->SetLineWidth(2);
 	g_B_time->SetLineWidth(2);
-	g_power_time->SetLineWidth(2);
+	g_AB_time->SetLineWidth(2);
 	g_A_time->SetLineColor(1);
 	g_B_time->SetLineColor(2);
-	g_power_time->SetLineColor(3);
+	g_AB_time->SetLineColor(3);
 	g_A_time->GetXaxis()->SetTimeFormat("%H:%M");
 	g_A_time->GetXaxis()->SetTimeOffset(0);
 	g_A_time->GetXaxis()->SetTimeDisplay(1);
 	g_B_time->GetXaxis()->SetTimeFormat("%H:%M");
 	g_B_time->GetXaxis()->SetTimeOffset(0);
 	g_B_time->GetXaxis()->SetTimeDisplay(1);
-	g_power_time->GetXaxis()->SetTimeFormat("%H:%M");
-	g_power_time->GetXaxis()->SetTimeOffset(0);
-	g_power_time->GetXaxis()->SetTimeDisplay(1);
-	g_A_time->GetYaxis()->SetRangeUser(-0.03,0.03);
+	g_AB_time->GetXaxis()->SetTimeFormat("%H:%M");
+	g_AB_time->GetXaxis()->SetTimeOffset(0);
+	g_AB_time->GetXaxis()->SetTimeDisplay(1);
+	g_A_time->GetYaxis()->SetRangeUser(0,1);
 	g_A_time->Draw("APL");
 	g_B_time->Draw("PL");
-	g_power_time->Draw("PL");
+	g_AB_time->Draw("PL");
 	gPad->BuildLegend();
 
+
+	new TCanvas();
+	g_kicks[0]->Draw("AL");
+	g_kicks_linearized[0]->Draw("L");
 }
