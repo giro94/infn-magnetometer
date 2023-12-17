@@ -370,6 +370,48 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		kick8long_SNR0->SetTitle("Kick 8");
 		if(savePlots)can_kick_SNR->SaveAs(Form("%s/SNR_kicks.png",outfolder.Data()));
 
+
+		for (int i=0; i<8; i++){
+			for (int bn=1; bn<=kicks_SNR0[i]->GetNbinsX(); bn++){
+				double val = kicks_SNR2[i]->GetBinContent(bn);
+				kicks_SNR2[i]->SetBinContent(bn,val+100);
+				kicks_SNR2[i]->SetBinEntries(bn,1);
+			}
+		}
+		for (int bn=1; bn<=trace_SNR0->GetNbinsX(); bn++){
+			double val = trace_SNR2->GetBinContent(bn);
+			trace_SNR2->SetBinContent(bn,val+100);
+			trace_SNR2->SetBinEntries(bn,1);
+		}
+		for (int bn=1; bn<=kick8long_SNR0->GetNbinsX(); bn++){
+			double val = kick8long_SNR2->GetBinContent(bn);
+			kick8long_SNR2->SetBinContent(bn,val+100);
+			kick8long_SNR2->SetBinEntries(bn,1);
+		}
+
+
+		TCanvas* can_kick_SNR2 = new TCanvas("can_kick_SNR2","",2600,1000);
+		can_kick_SNR2->Divide(2,1);
+		can_kick_SNR2->cd(1);
+		kicks_SNR0[0]->GetXaxis()->SetRangeUser(-1,1);
+		kicks_SNR2[0]->GetXaxis()->SetRangeUser(-1,1);
+		kicks_SNR0[0]->GetYaxis()->SetRangeUser(-160,60);
+		kicks_SNR2[0]->GetYaxis()->SetRangeUser(-160,60);
+		kicks_SNR0[0]->Draw("SAME HIST PLC");
+		kicks_SNR2[0]->Draw("SAME HIST PLC");
+		gPad->SetGridy();
+		gPad->BuildLegend(0.6,0.78,0.88,0.88);
+		kicks_SNR0[0]->SetTitle("Kick 1");
+		can_kick_SNR2->cd(2);
+		kick8long_SNR0->GetYaxis()->SetRangeUser(-160,60);
+		kick8long_SNR2->GetYaxis()->SetRangeUser(-160,60);
+		kick8long_SNR0->Draw("SAME HIST PLC");
+		kick8long_SNR2->Draw("SAME HIST PLC");
+		gPad->BuildLegend(0.6,0.78,0.88,0.88);
+		gPad->SetGridy();
+		kick8long_SNR0->SetTitle("Kick 8");
+		if(savePlots)can_kick_SNR2->SaveAs(Form("%s/SNR_kicks_2.png",outfolder.Data()));
+
 	}
 
 
