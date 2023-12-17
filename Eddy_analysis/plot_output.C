@@ -38,6 +38,9 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		g_trace_trend[i] = (TProfile*)f->Get(hname);
 	}
 
+	TProfile* trace_skipped = (TProfile*)f->Get("trace_skipped");
+
+
 
 	bool haveSNRplots = (trace_SNR0 != nullptr);
 
@@ -108,6 +111,16 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	kick_average->GetYaxis()->SetRangeUser(-40,20);
 	gPad->SetGridy();
 	if(savePlots)can3->SaveAs(Form("%s/kick_avg.png",outfolder.Data()));
+
+
+	TCanvas* can_skip = new TCanvas("can_skip","",2500,500);
+	trace_skipped->SetMarkerStyle(6);
+	trace_skipped->Draw("P");
+	trace_skipped->GetXaxis()->SetRangeUser(0,100);
+	trace_skipped->GetYaxis()->SetRangeUser(-60,60);
+	gPad->SetGridy();
+	if(savePlots)can_skip->SaveAs(Form("%s/skipped_traces.png",outfolder.Data()));
+
 
 	gStyle->SetPalette(kRainBow);
 
@@ -281,6 +294,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
     fftResidual->GetYaxis()->SetRangeUser(0,0.006);
 	//gPad->SaveAs("FFT_trace.png");
 */
+
 
 
 	if (haveSNRplots){

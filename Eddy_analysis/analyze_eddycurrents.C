@@ -59,6 +59,9 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TProfile** g_trace_kicks_SNR1 = new TProfile*[8];
 	TProfile** g_trace_kicks_SNR2 = new TProfile*[8];
 	TProfile* g_fulltrace_SNR2_timealigned = new TProfile("trace_SNR2_timealigned",Form("Aligned trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart-5,tend-5);
+	
+	TProfile* g_fulltrace_skipped = new TProfile("trace_skipped","Skipped traces;Time [ms];Voltage [mV]",Nlines,tstart-5,tend-5);
+
 
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_SNR0_kick%d",i+1);
@@ -158,11 +161,32 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 				break;
 			}
 		}
+
+		bool skipped = false;
 		if (first_kick_guess < 0){
 			cout<<"Warning! Could not find first kick in file "<<fname<<". Skipping...\n";
-			continue;
+			skipped = true;
 		} else if (first_kick_guess > firstkick_max){
 			cout<<"Warning! First kick found at "<<first_kick_guess<<" in file "<<fname<<". Skipping...\n";
+			skipped = true;
+		}
+
+		if (skipped){
+			//subtract baseline anyway from 0 to 5 ms
+			double avgC_skipbaseline = 0;
+			int Nlines_skipbaseline = 0;
+			for (int i=0; i<trace_time.size(); i++){
+				if (trace_time[i] < 5){
+					avgC_skipbaseline += trace_avgC[i];
+					Nlines_skipbaseline++;
+				}
+			}
+			avgC_skipbaseline /= Nlines_skipbaseline;
+			
+			for (int i=0; i<trace_time.size(); i++){
+				g_fulltrace_skipped->Fill(trace_time[i],trace_avgC[i] - avgC_skipbaseline);
+			}
+
 			continue;
 		}
 
