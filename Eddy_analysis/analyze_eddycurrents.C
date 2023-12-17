@@ -135,10 +135,17 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		}
 
 		//Find kick polarity
-		for (int i=1; i<trace_avgC.size(); i++){
-			if (trace_avgC[i] > 9000){
-				kick_trigger *= -1;
+		for (int i=0; i<trace_avgC.size(); i++){
+			if (trace_time[i] > firstkick_max) break;
+			if (trace_avgC[i] < -2000){
+				kick_trigger = -abs(kick_trigger);
+				polarity = 1;
+				break;
+			}
+			if (trace_avgC[i] > 2000){
+				kick_trigger = abs(kick_trigger);
 				polarity = -1;
+				break;
 			}
 		}
 
