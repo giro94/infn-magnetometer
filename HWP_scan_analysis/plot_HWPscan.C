@@ -28,10 +28,10 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	}
 
 
-	double baseline_fit_start = -0.9;
-	double baseline_fit_end = -0.5;
-	double blumlein_fit_start = -0.35;
-	double blumlein_fit_end = -0.1;
+	double baseline_fit_start;
+	double baseline_fit_end;
+	double blumlein_fit_start;
+	double blumlein_fit_end;
 
 	TF1* f_baseline = new TF1("f_baseline","[0]");
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])");
@@ -69,9 +69,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		cout<<"Found kick at "<<first_kick_guess<<" ms\n";
 
 		baseline_fit_start = first_kick_guess - 0.9;
-		baseline_fit_end = first_kick_guess - 0.5;
-		blumlein_fit_start = first_kick_guess - 0.35;
-		blumlein_fit_end = first_kick_guess - 0.1;
+		baseline_fit_end = first_kick_guess - 0.6;
+		blumlein_fit_start = first_kick_guess - 0.43;
+		blumlein_fit_end = first_kick_guess - 0.18;
 
 		g_traces[fi] = new TGraph();
 		g_baselines[fi] = new TGraph();
