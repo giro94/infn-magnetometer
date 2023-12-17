@@ -15,6 +15,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	double firstkick_max = 20.0;
 	double kick_dt_guess = 10.0;
 	double kick_trigger = -200.0;
+	double polarity = 1;
 
 	//Begin reading of files
 	vector<TString> files = getListOfFiles(folder);
@@ -133,10 +134,19 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			cout<<"Warning! File "<<fname<<" has "<<trace_time.size()<<" lines instead of the expected "<<Nlines<<"!\n";
 		}
 
+		//Find kick polarity
+		for (int i=1; i<trace_avgC.size(); i++){
+			if (trace_avgC[i] > 9000){
+				kick_trigger *= -1;
+				polarity = -1;
+			}
+		}
+
 		//Find first kick
 		double first_kick_guess = -1;
 		for (int i=1; i<trace_time.size(); i++){
-			if (trace_avgC[i-1] > kick_trigger && trace_avgC[i] < kick_trigger){
+			if ((polarity>0 && trace_avgC[i-1] > kick_trigger && trace_avgC[i] < kick_trigger)||
+				(polarity<0 && trace_avgC[i-1] < kick_trigger && trace_avgC[i] > kick_trigger)){
 				first_kick_guess = trace_time[i];
 				break;
 			}
@@ -241,28 +251,26 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 			for (int j=0; j<trace_time.size(); j++){
 				if (trace_time[j] > this_guess){
-					if (trace_avgC[j-1] > kick_trigger){
-						if (trace_avgC[j] < kick_trigger){
-							double fraction = (kick_trigger-trace_avgC[j-1])/(trace_avgC[j]-trace_avgC[j-1]);
-							double kick_time = trace_time[j-1] + dt*fraction;
-							kick_timings.push_back(kick_time);
-
-							for (int k=0; k<trace_time.size(); k++){
-								if (trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after){
-									g_trace_kicks[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR < SNR_th1) g_trace_kicks_SNR0[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR > SNR_th1) g_trace_kicks_SNR1[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR > SNR_th2) g_trace_kicks_SNR2[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-								}
-								if (i==7 && trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after8){
-									g_trace_kick8long->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR < SNR_th1) g_trace_kick8long_SNR0->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR > SNR_th1) g_trace_kick8long_SNR1->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-									if (SNR > SNR_th2) g_trace_kick8long_SNR2->Fill(trace_time[k]-kick_time,trace_avgC[k]);
-								}
+					if ((polarity>0 && trace_avgC[j-1] > kick_trigger && trace_avgC[j] < kick_trigger)||
+						(polarity<0 && trace_avgC[j-1] < kick_trigger && trace_avgC[j] > kick_trigger)){
+						double fraction = (kick_trigger-trace_avgC[j-1])/(trace_avgC[j]-trace_avgC[j-1]);
+						double kick_time = trace_time[j-1] + dt*fraction;
+						kick_timings.push_back(kick_time);
+						for (int k=0; k<trace_time.size(); k++){
+							if (trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after){
+								g_trace_kicks[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR < SNR_th1) g_trace_kicks_SNR0[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR > SNR_th1) g_trace_kicks_SNR1[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR > SNR_th2) g_trace_kicks_SNR2[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
 							}
-							break;
+							if (i==7 && trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after8){
+								g_trace_kick8long->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR < SNR_th1) g_trace_kick8long_SNR0->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR > SNR_th1) g_trace_kick8long_SNR1->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								if (SNR > SNR_th2) g_trace_kick8long_SNR2->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+							}
 						}
+						break;
 					}
 				}
 			}
