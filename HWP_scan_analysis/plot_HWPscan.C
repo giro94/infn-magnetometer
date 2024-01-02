@@ -48,6 +48,13 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		vector<double> trace_time = traces[map_varnames["Time"]];
 		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
 
+		g_traces[fi] = new TGraph();
+		g_baselines[fi] = new TGraph();
+		g_traces_norm[fi] = new TGraph();
+		for (int i=0; i<trace_time.size(); i++){
+			g_traces[fi]->SetPoint(i,trace_time[i],trace_avgC[i]);
+		}
+
 		//Find kick
 		double first_kick_guess = -1;
 		double firstkick_max = 20.0;
@@ -73,11 +80,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		blumlein_fit_start = first_kick_guess - 0.43;
 		blumlein_fit_end = first_kick_guess - 0.18;
 
-		g_traces[fi] = new TGraph();
-		g_baselines[fi] = new TGraph();
 		for (int i=0; i<trace_time.size(); i++){
-			g_traces[fi]->SetPoint(i,trace_time[i],trace_avgC[i]);
-
 			if (trace_time[i] >= baseline_fit_start && trace_time[i] < baseline_fit_end){
 				g_baselines[fi]->SetPoint(i,trace_time[i],trace_avgC[i]);
 			}
@@ -111,7 +114,6 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_scan->SetPointError(ipoint,0,peak_err+baseline_err);
 
 
-		g_traces_norm[fi] = new TGraph();
 		for (int i=0; i<trace_time.size(); i++){
 			g_traces_norm[fi]->SetPoint(i,trace_time[i],trace_avgC[i]-baseline);
 		}
@@ -171,7 +173,6 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_traces_norm[i]->GetYaxis()->SetTitle("Trace [mV]");
 		g_traces_norm[i]->Draw(i==0?"AL PLC":"L PLC");
 	}
-
 
 	TString outname = folder;
 	outname.Remove(TString::kTrailing,'/');
