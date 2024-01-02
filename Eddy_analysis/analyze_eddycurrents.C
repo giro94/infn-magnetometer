@@ -3,15 +3,6 @@
 
 void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -1){
 
-	/*
-	if (ROOT_VERSION_CODE < ROOT_VERSION(6,24,0)){
-		cout<<"ERROR! You are using a ROOT version older than 6.24\n";
-		cout<<"If you are on gm2ita, please execute:\n\n";
-		cout<<"  source /opt/cernroot/bin/thisroot.sh\n\n";
-		return;
-	}
-	*/
-	
 	double firstkick_max = 20.0;
 	double kick_dt_guess = 10.0;
 	double kick_trigger = -200.0;
@@ -22,13 +13,18 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	int Nfiles = files.size();
 
 	//Reading first file to get trace info
-	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	TString firstfile = Form("%s/%s",folder.Data(),files[0].Data());
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(firstfile);
 	int Nlines = headers.first;
 	map<TString,int> map_varnames = headers.second;
 	int Nvars = map_varnames.size();
 
-	float tstart = 0.;
-	float tend = 100.;
+	//Read time boundaries
+	vector<vector<double>> traces = readFileTraces(firstfile,Nvars);
+	float tstart = traces[map_varnames["Time"]].front();
+	float tend = traces[map_varnames["Time"]].back();
+
+	//Set binning
 	float dt = (tend-tstart)/Nlines;
 	float t_before = -1.0;
 	float t_after = 8.0;
