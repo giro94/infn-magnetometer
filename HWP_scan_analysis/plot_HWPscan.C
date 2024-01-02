@@ -193,14 +193,35 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 }
 
 
-
-
-
+//Equally-spaced list of angles
 void plot_HWPscan(TString folder, int N, double hwp_start=0, double hwp_step=5){
 
 	vector<double> hwp_angles;
 	for (int i=0; i<N; i++){
 		hwp_angles.push_back(hwp_start+i*hwp_step);
 	}
+	plot_HWPscan(folder, hwp_angles);
+}
+
+//Angles from angles.txt file
+void plot_HWPscan(TString folder){
+
+	TString filepath = Form("%s/angles.txt",folder.Data());
+	ifstream file_angles;
+	file_angles.open(filepath.Data());
+	if (!file_angles.is_open()){
+		cout<<"cannot open "<<filepath<<"\n";
+		throw std::runtime_error{"Cannot open angles.txt file, please specify angles as argument."};
+	}
+
+	vector<double> hwp_angles;
+	while (!file_angles.eof()){
+		double angle=0;
+		file_angles>>angle;
+		if (file_angles.eof()) break;
+		hwp_angles.push_back(angle);
+	}
+	file_angles.close();
+
 	plot_HWPscan(folder, hwp_angles);
 }
