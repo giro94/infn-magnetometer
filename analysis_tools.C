@@ -137,6 +137,21 @@ TH1D* runningAverage(TH1D* input, int width, bool weighted=false){
 }
 
 
+TH1D* runningAverage_5_10_15(TH1D* input){
+    return runningAverage(runningAverage(runningAverage(input,5,true),10,true),15,true);
+}
+
+void cleanTrace(TH1D* trace, double threshold=-50, double setvalue=0){
+    for (int bn=1; bn<=trace->GetNbinsX(); bn++){
+        if (threshold < 0 && trace->GetBinContent(bn) < threshold){
+            trace->SetBinContent(bn,setvalue);
+        } else if (threshold > 0 && trace->GetBinContent(bn) > threshold){
+            trace->SetBinContent(bn,setvalue);
+        } 
+    }
+    return;
+}
+
 
 TH1D* SetupFFT(TH1D* h_in, double xmin, double xmax){
     double timeTot = xmax - xmin;
