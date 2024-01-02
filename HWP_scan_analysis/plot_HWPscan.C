@@ -173,10 +173,10 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	}
 
 
-	TString outname = Form("%s_output.root",folder.Data());
-	outname.ReplaceAll("../","");
-	outname.ReplaceAll("/","__");
-	outname.ReplaceAll(" ","_");
+	TString outname = folder;
+	outname.Remove(TString::kTrailing,'/');
+    outname.Remove(0,outname.Last('/')+1);
+    outname += "_output.root";
 	cout<<"Creating "<<outname<<"\n";
 	TFile* fout = new TFile(outname,"recreate");
 
