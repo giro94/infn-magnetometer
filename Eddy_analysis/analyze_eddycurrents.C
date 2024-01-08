@@ -58,6 +58,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	
 	TProfile* g_fulltrace_skipped = new TProfile("trace_skipped","Skipped traces;Time [ms];Voltage [mV]",Nlines,tstart-5,tend-5);
 
+	TProfile* g_fulltrace_blum50 = new TProfile("trace_blum50","Normalized trace (blumlein 50 mV);Time [ms];Voltage [mV]",Nlines,tstart,tend);
 
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_SNR0_kick%d",i+1);
@@ -258,6 +259,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		for (int i=0; i<trace_time.size(); i++){
 			h2_fulltrace->Fill(trace_time[i],trace_avgC[i]);
 			g_fulltrace->Fill(trace_time[i],trace_avgC[i]);
+			g_fulltrace_blum50->Fill(trace_time[i],trace_avgC[i] * 50.0 / blumlein);
 			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR > SNR_th2){
