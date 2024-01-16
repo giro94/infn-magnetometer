@@ -38,6 +38,17 @@ or, save to output:
 root -l -b -q display_traces\(\"/path/to/input/file.csv\"\,\"output.root\"\)
 ```
 
+
+### Inspect the average traces in a folder
+Interactively:
+```
+root -l average_traces\(\"/path/to/input/folder/\"\)
+```
+or, save to output:
+```
+root -l -b -q average_traces\(\"/path/to/input/folder/\"\,\"output.root\"\)
+```
+
 ### HWP scan
 ```
 cd HWP_scan_analysis
