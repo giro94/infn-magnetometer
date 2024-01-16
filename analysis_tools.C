@@ -90,6 +90,7 @@ vector<vector<double>> readFileTraces(TString filepath, int Nvars){
         cout<<"cannot open "<<filepath<<"\n";
         throw std::runtime_error{"Cannot open file"};
     }
+
     char buff[256];
     file.getline(buff,256); //Header, names
     file.getline(buff,256); //Header, units
@@ -101,10 +102,15 @@ vector<vector<double>> readFileTraces(TString filepath, int Nvars){
         double var=0;
         for (int i=0; i<Nvars; i++){
             if (i>0) file>>comma;
-            file>>var;
+            if (!(file>>var)){
+                if (file.eof()) break;
+                cout<<"Error while reading file "<<filepath<<" line "<<vectors[0].size()+4<<" column "<<i+1<<"\n";
+                throw std::runtime_error{"Problem reading file. Might have ecountered infinity symbol. Did you run \"fix_files_symbols.sh\" over the data first?"};
+            }
             if (file.eof()) break;
             vectors[i].push_back(var);
         }
+        if (file.eof()) break;
     }
     file.close();
     return vectors;
