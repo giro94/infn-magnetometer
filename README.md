@@ -31,22 +31,22 @@ git clone https://github.com/giro94/infn-magnetometer.git
 ### Inspect the traces in a file
 Interactively:
 ```
-root -l display_traces\(\"/path/to/input/file.csv\"\)
+root -l display_traces.C\(\"/path/to/input/file.csv\"\)
 ```
 or, save to output:
 ```
-root -l -b -q display_traces\(\"/path/to/input/file.csv\"\,\"output.root\"\)
+root -l -b -q display_traces.C\(\"/path/to/input/file.csv\"\,\"output.root\"\)
 ```
 
 
 ### Inspect the average traces in a folder
 Interactively:
 ```
-root -l average_traces\(\"/path/to/input/folder/\"\)
+root -l average_traces.C\(\"/path/to/input/folder/\"\)
 ```
 or, save to output:
 ```
-root -l -b -q average_traces\(\"/path/to/input/folder/\"\,\"output.root\"\)
+root -l -b -q average_traces.C\(\"/path/to/input/folder/\"\,\"output.root\"\)
 ```
 
 ### HWP scan
