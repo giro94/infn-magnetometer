@@ -3,6 +3,10 @@ INFN g-2 magnetometer analysis scripts
 
 ##### Table of Contents  
 [General instructions](#general-instructionss)  
+* [gm2ita](#gm2ita-setup)
+* [Cloning repository](#cloning-repository)
+* [Fix symbols](#before-analyzing-any-file-fix-infinity-symbols)
+* [Note on running scripts](#note-on-running-scripts)
 [Script instructions](#script-instructions)  
 
 
