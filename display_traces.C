@@ -1,4 +1,4 @@
-#include "Eddy_analysis/FFT_tools.C"
+#include "analysis_tools.C"
 
 void display_traces(TString fname, TString foutname=""){
 
@@ -17,98 +17,54 @@ void display_traces(TString fname, TString foutname=""){
 
 	vector<int> colors = {1,2,3,4,9,6};
 
-	char buff[256];
-	file.getline(buff,256); //Header, names
-	stringstream ss(buff);
-	int Nvar = 0;
-	vector<TString> varnames;
-	while(ss.good()){
-		string substr;
-		getline(ss,substr,',');
-		substr.erase(remove(substr.begin(),substr.end(),'\r'),substr.end());
-		varnames.push_back(substr);
-		Nvar++;
-	}
-	cout<<"Found the following columns:\n";
-	for (int i=0; i<Nvar; i++){
-		cout<<"\""<<varnames[i]<<"\" ";
-	}
-	cout<<"\n";
+	//Get headers
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(fname);
+	vector<TString> varunits = getHeaderUnits(fname);
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
+
+	map<int,TString> map_headers;
+    for (const auto& pair : map_varnames) {
+        map_headers[pair.second] = pair.first;
+    }
+    
+	//Get traces
+	vector<vector<double>> traces = readFileTraces(fname,Nvars);
+	vector<double> trace_time = traces[map_varnames["Time"]];
+
+	file.close();
 
 	TFile* fout;
 	if (saveOutput){
 		fout = new TFile(foutname,"recreate");
 	}
 
-	TGraph** g_traces = new TGraph* [Nvar-1];
-	for (int i=0; i<Nvar-1; i++){
+	TGraph** g_traces = new TGraph* [Nvars-1];
+	for (int i=0; i<Nvars-1; i++){
 		g_traces[i] = new TGraph();
-	}
 
-	file.getline(buff,256); //Header, blank row
-	while (!file.eof()){
-		char comma;
-		double var=0;
-		vector<double> vars;
-		for (int i=0; i<Nvar; i++){
-			if (i>0) file>>comma;
-			file>>var;
-			vars.push_back(var);
-		}
-		if (file.eof()) break;
-		
-		for (int i=0; i<Nvar-1; i++){
-			g_traces[i]->AddPoint(vars[0],vars[i+1]);
+		vector<double> trace = traces[i+1];
+		for (int j=0; j<trace_time.size(); j++){
+			g_traces[i]->SetPoint(g_traces[i]->GetN(),trace_time[j],trace[j]);
 		}
 	}
-	file.close();
 
-	for (int i=0; i<Nvar-1; i++){
-		g_traces[i]->SetTitle(varnames[i+1]);
-		g_traces[i]->GetXaxis()->SetTitle("Time [ms]");
-		g_traces[i]->GetYaxis()->SetTitle("Trace");
+	for (int i=0; i<Nvars-1; i++){
+		g_traces[i]->SetTitle(map_headers[i+1]);
+		g_traces[i]->GetXaxis()->SetTitle(Form("Time %s",varunits[0].Data()));
+		g_traces[i]->GetYaxis()->SetTitle(Form("Trace %s",varunits[i+1].Data()));
 		g_traces[i]->SetLineColor(colors[i]);
-		g_traces[i]->GetXaxis()->SetRangeUser(g_traces[i]->GetPointX(0),g_traces[i]->GetPointX(g_traces[i]->GetN()-1));
 	}
 
 
-
-	if (Nvar-1 == 5){
-		g_traces[0]->GetYaxis()->SetRangeUser(0,12);
-		g_traces[1]->GetYaxis()->SetRangeUser(0,12);
-		g_traces[2]->GetYaxis()->SetRangeUser(-2,2);
-		g_traces[3]->GetYaxis()->SetRangeUser(-2,2);
-		TCanvas* can = new TCanvas("","",1600,900);
-		can->Divide(1,2);
-		can->cd(1);
-		TVirtualPad* pad_up = gPad;
-		pad_up->Divide(2,1);
-		pad_up->cd(1);
-		g_traces[0]->Draw("AL");
-		g_traces[1]->Draw("L");
-		gPad->BuildLegend();
-		pad_up->cd(2);
-		g_traces[2]->Draw("AL");
-		g_traces[3]->Draw("L");
-		gPad->BuildLegend();
-		can->cd(2);
-		g_traces[4]->Draw("AL");
-	} else {
-		for (int i=0; i<Nvar-1; i++){
-			new TCanvas("","",1800,800);
-			g_traces[i]->Draw("AL");
-		}
-	}
-
-
-
-	new TCanvas("","",1800,800);
-	for (int i=0; i<Nvar-1; i++){
-		g_traces[i]->Draw(i==0?"AL":"L");
+	for (int i=0; i<Nvars-1; i++){
+		new TCanvas();
+		g_traces[i]->Draw("AL");
 	}
 
 	if (saveOutput){
-		for (int i=0; i<Nvar-1; i++){
+		for (int i=0; i<Nvars-1; i++){
 			g_traces[i]->Write();
 		}
 

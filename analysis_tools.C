@@ -82,6 +82,32 @@ pair<int,map<TString,int>> getFileLengthAndHeaders(TString filepath){
     return make_pair(Nlines,map_varnames);
 }
 
+vector<TString> getHeaderUnits(TString filepath){
+    ifstream file;
+    file.open(filepath.Data());
+    if (!file.is_open()){
+        cout<<"cannot open "<<filepath<<"\n";
+        throw std::runtime_error{"Cannot open file"};
+    }
+    char buff[256];
+    file.getline(buff,256); //Header, names
+    file.getline(buff,256); //Header, units
+    stringstream ss(buff);
+
+    //Read units
+    vector<TString> varunits;
+    while(ss.good()){
+        string varunit;
+        getline(ss,varunit,',');
+        varunit.erase(remove(varunit.begin(),varunit.end(),'\r'),varunit.end());
+        varunits.push_back(varunit);
+    }
+
+    file.close();
+    return varunits;
+}
+
+
 vector<vector<double>> readFileTraces(TString filepath, int Nvars){
     ifstream file;
     file.open(filepath.Data());
