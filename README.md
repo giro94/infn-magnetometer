@@ -1,7 +1,7 @@
 # infn-magnetometer
 INFN g-2 magnetometer analysis scripts
 
-## Instructions
+## General instructions
 
 ### gm2ita setup
 When logging on gm2ita, please run these commands in order to get the ROOT envinronment to run scripts:
@@ -32,6 +32,8 @@ Every time you want to run a ROOT macro, you have two ways of giving arguments:
 2. put single quotes: `root -l -b -q 'macro.C("string_argument",{2,5,4},1000)'`
 
 In the following examples, I will always use option 1.
+
+## Script instructions
 
 ### Inspect the traces in a file
 Interactively:
