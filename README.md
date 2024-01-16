@@ -1,7 +1,7 @@
 # infn-magnetometer
 INFN g-2 magnetometer analysis scripts
 
-##### Table of Contents  
+#### Table of Contents  
 [General instructions](#general-instructionss)  
 * [gm2ita](#gm2ita-setup)
 * [Cloning repository](#cloning-repository)
