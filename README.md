@@ -33,7 +33,7 @@ Interactively:
 ```
 root -l display_traces\(\"/path/to/input/file.csv\"\)
 ```
-Save to output:
+or, save to output:
 ```
 root -l -b -q display_traces\(\"/path/to/input/file.csv\"\,\"output.root\"\)
 ```
@@ -65,4 +65,3 @@ Optional arguments:
 root -l -b -q analyze_eddycurrents.C\(\"/path/to/input/folder/\"\,\"output.root\"\,MAXFILES\)
 ```
 To limit reading maximum MAXFILES files in the input folder
-
