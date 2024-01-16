@@ -28,15 +28,14 @@ TDatime getFileTime(TString filename){
         filename.Remove(0,idx+1);
     }
     filename.ReplaceAll(".csv","");
-    std::tm tm{};
-    std::istringstream iss(filename.Data());
-    iss >> std::get_time(&tm, "%m_%d_%Y %H_%M_%S");
-    if (iss.fail()) {
-        cout<<filename<<"\n";
+
+    int yy, mm, dd, hh, mi, ss;
+    if (!(sscanf(filename, "%d_%d_%d %d_%d_%d", &mm, &dd, &yy, &hh, &mi, &ss) == 6)){
         cout<<"Can't extract time from file name "<<filename<<"!\n";
         throw std::runtime_error{"failed to parse time string"};
     }
-    return TDatime(tm.tm_year+1900,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+
+    return TDatime(yy,mm,dd,hh,mi,ss);
 }
 
 pair<int,map<TString,int>> getFileLengthAndHeaders(TString filepath){

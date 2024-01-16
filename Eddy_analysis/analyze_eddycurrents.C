@@ -344,25 +344,25 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_correlation_ABdiff_SNR->SetTitle("Correlation SNR vs B-A;B-A [V];Blumlein SNR");
 
 	g_trend_A->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_A->GetXaxis()->SetTimeOffset(0);
+	g_trend_A->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_A->GetXaxis()->SetTimeDisplay(1);
 	g_trend_B->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_B->GetXaxis()->SetTimeOffset(0);
+	g_trend_B->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_B->GetXaxis()->SetTimeDisplay(1);
 	g_trend_ABdiff->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_ABdiff->GetXaxis()->SetTimeOffset(0);
+	g_trend_ABdiff->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_ABdiff->GetXaxis()->SetTimeDisplay(1);
 	g_trend_baseline->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_baseline->GetXaxis()->SetTimeOffset(0);
+	g_trend_baseline->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_baseline->GetXaxis()->SetTimeDisplay(1);
 	g_trend_stddev->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_stddev->GetXaxis()->SetTimeOffset(0);
+	g_trend_stddev->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_stddev->GetXaxis()->SetTimeDisplay(1);
 	g_trend_blumlein->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_blumlein->GetXaxis()->SetTimeOffset(0);
+	g_trend_blumlein->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_blumlein->GetXaxis()->SetTimeDisplay(1);
 	g_trend_SNR->GetXaxis()->SetTimeFormat("%H:%M");
-	g_trend_SNR->GetXaxis()->SetTimeOffset(0);
+	g_trend_SNR->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_SNR->GetXaxis()->SetTimeDisplay(1);
 
 	g_trend_A->Write();
