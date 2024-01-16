@@ -4,12 +4,11 @@ INFN g-2 magnetometer analysis scripts
 ## Instructions
 
 ### gm2ita setup
-When logging on gm2ita, please run these commands:
+When logging on gm2ita, please run these commands in order to get the ROOT envinronment to run scripts:
 ```
 source setup_USER.sh
 source /opt/cernroot/bin/thisroot.sh
 ```
-In order to get the ROOT envinronment to run scripts
 
 ### Cloning repository
 To get the code, please do:
