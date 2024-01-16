@@ -11,8 +11,7 @@ source /opt/cernroot/bin/thisroot.sh
 ```
 
 ### Cloning repository
-To get the code, please do:
-
+To get the code, please do:  
 Option 1) You'll need an assigned ssh key on github and you'll be able to commit/push your edits:
 ```
 git clone git@github.com:giro94/infn-magnetometer.git
@@ -26,6 +25,13 @@ git clone https://github.com/giro94/infn-magnetometer.git
 ```
 ./fix_files_symbols.sh /path/to/input/folder/
 ```
+
+### Note on running scripts
+Every time you want to run a ROOT macro, you have two ways of giving arguments:  
+1. escape each special character: `root -l -b -q macro.C\(\"string_argument\"\,\{array,of,values\}\,1000\)`
+2. put single quotes: `root -l -b -q 'macro.C("string_argument",{2,5,4},1000)'`
+
+In the following examples, I will always use option 1.
 
 ### Inspect the traces in a file
 Interactively:
@@ -62,6 +68,15 @@ root -l -b -q plot_HWPscan\(\"/path/to/input/folder/\"\)
 ```
 and the code will read from the "angles.txt" file.
 
+### Magnet ramp analysis
+```
+cd Ramp_up_analysis
+root -l -b -q plot_rampup.C\(\"/path/to/input/folder/\"\,\"output.root\"\,\"magnet_current.csv\"\)
+```
+The magnet current is a csv that can be retrieved from SEEQ (need special authorization, ask Matt).
+  The downloaded file is actually a .xlsx, and you'll need to export the 2nd tab in csv format.
+You don't need to provide the third argument. If missing, the script will plot the measured B-A vs timestamps.
+
 
 ### Eddy currents analysis
 ```
@@ -78,7 +93,7 @@ To limit reading maximum MAXFILES files in the input folder
 
 
 ## Build your own code
-The general purpose header `analysis_tools.C` contains useful functions to help you read all the data.
+The general purpose header `analysis_tools.C` contains useful functions to help you read all the data.  
 A minimal working code could be:
 ```
 #include "analysis_tools.C"
