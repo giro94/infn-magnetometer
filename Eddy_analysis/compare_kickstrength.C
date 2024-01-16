@@ -8,6 +8,7 @@ void compare_kickstrength(){
 	TFile* f2 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct25_H25_B100_k389.root");
 	TFile* f3 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct25_H25_B100_k583.root");
 	TFile* f4 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct24_H25_B100_k777.root");
+	vector<double> strengths = {1.94, 3.89, 5.83, 7.77};
 
 
 	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_px");
@@ -39,6 +40,23 @@ void compare_kickstrength(){
 	TH1D* f2_kick1_FFT = (TH1D*)f2->Get("trace_kick1_px_FFT");
 	TH1D* f3_kick1_FFT = (TH1D*)f3->Get("trace_kick1_px_FFT");
 	TH1D* f4_kick1_FFT = (TH1D*)f4->Get("trace_kick1_px_FFT");
+
+
+	f1_kick1->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[0]));
+	f2_kick1->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[1]));
+	f3_kick1->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[2]));
+	f4_kick1->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[3]));
+
+	f1_kick8->SetTitle(Form("Kick 8 (Kick %.2f kV)",strengths[0]));
+	f2_kick8->SetTitle(Form("Kick 8 (Kick %.2f kV)",strengths[1]));
+	f3_kick8->SetTitle(Form("Kick 8 (Kick %.2f kV)",strengths[2]));
+	f4_kick8->SetTitle(Form("Kick 8 (Kick %.2f kV)",strengths[3]));
+
+	f1_kick1_FFT->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[0]));
+	f2_kick1_FFT->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[1]));
+	f3_kick1_FFT->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[2]));
+	f4_kick1_FFT->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[3]));
+
 
 
 	TGraphErrors* g_blum_amp = new TGraphErrors();
@@ -83,12 +101,30 @@ void compare_kickstrength(){
 	g_blum_amp->SetPoint(3,blum4,amp4);
 	g_blum_amp->SetPointError(3,blumerr4,amperr4);
 
-
 	new TCanvas();
 	g_blum_amp->GetXaxis()->SetTitle("Blumlein [mV]");
 	g_blum_amp->GetYaxis()->SetTitle("Exp amplitude [mV]");
 	g_blum_amp->SetMarkerStyle(20);
 	g_blum_amp->Draw("APL");
+
+
+
+	TGraphErrors* g_kick_blum = new TGraphErrors();
+	g_kick_blum->SetPoint(g_kick_blum->GetN(),strengths[0],blum1);
+	g_kick_blum->SetPointError(g_kick_blum->GetN()-1,0,blumerr1);
+	g_kick_blum->SetPoint(g_kick_blum->GetN(),strengths[1],blum2);
+	g_kick_blum->SetPointError(g_kick_blum->GetN()-1,0,blumerr2);
+	g_kick_blum->SetPoint(g_kick_blum->GetN(),strengths[2],blum3);
+	g_kick_blum->SetPointError(g_kick_blum->GetN()-1,0,blumerr3);
+	g_kick_blum->SetPoint(g_kick_blum->GetN(),strengths[3],blum4);
+	g_kick_blum->SetPointError(g_kick_blum->GetN()-1,0,blumerr4);
+	new TCanvas();
+	g_kick_blum->GetXaxis()->SetTitle("Kicker strength [kV]");
+	g_kick_blum->GetYaxis()->SetTitle("Blumlein [mV]");
+	g_kick_blum->SetMarkerStyle(20);
+	g_kick_blum->Draw("APL");
+
+
 
 	int bin17 = f1_kick1_FFT->FindBin(17);
 	int bin18 = f1_kick1_FFT->FindBin(18);
@@ -145,6 +181,15 @@ void compare_kickstrength(){
 
 
 
+	TCanvas* can_g = new TCanvas("can_g","",1800,600);
+	can_g->Divide(3,1);
+	can_g->cd(1);
+	g_kick_blum->Draw("APL");
+	can_g->cd(2);
+	g_amp_17kHz->Draw("APL");
+	can_g->cd(3);
+	g_amp_4kHz->Draw("APL");
+
 	gStyle->SetOptStat(0);
 
 	TCanvas* can = new TCanvas("can","",1800,900);
@@ -167,6 +212,12 @@ void compare_kickstrength(){
 	f4_kick1_exp->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick1_exp->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
+	TLegend* leg1 = new TLegend();
+	leg1->AddEntry(f1_kick1_exp,Form("Kick %.2f kV",strengths[0]),"L");
+	leg1->AddEntry(f2_kick1_exp,Form("Kick %.2f kV",strengths[1]),"L");
+	leg1->AddEntry(f3_kick1_exp,Form("Kick %.2f kV",strengths[2]),"L");
+	leg1->AddEntry(f4_kick1_exp,Form("Kick %.2f kV",strengths[3]),"L");
+	leg1->Draw();
 	can->cd(2);
 	f1_kick8_exp->SetLineColor(1);
 	f2_kick8_exp->SetLineColor(2);
@@ -185,6 +236,7 @@ void compare_kickstrength(){
 	f4_kick8_exp->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick8_exp->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
+	gPad->BuildLegend();
 
 
 	TCanvas* can2 = new TCanvas("can2","",1800,900);
@@ -207,6 +259,7 @@ void compare_kickstrength(){
 	f4_kick1->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick1->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
+	gPad->BuildLegend();
 	can2->cd(2);
 	f1_kick8->SetLineColor(1);
 	f2_kick8->SetLineColor(2);
@@ -225,6 +278,7 @@ void compare_kickstrength(){
 	f4_kick8->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick8->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
+	gPad->BuildLegend();
 
 
 	TCanvas* can_FFT = new TCanvas("can_FFT","",1800,900);
@@ -237,6 +291,7 @@ void compare_kickstrength(){
     f3_kick1_FFT->Draw("HIST SAME");
     f4_kick1_FFT->Draw("HIST SAME");
     gPad->SetLogx();
+	gPad->BuildLegend();
 
 
 
