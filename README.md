@@ -65,3 +65,39 @@ Optional arguments:
 root -l -b -q analyze_eddycurrents.C\(\"/path/to/input/folder/\"\,\"output.root\"\,MAXFILES\)
 ```
 To limit reading maximum MAXFILES files in the input folder
+
+
+## Build your own code
+The general purpose header `analysis_tools.C` contains useful functions to help you read all the data.
+A minimal working code could be:
+```
+#include "analysis_tools.C"
+
+vector<TString> files = getListOfFiles(folder);
+int Nfiles = files.size();
+
+//Reading first file to get trace info
+pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+int Nlines = headers.first;
+map<TString,int> map_varnames = headers.second;
+int Nvars = map_varnames.size();
+
+for (int fi=0; fi<Nfiles; fi++){
+		
+  TString fname = files[fi];
+  TDatime datetime = getFileTime(fname);
+  TString filepath = Form("%s/%s",folder.Data(),fname.Data());
+
+  vector<vector<double>> traces = readFileTraces(filepath,Nvars);
+  vector<double> trace_time = traces[map_varnames["Time"]];
+  vector<double> trace_A = traces[map_varnames["Channel A"]];
+  vector<double> trace_B = traces[map_varnames["Channel B"]];
+  vector<double> trace_C = traces[map_varnames["Channel C"]];
+  vector<double> trace_avgC = traces[map_varnames["average(C)"]];
+        
+  /* .... */
+}
+```
+
+
+
