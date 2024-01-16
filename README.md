@@ -7,8 +7,15 @@ INFN g-2 magnetometer analysis scripts
 * [Cloning repository](#cloning-repository)
 * [Fix symbols](#before-analyzing-any-file-fix-infinity-symbols)
 * [Note on running scripts](#note-on-running-scripts)
+  
 [Script instructions](#script-instructions)  
+* [Inspect a file](#inspect-the-traces-in-a-file)
+* [Average many files](#inspect-the-average-traces-in-a-folder)
+* [HWP scan](#hwp-scan)
+* [Magnet ramp](#magnet-ramp-analysis)
+* [Eddy currents](#eddy-currents-analysis)
 
+[Build your own code](#build-your-own-code)
 
 ## General instructions
 
