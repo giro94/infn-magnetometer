@@ -124,7 +124,7 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 
 	gStyle->SetPalette(kRainBow);
 
-	new TCanvas();
+	new TCanvas("","",1920,1080);
 	for (int i=0; i<10; i++){
 		g_trace_trend[i]->GetYaxis()->SetRangeUser(-1000,100);
 		g_trace_trend[i]->Draw("SAME HIST PLC");
@@ -228,20 +228,11 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 		can_FFT->cd(i+1);
 		double fft_xmin = 0.1; //ms from kick
 		double fft_xmax = 8.0; 
-    	TH1 *fft_histogram = 0;
-    	TVirtualFFT::SetTransform(0);
-    	TH1D* fftResidualInit = SetupFFT(this_kick, fft_xmin, fft_xmax);
-    	fft_histogram = fftResidualInit->FFT(fft_histogram,"MAG");
-    	h1_fft_kicks[i] = RescaleAxis(fft_histogram, 1./(fft_xmax - fft_xmin));
-    	h1_fft_kicks[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
-    	h1_fft_kicks[i]->SetStats(0);
+    	h1_fft_kicks[i] = doFFT(this_kick, fft_xmin, fft_xmax);
     	h1_fft_kicks[i]->SetName(Form("residualFFT_%d",i));
-    	h1_fft_kicks[i]->Scale(1.0 / h1_fft_kicks[i]->Integral());
-    	h1_fft_kicks[i]->GetXaxis()->SetRangeUser(0, h1_fft_kicks[i]->GetXaxis()->GetXmax()/2.);
+		h1_fft_kicks[i]->SetTitle(Form("FFT %d;Frequency (kHz);Magnitude [Arb Units]",i+1));
     	h1_fft_kicks[i]->Draw("HIST");
-    	h1_fft_kicks[i]->GetXaxis()->SetRangeUser(0.2,1000);
     	gPad->SetLogx();
-    	h1_fft_kicks[i]->GetXaxis()->SetRangeUser(0.2,1000);
     	h1_fft_kicks[i]->GetYaxis()->SetRangeUser(0,0.008);
 	}
 	if(savePlots)can_FFT->SaveAs(Form("%s/trace_FFTs.png",outfolder.Data()));

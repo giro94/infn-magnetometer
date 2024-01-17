@@ -41,7 +41,6 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		TString fname = files[fi];
 		cout<<"Reading file "<<fname<<" (angle "<<hwp_angles[fi]<<")\n";
 
-		TDatime datetime = getFileTime(fname);
 		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
@@ -73,7 +72,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 			continue;
 		}
 
-		cout<<"Found kick at "<<first_kick_guess<<" ms\n";
+		//cout<<"Found kick at "<<first_kick_guess<<" ms\n";
 
 		baseline_fit_start = first_kick_guess - 0.9;
 		baseline_fit_end = first_kick_guess - 0.6;
