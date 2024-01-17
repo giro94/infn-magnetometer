@@ -1,4 +1,4 @@
-#include <dirent.h>
+#include "../analysis_tools.C"
 
 void plot_rampup(TString folder, TString output_file, TString current_filename=""){
 
@@ -26,19 +26,20 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		while (!file_current.eof()){
 
 			file_current.getline(buff,256);
-			stringstream ss(buff);
+			stringstream iss(buff);
 			string substr;
-			getline(ss,substr,',');
+			getline(iss,substr,',');
 			if (substr == "") continue;
-			std::tm t{};
-			std::istringstream iss(substr);
-			iss >> std::get_time(&t,"%Y-%m-%dT%H:%M:%S");
-			if (iss.fail()) {
-				cout<<substr<<"\n";
-			    throw std::runtime_error{"failed to parse time string"};
-			}   
-			int time_stamp = mktime(&t);
-			getline(ss,substr,',');
+
+			int yy, mm, dd, hh, mi, ss;
+    		if (!(sscanf(substr.c_str(), "%d-%d-%dT%d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6)){
+        		cout<<"Can't extract time from string "<<substr<<"!\n";
+        		throw std::runtime_error{"failed to parse time string"};
+    		}
+    		TDatime this_time = TDatime(yy,mm,dd,hh,mi,ss);
+    		int time_stamp = this_time.Convert();
+
+			getline(iss,substr,',');
 			if (substr == "") continue;
 			current = stof(substr);
 
@@ -48,108 +49,47 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		file_current.close();
 	}
 
-
-	DIR* dir = opendir(folder.Data());
-	struct dirent* dirfile;
-	cout<<"Reading folder "<<folder<<"\n";
-	
-	vector<TString> files;
-	while((dirfile = readdir(dir)) != NULL){
-		TString fname = dirfile->d_name;
-		if (!fname.EndsWith("csv")) continue;
-		files.push_back(fname);
-	}
-
-	sort(files.begin(),files.end());
-
+	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
+
+	//Reading first file to get trace info
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
 
 	for (int fi=0; fi<Nfiles; fi++){
 
 		TString fname = files[fi];
 		if (fi%100==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
 
-		ifstream file;
-		TString filename = Form("%s/%s",folder.Data(),fname.Data());
-		file.open(filename.Data());
-		if (!file.is_open()){
-			cout<<"cannot open "<<filename<<"\n";
-			return;
-		}
-		char buff[256];
-		file.getline(buff,256); //Header, names
+		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
-		stringstream ss(buff);
-		int Nvar = 0;
-		double Apos = -1;
-		double Bpos = -1;
-		double ABpos = -1;
-		while(ss.good()){
-			string substr;
-			getline(ss,substr,',');
-			if (substr.find("average(B-A)") != string::npos){
-				ABpos = Nvar;
-			} else if (substr.find("A") != string::npos){
-				Apos = Nvar;
-			} else if (substr.find("B") != string::npos){
-				Bpos = Nvar;
-			}
-			Nvar++;
-		}
+		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
+		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> trace_A = traces[map_varnames["Channel A"]];
+		vector<double> trace_B = traces[map_varnames["Channel B"]];
+		vector<double> trace_diff = traces[map_varnames["average(B-A)"]];
 
-		file.getline(buff,256); //Header, units
-		file.getline(buff,256); //Header, blank row
-
-		TString file_datetime = fname;
-		file_datetime.ReplaceAll("FD_","");
-		file_datetime.ReplaceAll("Ramp_","");
-		file_datetime.ReplaceAll(".csv","");
-		std::tm t{};
-		std::istringstream iss(file_datetime.Data());
-		iss >> std::get_time(&t, "%m_%d_%Y %H_%M_%S");
-		if (iss.fail()) {
-			cout<<file_datetime<<"\n";
-		    throw std::runtime_error{"failed to parse time string"};
-		}
-		int time_stamp = mktime(&t);
+		TDatime datetime = getFileTime(fname);
+		int time_stamp = datetime.Convert();
 
 		double current = fi;
-
 		if (current_filename != ""){
 			current = map_time_current[time_stamp];
 		}
 		
-		double time, A, B, C, avgAB;
-		char comma;
-
 		double A_avg = 0;
 		double B_avg = 0;
 		double ABdiff_avg = 0;
 		double ABdiff_avg_squared = 0;
-		double Npoints = 0;
-		while (!file.eof()){
-			double var=0;
-			for (int i=0; i<Nvar; i++){
-				if (i>0) file>>comma;
-				file>>var;
-
-				if (i==0){time = var;}
-				if (i==Apos){A = var;}
-				if (i==Bpos){B = var;}
-				if (i==ABpos){avgAB = var;}
-			}
-
-			if (file.eof()) break;
-
-			A_avg += A;
-			B_avg += B;
-			ABdiff_avg += avgAB;
-			ABdiff_avg_squared += avgAB*avgAB;
-
-			Npoints += 1;
+		double Npoints = trace_time.size();
+		for (int i=0; i<Npoints; i++){
+			A_avg += trace_A[i];
+			B_avg += trace_B[i];
+			ABdiff_avg += trace_diff[i];
+			ABdiff_avg_squared += trace_diff[i]*trace_diff[i];
 		}
-		file.close();
-
 		A_avg /= Npoints;
 		B_avg /= Npoints;
 		ABdiff_avg /= Npoints;
@@ -161,7 +101,6 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		g_rampup->SetPointError(ipoint,0,ABerr);
 		g_rampupA->SetPoint(ipoint,current,A_avg);
 		g_rampupB->SetPoint(ipoint,current,B_avg);
-
 	}
 
 	new TCanvas();
