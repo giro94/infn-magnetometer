@@ -266,12 +266,13 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 				h2_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
 				g_fulltrace_SNR2->Fill(trace_time[i],trace_avgC[i]);
 			}
-			int Nfi_10p = Nfiles / 10;
+			int Nfi_10p = int(ceil(float(Nfiles) / 10));
 			int fi_p = (fi-fi%Nfi_10p)/Nfi_10p;
 			if (fi_p<10){
 				g_trace_trend[fi_p]->Fill(trace_time[i],trace_avgC[i]);
 			}
 		}
+
 
 		//Fill individual kicks
 		vector<double> kick_timings;
