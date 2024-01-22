@@ -2,7 +2,7 @@
 
 void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
-	bool do_sort = false;
+	bool do_sort = true;
 
 	int Nangles = hwp_angles.size();
 
@@ -35,6 +35,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 	TF1* f_baseline = new TF1("f_baseline","[0]");
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])");
+	TGraph* g_trend_stddev = new TGraph();
 
 	for (int fi=0; fi<Nangles; fi++){
 
@@ -43,9 +44,31 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
+		TDatime datetime = getFileTime(fname);
+
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
 		vector<double> trace_time = traces[map_varnames["Time"]];
 		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
+
+		//Find kick polarity
+		double polarity = 1;
+		double firstkick_max = 20.0;
+		double kick_trigger = -200.0;
+		for (int i=0; i<trace_avgC.size(); i++){
+			if (trace_time[i] > firstkick_max) break;
+			if (trace_avgC[i] < -2000){
+				kick_trigger = -abs(kick_trigger);
+				polarity = 1;
+				break;
+			}
+			if (trace_avgC[i] > 2000){
+				kick_trigger = abs(kick_trigger);
+				polarity = -1;
+				break;
+			}
+		}
+
+
 
 		g_traces[fi] = new TGraph();
 		g_baselines[fi] = new TGraph();
@@ -56,10 +79,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 		//Find kick
 		double first_kick_guess = -1;
-		double firstkick_max = 20.0;
-		double kick_trigger = -200.0;
 		for (int i=1; i<trace_time.size(); i++){
-			if (trace_avgC[i-1] > kick_trigger && trace_avgC[i] < kick_trigger){
+			if ((polarity>0 && trace_avgC[i-1] > kick_trigger && trace_avgC[i] < kick_trigger)||
+				(polarity<0 && trace_avgC[i-1] < kick_trigger && trace_avgC[i] > kick_trigger)){
 				first_kick_guess = trace_time[i];
 				break;
 			}
@@ -89,7 +111,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baseline = g_traces[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
-		f_blumlein->SetParameters(60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-1000.0);
+		f_blumlein->SetParameters(polarity*60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-polarity*1000.0);
 		TFitResultPtr fit_blumlein = g_traces[fi]->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
 
 		if (fit_baseline<0 || fit_blumlein<0){
@@ -102,7 +124,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double peak = fit_blumlein->Parameter(0);
 		double baseline_err = fit_baseline->ParError(0);
 		double peak_err = fit_blumlein->ParError(0);
-		double amplitude = abs(peak-baseline);
+		double amplitude = peak-baseline;
 		double baseline_stddev = g_baselines[fi]->GetRMS(2);
 		double SNR = amplitude/baseline_stddev;
 
@@ -112,11 +134,22 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		int ipoint = g_scan->GetN()-1;
 		g_scan->SetPointError(ipoint,0,peak_err+baseline_err);
 
+		g_trend_stddev->SetPoint(g_trend_stddev->GetN(),datetime.Convert(),baseline_stddev);
 
 		for (int i=0; i<trace_time.size(); i++){
 			g_traces_norm[fi]->SetPoint(i,trace_time[i],trace_avgC[i]-baseline);
 		}
 	}
+
+	new TCanvas();
+	g_trend_stddev->Sort();
+	g_trend_stddev->SetName("g_trend_stddev");
+	g_trend_stddev->SetTitle("Trend of StdDev;Time;StdDev [mV]");
+	g_trend_stddev->GetXaxis()->SetTimeFormat("%H:%M");
+	g_trend_stddev->GetXaxis()->SetTimeOffset(0);
+	g_trend_stddev->GetXaxis()->SetTimeDisplay(1);
+	g_trend_stddev->SetMarkerStyle(20);
+	g_trend_stddev->Draw("APL");
 
 	TCanvas* can_scan = new TCanvas("can_scan","",1800,600);
 	can_scan->Divide(3,1);
@@ -151,6 +184,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	g_snr->Draw("APL");
 	gPad->SetGridx();
 
+	new TCanvas();
+	g_scan->Draw("APL");
+	gPad->SetGridx();
 
 	gStyle->SetPalette(kRainBow);
 	new TCanvas();
