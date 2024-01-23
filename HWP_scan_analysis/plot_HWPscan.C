@@ -189,14 +189,18 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	gPad->SetGridx();
 
 	gStyle->SetPalette(kRainBow);
-	new TCanvas();
+	TCanvas* can_fit = new TCanvas();
+	double ncol = 4;
+	can_fit->Divide(ncol,int(ceil(Nangles/ncol)));
 	for (int i=0; i<Nangles; i++){
+		can_fit->cd(i+1);
 		g_traces[i]->SetName(Form("trace_%.1f",hwp_angles[i]));
 		g_traces[i]->SetTitle(Form("Trace (hwp = %.1f)",hwp_angles[i]));
+		g_traces[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+1);
 		g_traces[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces[i]->GetXaxis()->SetTitle("Time [ms]");
 		g_traces[i]->GetYaxis()->SetTitle("Trace [mV]");
-		g_traces[i]->Draw(i==0?"AL PLC":"L PLC");
+		g_traces[i]->Draw("AL PLC");
 	}
 
 	new TCanvas();
