@@ -4,6 +4,11 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 	bool do_sort = true;
 
+	TString HorQ = "HWP";
+	if (folder.Index("QWP") != -1){
+		HorQ = "QWP";
+	}
+
 	int Nangles = hwp_angles.size();
 
 	TGraph** g_traces = new TGraph* [Nangles];
@@ -23,7 +28,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	int Nvars = map_varnames.size();
 
 	if (Nfiles != Nangles){
-		cout<<"Errors! Looking for "<<Nangles<<" HWP angles, but found "<<Nfiles<<" files!\n";
+		cout<<"Errors! Looking for "<<Nangles<<" angles, but found "<<Nfiles<<" files!\n";
 		return;
 	}
 
@@ -155,9 +160,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	can_scan->Divide(3,1);
 	can_scan->cd(1);
 	if (do_sort) g_scan->Sort();
-	g_scan->SetName("HWPscan");
-	g_scan->SetTitle("HWP scan");
-	g_scan->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_scan->SetName(Form("%sscan",HorQ.Data()));
+	g_scan->SetTitle(Form("%s scan",HorQ.Data()));
+	g_scan->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
 	g_scan->GetYaxis()->SetTitle("Blumlein amplitude [mV]");
 	g_scan->SetMarkerStyle(20);
 	g_scan->Draw("APL");
@@ -165,9 +170,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 	can_scan->cd(2);
 	if (do_sort) g_stddev->Sort();
-	g_stddev->SetName("HWPscan_stddev");
-	g_stddev->SetTitle("HWP scan StdDev");
-	g_stddev->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_stddev->SetName(Form("%sscan_stddev",HorQ.Data()));
+	g_stddev->SetTitle(Form("%s scan StdDev",HorQ.Data()));
+	g_stddev->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
 	g_stddev->GetYaxis()->SetTitle("Baseline StdDev [mV]");
 	g_stddev->SetMarkerStyle(20);
 	g_stddev->Draw("APL");
@@ -175,9 +180,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 	can_scan->cd(3);
 	if (do_sort) g_snr->Sort();
-	g_snr->SetName("HWPscan_SNR");
-	g_snr->SetTitle("HWP scan SNR");
-	g_snr->GetXaxis()->SetTitle("HWP angle [#circ]");
+	g_snr->SetName(Form("%sscan_SNR",HorQ.Data()));
+	g_snr->SetTitle(Form("%s scan SNR",HorQ.Data()));
+	g_snr->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
 	g_snr->GetYaxis()->SetTitle("Signal/Noise");
 	g_snr->SetMarkerStyle(20);
 	g_snr->SetLineStyle(kDashed);
@@ -195,7 +200,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	for (int i=0; i<Nangles; i++){
 		can_fit->cd(i+1);
 		g_traces[i]->SetName(Form("trace_%.1f",hwp_angles[i]));
-		g_traces[i]->SetTitle(Form("Trace (hwp = %.1f)",hwp_angles[i]));
+		g_traces[i]->SetTitle(Form("Trace (%s = %.1f)",HorQ.Data(),hwp_angles[i]));
 		g_traces[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+1);
 		g_traces[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces[i]->GetXaxis()->SetTitle("Time [ms]");
@@ -203,14 +208,17 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_traces[i]->Draw("AL PLC");
 	}
 
-	new TCanvas();
+	TCanvas* can_norm = new TCanvas();
+	can_norm->Divide(ncol,int(ceil(Nangles/ncol)));
 	for (int i=0; i<Nangles; i++){
+		can_norm->cd(i+1);
 		g_traces_norm[i]->SetName(Form("trace_norm_%.1f",hwp_angles[i]));
-		g_traces_norm[i]->SetTitle(Form("Normalized trace (hwp = %.1f)",hwp_angles[i]));
+		g_traces_norm[i]->SetTitle(Form("Normalized trace (%s = %.1f)",HorQ.Data(),hwp_angles[i]));
+		g_traces_norm[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+1);
 		g_traces_norm[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces_norm[i]->GetXaxis()->SetTitle("Time [ms]");
 		g_traces_norm[i]->GetYaxis()->SetTitle("Trace [mV]");
-		g_traces_norm[i]->Draw(i==0?"AL PLC":"L PLC");
+		g_traces_norm[i]->Draw("AL PLC");
 	}
 
 	TString outname = folder;
