@@ -15,14 +15,16 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	TGraph** g_baselines = new TGraph* [Nangles];
 	TGraph** g_traces_norm = new TGraph* [Nangles];
 	TGraphErrors* g_scan = new TGraphErrors();
+	TGraphErrors* g_vibration = new TGraphErrors();
 	TGraph* g_stddev = new TGraph();
 	TGraph* g_snr = new TGraph();
 
 	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
 
+	TString firstfile = Form("%s/%s",folder.Data(),files[0].Data());
 	//Reading first file to get trace info
-	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(firstfile);
 	int Nlines = headers.first;
 	map<TString,int> map_varnames = headers.second;
 	int Nvars = map_varnames.size();
@@ -33,13 +35,22 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	}
 
 
+	//Read time boundaries
+	vector<vector<double>> traces = readFileTraces(firstfile,Nvars);
+	float tstart = traces[map_varnames["Time"]].front();
+	float tend = traces[map_varnames["Time"]].back();
+
+
 	double baseline_fit_start;
 	double baseline_fit_end;
 	double blumlein_fit_start;
 	double blumlein_fit_end;
+	double vibration_fit_start;
+	double vibration_fit_end;
 
 	TF1* f_baseline = new TF1("f_baseline","[0]");
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])");
+	TF1* f_vibration = new TF1("f_vibration","[0]+[1]*sin([2]*x+[3])");
 	TGraph* g_trend_stddev = new TGraph();
 
 	for (int fi=0; fi<Nangles; fi++){
@@ -105,6 +116,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		baseline_fit_end = first_kick_guess - 0.6;
 		blumlein_fit_start = first_kick_guess - 0.43;
 		blumlein_fit_end = first_kick_guess - 0.18;
+		vibration_fit_start = first_kick_guess + 2.0;
+		vibration_fit_end = first_kick_guess + 4.0;
 
 		for (int i=0; i<trace_time.size(); i++){
 			if (trace_time[i] >= baseline_fit_start && trace_time[i] < baseline_fit_end){
@@ -118,6 +131,10 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 		f_blumlein->SetParameters(polarity*60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-polarity*1000.0);
 		TFitResultPtr fit_blumlein = g_traces[fi]->Fit("f_blumlein","QS+","",blumlein_fit_start,blumlein_fit_end);
+
+		f_vibration->SetParameters(0,20,109,0);
+		f_vibration->SetParLimits(1,0,50);
+		TFitResultPtr fit_vibration = g_traces[fi]->Fit("f_vibration","QS+","",vibration_fit_start,vibration_fit_end);
 
 		if (fit_baseline<0 || fit_blumlein<0){
 			cout<<"Bad fit!\n";
@@ -133,11 +150,20 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double baseline_stddev = g_baselines[fi]->GetRMS(2);
 		double SNR = amplitude/baseline_stddev;
 
-		g_stddev->AddPoint(HWPangle,baseline_stddev);
-		g_snr->AddPoint(HWPangle,SNR);
-		g_scan->AddPoint(HWPangle,amplitude);
-		int ipoint = g_scan->GetN()-1;
-		g_scan->SetPointError(ipoint,0,peak_err+baseline_err);
+		double vibration_amp = 0;
+		double vibration_amp_err = 0;
+		if (fit_vibration >= 0){
+			vibration_amp = fit_vibration->Parameter(1);
+			vibration_amp_err = fit_vibration->ParError(1);
+		}
+
+		g_stddev->SetPoint(g_stddev->GetN(),HWPangle,baseline_stddev);
+		g_snr->SetPoint(g_snr->GetN(),HWPangle,SNR);
+		g_scan->SetPoint(g_scan->GetN(),HWPangle,amplitude);
+		g_scan->SetPointError(g_scan->GetN()-1,0,peak_err+baseline_err);
+
+		g_vibration->SetPoint(g_vibration->GetN(),HWPangle,vibration_amp);
+		g_vibration->SetPointError(g_vibration->GetN()-1,0,vibration_amp_err);
 
 		g_trend_stddev->SetPoint(g_trend_stddev->GetN(),datetime.Convert(),baseline_stddev);
 
@@ -193,6 +219,24 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	g_scan->Draw("APL");
 	gPad->SetGridx();
 
+
+	new TCanvas();
+	if (do_sort) g_vibration->Sort();
+	g_vibration->SetName(Form("%svibration",HorQ.Data()));
+	g_vibration->SetTitle(Form("%s vibration",HorQ.Data()));
+	g_vibration->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
+	g_vibration->GetYaxis()->SetTitle("Vibration amplitude [mV]");
+	g_vibration->SetMarkerStyle(20);
+	g_vibration->Draw("APL");
+	gPad->SetGridx();
+
+	new TCanvas();
+	g_vibration->SetMarkerColor(kRed);
+	g_scan->Draw("APL");
+	g_vibration->Draw("PL");
+	gPad->SetGridx();
+	gPad->BuildLegend();
+
 	gStyle->SetPalette(kRainBow);
 	TCanvas* can_fit = new TCanvas();
 	double ncol = 4;
@@ -201,7 +245,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		can_fit->cd(i+1);
 		g_traces[i]->SetName(Form("trace_%.1f",hwp_angles[i]));
 		g_traces[i]->SetTitle(Form("Trace (%s = %.1f)",HorQ.Data(),hwp_angles[i]));
-		g_traces[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+1);
+		g_traces[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+5);
 		g_traces[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces[i]->GetXaxis()->SetTitle("Time [ms]");
 		g_traces[i]->GetYaxis()->SetTitle("Trace [mV]");
@@ -214,7 +258,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		can_norm->cd(i+1);
 		g_traces_norm[i]->SetName(Form("trace_norm_%.1f",hwp_angles[i]));
 		g_traces_norm[i]->SetTitle(Form("Normalized trace (%s = %.1f)",HorQ.Data(),hwp_angles[i]));
-		g_traces_norm[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+1);
+		g_traces_norm[i]->GetXaxis()->SetRangeUser(baseline_fit_start-0.5,blumlein_fit_end+5);
 		g_traces_norm[i]->GetYaxis()->SetRangeUser(-70,70);
 		g_traces_norm[i]->GetXaxis()->SetTitle("Time [ms]");
 		g_traces_norm[i]->GetYaxis()->SetTitle("Trace [mV]");

@@ -61,13 +61,13 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 
 
 	for (int bn=1; bn<=trace->GetNbinsX(); bn++){
-		if (trace->GetBinContent(bn) < -50){
+		if (trace->GetBinContent(bn) < -60){
 			trace->SetBinContent(bn,0);
 		}
 	}
 	for (int i=0; i<10; i++){
 		for (int bn=1; bn<=g_trace_trend[i]->GetNbinsX(); bn++){
-			if (g_trace_trend[i]->GetBinContent(bn) < -50){
+			if (g_trace_trend[i]->GetBinContent(bn) < -60){
 				g_trace_trend[i]->SetBinContent(bn,0);
 			}
 		}
@@ -158,8 +158,8 @@ void plot_output(TString filename="output.root",TString outfolder=""){
 	g_trend_blumlein->SetLineWidth(2);
 	g_trend_baseline->SetLineColor(kBlue);
 	g_trend_blumlein->SetLineColor(kRed);
-	g_trend_baseline->GetYaxis()->SetRangeUser(-30,100);
-	g_trend_blumlein->GetYaxis()->SetRangeUser(-30,100);
+	g_trend_baseline->GetYaxis()->SetRangeUser(-80,100);
+	g_trend_blumlein->GetYaxis()->SetRangeUser(-80,100);
 	g_trend_baseline->Draw("APLZ");
 	g_trend_blumlein->Draw("PLZ");
 	gPad->SetGridy();

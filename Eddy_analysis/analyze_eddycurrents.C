@@ -220,7 +220,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		avgC_stddev = sqrt(avgC_squared - avgC_baseline*avgC_baseline);
 		avgC_baselineerr = avgC_stddev / sqrt(Nlines_baseline);
 
-		f_blumlein->SetParameters(60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-1000.0);
+		f_blumlein->SetParameters(polarity*60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-polarity*1000.0);
 		TFitResultPtr fit_blumlein = g_blumlein_temp->Fit("f_blumlein","QS","",blumlein_fit_start,blumlein_fit_end);
 		double peak = avgC_baseline;
 		double peakerr = 0;
@@ -232,7 +232,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		double blumerr = sqrt(peakerr*peakerr + avgC_baselineerr*avgC_baselineerr);
 		double AB = A_avg + B_avg;
 		double ABdiff = B_avg - A_avg;
-		double SNR = blumlein/avgC_stddev;
+		double SNR = abs(blumlein)/avgC_stddev;
 
 		g_trend_A->SetPoint(g_trend_A->GetN(),datetime.Convert(),A_avg);
 		g_trend_B->SetPoint(g_trend_B->GetN(),datetime.Convert(),B_avg);

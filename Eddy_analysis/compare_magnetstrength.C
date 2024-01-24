@@ -15,13 +15,22 @@ void compare_magnetstrength(){
 	vector<double> strengths = {0, 3884, 4595, 5175};
 	*/
 	
+	//October comparison
+	/*
 	TFile* f1 = TFile::Open("fitted_noSNR_kick_analysis_output_SD_R0_eddy_oct23_H25_B0_k777.root");
 	TFile* f2 = TFile::Open("fitted_noSNR_kick_analysis_output_SD_R0_eddy_oct20_H25_B50_k777.root");
 	TFile* f3 = TFile::Open("fitted_noSNR_kick_analysis_output_SD_R0_eddy_oct21_H25_B88_k777.root");
 	TFile* f4 = TFile::Open("fitted_noSNR_kick_analysis_output_SD_R0_eddy_oct21_H25_B100_k777.root");
 	//TFile* f4 = TFile::Open("fitted_noSNR_kick_analysis_output_SD_R0_eddy_oct22_H25_B100_k777.root");
 	vector<double> strengths = {0, 2468, 4595, 5175};
-	
+	*/
+
+	//January comparison
+	TFile* f1 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan21_B3043_H24.root");
+	TFile* f2 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan20_B3619_H16.root");
+	TFile* f3 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan19_B4353_H23.root");
+	TFile* f4 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan19_B5175_H15.root");
+	vector<double> strengths = {3043, 3619, 4353, 5175};
 
 
 	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_px");
@@ -99,8 +108,8 @@ void compare_magnetstrength(){
 	double peakerr3 = f3_kick1_exp_res->GetFunction("f_blumlein")->GetParError(0);
 	double blum3 = peak3 - base3;
 	double blumerr3 = sqrt(baseerr3*baseerr3 + peakerr3*peakerr3);
-	//g_blum_amp->SetPoint(g_blum_amp->GetN(),blum3,amp3);
-	//g_blum_amp->SetPointError(g_blum_amp->GetN()-1,blumerr3,amperr3);
+	g_blum_amp->SetPoint(g_blum_amp->GetN(),blum3,amp3);
+	g_blum_amp->SetPointError(g_blum_amp->GetN()-1,blumerr3,amperr3);
 	double amp4 = f4_kick1_exp->GetFunction("f_exp")->GetParameter(0);
 	double amperr4 = f4_kick1_exp->GetFunction("f_exp")->GetParError(0);
 	double base4 = f4_kick1_exp_res->GetFunction("pol0")->GetParameter(0);
@@ -116,7 +125,7 @@ void compare_magnetstrength(){
 	vector<double> norm_factor;
 	norm_factor.push_back(50./peak1);
 	norm_factor.push_back(50./peak2);
-	norm_factor.push_back(-50./peak3);
+	norm_factor.push_back(50./peak3);
 	norm_factor.push_back(50./peak4);
 
 
@@ -146,8 +155,8 @@ void compare_magnetstrength(){
 	g_magnet_amp->SetPointError(g_magnet_amp->GetN()-1,0,amperr1*norm_factor[0]);
 	g_magnet_amp->SetPoint(g_magnet_amp->GetN(),strengths[1],amp2*norm_factor[1]);
 	g_magnet_amp->SetPointError(g_magnet_amp->GetN()-1,0,amperr2*norm_factor[1]);
-	//g_magnet_amp->SetPoint(g_magnet_amp->GetN(),strengths[2],amp3*norm_factor[2]);
-	//g_magnet_amp->SetPointError(g_magnet_amp->GetN()-1,0,amperr3*norm_factor[2]);
+	g_magnet_amp->SetPoint(g_magnet_amp->GetN(),strengths[2],amp3*norm_factor[2]);
+	g_magnet_amp->SetPointError(g_magnet_amp->GetN()-1,0,amperr3*norm_factor[2]);
 	g_magnet_amp->SetPoint(g_magnet_amp->GetN(),strengths[3],amp4*norm_factor[3]);
 	g_magnet_amp->SetPointError(g_magnet_amp->GetN()-1,0,amperr4*norm_factor[3]);
 	new TCanvas();
@@ -334,18 +343,18 @@ void compare_magnetstrength(){
 	can3->cd(1);
 	f1_kick1_norm->SetLineColor(1);
 	f2_kick1_norm->SetLineColor(2);
-	//f3_kick1_norm->SetLineColor(3);
+	f3_kick1_norm->SetLineColor(3);
 	f4_kick1_norm->SetLineColor(4);
 	f1_kick1_norm->Draw("HIST");
 	f2_kick1_norm->Draw("HIST SAME");
-	//f3_kick1_norm->Draw("HIST SAME");
+	f3_kick1_norm->Draw("HIST SAME");
 	f4_kick1_norm->Draw("HIST SAME");
 	f1_kick1_norm->GetXaxis()->SetRangeUser(-1,1);
 	f1_kick1_norm->GetYaxis()->SetRangeUser(-30,60);
 	f2_kick1_norm->GetXaxis()->SetRangeUser(-1,1);
 	f2_kick1_norm->GetYaxis()->SetRangeUser(-30,60);
-	//f3_kick1_norm->GetXaxis()->SetRangeUser(-1,1);
-	//f3_kick1_norm->GetYaxis()->SetRangeUser(-30,60);
+	f3_kick1_norm->GetXaxis()->SetRangeUser(-1,1);
+	f3_kick1_norm->GetYaxis()->SetRangeUser(-30,60);
 	f4_kick1_norm->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick1_norm->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
@@ -353,18 +362,18 @@ void compare_magnetstrength(){
 	can3->cd(2);
 	f1_kick8_norm->SetLineColor(1);
 	f2_kick8_norm->SetLineColor(2);
-	//f3_kick8_norm->SetLineColor(3);
+	f3_kick8_norm->SetLineColor(3);
 	f4_kick8_norm->SetLineColor(4);
 	f1_kick8_norm->Draw("HIST");
 	f2_kick8_norm->Draw("HIST SAME");
-	//f3_kick8_norm->Draw("HIST SAME");
+	f3_kick8_norm->Draw("HIST SAME");
 	f4_kick8_norm->Draw("HIST SAME");
 	f1_kick8_norm->GetXaxis()->SetRangeUser(-1,1);
 	f1_kick8_norm->GetYaxis()->SetRangeUser(-30,60);
 	f2_kick8_norm->GetXaxis()->SetRangeUser(-1,1);
 	f2_kick8_norm->GetYaxis()->SetRangeUser(-30,60);
-	//f3_kick8_norm->GetXaxis()->SetRangeUser(-1,1);
-	//f3_kick8_norm->GetYaxis()->SetRangeUser(-30,60);
+	f3_kick8_norm->GetXaxis()->SetRangeUser(-1,1);
+	f3_kick8_norm->GetYaxis()->SetRangeUser(-30,60);
 	f4_kick8_norm->GetXaxis()->SetRangeUser(-1,1);
 	f4_kick8_norm->GetYaxis()->SetRangeUser(-30,60);
 	gPad->SetGridy();
