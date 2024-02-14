@@ -25,7 +25,7 @@ vector<TString> getListOfFiles(TString folder){
 TDatime getFileTime(TString filename){
     int istart = filename.Index(TRegexp("[0-9][0-9]_[0-9][0-9]_[0-9][0-9][0-9][0-9] [0-9][0-9]_[0-9][0-9]_[0-9][0-9]"));
     filename.Remove(0,istart);
-    filename.Remove(istart+19);
+    filename.Remove(19); //Length of date string
 
     int yy, mm, dd, hh, mi, ss;
     if (!(sscanf(filename, "%d_%d_%d %d_%d_%d", &mm, &dd, &yy, &hh, &mi, &ss) == 6)){
