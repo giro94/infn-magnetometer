@@ -23,11 +23,9 @@ vector<TString> getListOfFiles(TString folder){
 }
 
 TDatime getFileTime(TString filename){
-    int idx = filename.Index(TRegexp("_[0-9]"));
-    if (idx >= 0){
-        filename.Remove(0,idx+1);
-    }
-    filename.ReplaceAll(".csv","");
+    int istart = filename.Index(TRegexp("[0-9][0-9]_[0-9][0-9]_[0-9][0-9][0-9][0-9] [0-9][0-9]_[0-9][0-9]_[0-9][0-9]"));
+    filename.Remove(0,istart);
+    filename.Remove(istart+19);
 
     int yy, mm, dd, hh, mi, ss;
     if (!(sscanf(filename, "%d_%d_%d %d_%d_%d", &mm, &dd, &yy, &hh, &mi, &ss) == 6)){
@@ -141,9 +139,12 @@ vector<vector<double>> readFileTraces(TString filepath, int Nvars){
     return vectors;
 }
 
-TH1D* runningAverage(TH1D* input, int width, bool weighted=false){
+TH1D* runningAverage(TH1D* input, int width, bool weighted=false, TString fname=""){
 
-    TH1D* hist_ra = (TH1D*)input->Clone(Form("%s_runningAverage%d%s",input->GetName(),width,weighted?"W":""));
+    if (fname == ""){
+        fname = input->GetName();
+    }
+    TH1D* hist_ra = (TH1D*)input->Clone(Form("%s_runningAverage%d%s",fname.Data(),width,weighted?"W":""));
 
     int Nbins = hist_ra->GetNbinsX();
     for (int bn=1; bn<=Nbins; bn++){
@@ -168,8 +169,8 @@ TH1D* runningAverage(TH1D* input, int width, bool weighted=false){
 }
 
 
-TH1D* runningAverage_5_10_15(TH1D* input){
-    return runningAverage(runningAverage(runningAverage(input,5,true),10,true),15,true);
+TH1D* runningAverage_5_10_15(TH1D* input, TString fname=""){
+    return runningAverage(runningAverage(runningAverage(input,5,true),10,true),15,true,fname);
 }
 
 void cleanTrace(TH1D* trace, double threshold=-50, double setvalue=0){
