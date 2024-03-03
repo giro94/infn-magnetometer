@@ -169,6 +169,14 @@ TH1D* runningAverage(TH1D* input, int width, bool weighted=false, TString fname=
 }
 
 
+TH1D* runningAverage_5(TH1D* input, TString fname=""){
+    return runningAverage(input,5,true,fname);
+}
+
+TH1D* runningAverage_5_10(TH1D* input, TString fname=""){
+    return runningAverage(runningAverage(input,5,true),10,true,fname);
+}
+
 TH1D* runningAverage_5_10_15(TH1D* input, TString fname=""){
     return runningAverage(runningAverage(runningAverage(input,5,true),10,true),15,true,fname);
 }
@@ -235,6 +243,34 @@ TH1D* doFFT(TH1D* h_in, double xmin, double xmax, TString hname=""){
     delete fft_histogram;
     delete h_in_fftInit;
     return h_out;
+}
+
+TH2D* getSpectrograph(TH1D* h_in, double xmin, double xmax, double xwidth, TString hname=""){
+
+    double xwindow = xmax-xmin;
+    double binW = h_in->GetBinWidth(1);
+    int nBinsSlice = xwidth / binW;
+    int nSlices = xwindow / xwidth;
+
+    TString hname_ = (hname=="" ? Form("%s_spectrograph",h_in->GetName()) : hname);
+    TH2D* h2_spectrograph = new TH2D(hname_,"Spectrograph",nSlices,xmin,xmax,nBinsSlice,0,nBinsSlice/xwidth);
+
+    for (int i=0; i<nSlices; i++){
+        double slice_start = xmin + i*xwidth;
+        double slice_end = slice_start + xwidth;
+        double slice_center = 0.5*(slice_start+slice_end);
+        TH1D* fft_slice = doFFT(h_in,slice_start,slice_end);
+        for (int bx=1; bx<=fft_slice->GetNbinsX(); bx++){
+            h2_spectrograph->Fill(slice_center,fft_slice->GetBinCenter(bx),fft_slice->GetBinContent(bx));
+        }
+        delete fft_slice;
+    }
+
+    h2_spectrograph->GetXaxis()->SetTitle("Time [ms]");
+    h2_spectrograph->GetYaxis()->SetTitle("Frequency [kHz]");
+    h2_spectrograph->GetZaxis()->SetTitle("FFT Magnitude [Arb Units]");
+    h2_spectrograph->GetYaxis()->SetRangeUser(1./xwidth,0.5/binW);
+    return h2_spectrograph;
 }
 
 

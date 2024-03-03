@@ -18,7 +18,7 @@ void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
 	TH1D* trace = ((TProfile*)f->Get(Form("trace%s",SNRstring.Data())))->ProjectionX();
 	TH1D** kicks = new TH1D*[8];
 	for (int i=0; i<8; i++){
-		kicks[i] = ((TProfile*)f->Get(Form("trace%s_kick%d",SNRstring.Data(),i+1)))->ProjectionX();
+		kicks[i] = ((TProfile*)f->Get(Form("trace%s_kick%d_calibrated",SNRstring.Data(),i+1)))->ProjectionX();
 	}
 	TH1D* kick8long = ((TProfile*)f->Get(Form("trace%s_kick8long",SNRstring.Data())))->ProjectionX();
 
@@ -28,14 +28,14 @@ void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
 	}
 	cleanTrace(kick8long,-50);
 
-	TH1D* trace_ra = runningAverage(runningAverage(runningAverage(trace,5,true),10,true),15,true);
+	TH1D* trace_ra = runningAverage_5_10_15(trace);
 	trace_ra->SetTitle(Form("%s (RunningAvg %d)",trace->GetTitle(),51015));	
 	TH1D** kicks_ra = new TH1D*[8];
 	for (int i=0; i<8; i++){
-		kicks_ra[i] = runningAverage(runningAverage(runningAverage(kicks[i],5,true),10,true),15,true);
+		kicks_ra[i] = runningAverage_5_10_15(kicks[i]);
 		kicks_ra[i]->SetTitle(Form("%s (RunningAvg %d)",kicks[i]->GetTitle(),51015));	
 	}
-	TH1D* kick8long_ra = runningAverage(runningAverage(runningAverage(kick8long,5,true),10,true),15,true);
+	TH1D* kick8long_ra = runningAverage_5_10_15(kick8long);
 	kick8long_ra->SetTitle(Form("%s (RunningAvg %d)",kick8long->GetTitle(),51015));	
 
 
@@ -247,17 +247,17 @@ void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
 
 	TF1* f_exp_17 = new TF1("f_exp_17","[2]-[0]*exp(-x/[1])+[3]*exp(-x/[4])*sin([5]*6.283185307*x+[6])");
 	f_exp_17->SetParameters(10,0.07,0,2,0.3,17,0);
-	f_exp_17->SetParLimits(3,0.5,5);
+	f_exp_17->SetParLimits(3,0.5,10);
 	f_exp_17->SetParLimits(4,0.1,1.0);
-	f_exp_17->SetParLimits(5,16,18);
+	f_exp_17->SetParLimits(5,15,19);
 	f_exp_17->SetParNames("A","#tau","offset","A_{1}","#tau_{1}","f_{1}","#phi_{1}");
 
 	TF1* f_exp_17_4 = new TF1("f_exp_17_4","[2]-[0]*exp(-x/[1])+[3]*exp(-x/[4])*sin([5]*6.283185307*x+[6])+[7]*sin([8]*6.283185307*x+[9])");
 	f_exp_17_4->SetParameters(10,0.07,0,2,0.3,17,0,5,4,0);
-	f_exp_17_4->SetParLimits(3,0.5,5);
+	f_exp_17_4->SetParLimits(3,0.5,10);
 	f_exp_17_4->SetParLimits(4,0.1,1.0);
-	f_exp_17_4->SetParLimits(5,16,18);
-	f_exp_17_4->SetParLimits(7,0.1,10);
+	f_exp_17_4->SetParLimits(5,15,19);
+	f_exp_17_4->SetParLimits(7,0.1,20);
 	f_exp_17_4->SetParLimits(8,3,5);
 	f_exp_17_4->SetParNames("A","#tau","offset","A_{1}","#tau_{1}","f_{1}","#phi_{1}","A_{2}","f_{2}","#phi_{2}");
 
@@ -287,7 +287,7 @@ void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
 		kicks_fit_exp[i]->GetYaxis()->SetRangeUser(-20,20);
 
 		f_exp->SetParameters(10,0.07,0);
-		//f_exp->FixParameter(2,0.0);
+		f_exp->FixParameter(2,0.0);
 		TFitResultPtr fit_kick = kicks_fit_exp[i]->Fit(f_exp,"QS","",0.02,0.7);
 		g_off->SetPoint(g_off->GetN(),i+1,fit_kick->Parameter(2));
 		g_off->SetPointError(g_off->GetN()-1,0,fit_kick->ParError(2));

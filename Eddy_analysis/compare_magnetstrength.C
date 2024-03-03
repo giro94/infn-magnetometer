@@ -26,10 +26,10 @@ void compare_magnetstrength(){
 	*/
 
 	//January comparison
-	TFile* f1 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan21_B3043_H24.root");
-	TFile* f2 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan20_B3619_H16.root");
-	TFile* f3 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan19_B4353_H23.root");
-	TFile* f4 = TFile::Open("fitted_noSNR_kick_analysis_output_EC_jan19_B5175_H15.root");
+	TFile* f1 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan21_B3043_H24.root");
+	TFile* f2 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan20_B3619_H16.root");
+	TFile* f3 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan19_B4353_H23.root");
+	TFile* f4 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan19_B5175_H15.root");
 	vector<double> strengths = {3043, 3619, 4353, 5175};
 
 
@@ -67,6 +67,11 @@ void compare_magnetstrength(){
 	f2_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[1]));
 	f3_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[2]));
 	f4_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[3]));
+
+	f1_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[0]));
+	f2_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[1]));
+	f3_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[2]));
+	f4_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[3]));
 
 	f1_kick8->SetTitle(Form("Kick 8 (Magnet %.f A)",strengths[0]));
 	f2_kick8->SetTitle(Form("Kick 8 (Magnet %.f A)",strengths[1]));
@@ -129,14 +134,14 @@ void compare_magnetstrength(){
 	norm_factor.push_back(50./peak4);
 
 
-	TH1D* f1_kick1_norm = (TH1D*)f1_kick1->Clone("trace_kick1_norm");
-	TH1D* f2_kick1_norm = (TH1D*)f2_kick1->Clone("trace_kick1_norm");
-	TH1D* f3_kick1_norm = (TH1D*)f3_kick1->Clone("trace_kick1_norm");
-	TH1D* f4_kick1_norm = (TH1D*)f4_kick1->Clone("trace_kick1_norm");
-	TH1D* f1_kick8_norm = (TH1D*)f1_kick8->Clone("trace_kick8_norm");
-	TH1D* f2_kick8_norm = (TH1D*)f2_kick8->Clone("trace_kick8_norm");
-	TH1D* f3_kick8_norm = (TH1D*)f3_kick8->Clone("trace_kick8_norm");
-	TH1D* f4_kick8_norm = (TH1D*)f4_kick8->Clone("trace_kick8_norm");
+	TH1D* f1_kick1_norm = (TH1D*)f1_kick1_exp->Clone("trace_kick1_norm");
+	TH1D* f2_kick1_norm = (TH1D*)f2_kick1_exp->Clone("trace_kick1_norm");
+	TH1D* f3_kick1_norm = (TH1D*)f3_kick1_exp->Clone("trace_kick1_norm");
+	TH1D* f4_kick1_norm = (TH1D*)f4_kick1_exp->Clone("trace_kick1_norm");
+	TH1D* f1_kick8_norm = (TH1D*)f1_kick8_exp->Clone("trace_kick8_norm");
+	TH1D* f2_kick8_norm = (TH1D*)f2_kick8_exp->Clone("trace_kick8_norm");
+	TH1D* f3_kick8_norm = (TH1D*)f3_kick8_exp->Clone("trace_kick8_norm");
+	TH1D* f4_kick8_norm = (TH1D*)f4_kick8_exp->Clone("trace_kick8_norm");
 
 	f1_kick1_norm->Scale(norm_factor[0]);
 	f2_kick1_norm->Scale(norm_factor[1]);
@@ -149,6 +154,18 @@ void compare_magnetstrength(){
 	f4_kick8_norm->Scale(norm_factor[3]);
 
 
+	f1_kick1_norm->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[0]));
+	f2_kick1_norm->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[1]));
+	f3_kick1_norm->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[2]));
+	f4_kick1_norm->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[3]));
+	f1_kick1_norm->SetLineWidth(2);
+	f2_kick1_norm->SetLineWidth(2);
+	f3_kick1_norm->SetLineWidth(2);
+	f4_kick1_norm->SetLineWidth(2);
+	f1_kick1_norm->SetLineColor(1);
+	f2_kick1_norm->SetLineColor(2);
+	f3_kick1_norm->SetLineColor(3);
+	f4_kick1_norm->SetLineColor(4);
 
 	TGraphErrors* g_magnet_amp = new TGraphErrors();
 	g_magnet_amp->SetPoint(g_magnet_amp->GetN(),strengths[0],amp1*norm_factor[0]);
@@ -240,6 +257,10 @@ void compare_magnetstrength(){
 	TCanvas* can = new TCanvas("can","",1800,900);
 	can->Divide(2,1);
 	can->cd(1);
+	f1_kick1_exp->SetLineWidth(2);
+	f2_kick1_exp->SetLineWidth(2);
+	f3_kick1_exp->SetLineWidth(2);
+	f4_kick1_exp->SetLineWidth(2);
 	f1_kick1_exp->SetLineColor(1);
 	f2_kick1_exp->SetLineColor(2);
 	f3_kick1_exp->SetLineColor(3);

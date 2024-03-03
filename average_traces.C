@@ -45,6 +45,8 @@ void average_traces(TString folder, TString foutname=""){
 	for (int fi=0; fi<Nfiles; fi++){
 
 		TString fname = files[fi];
+		if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+
 		TDatime datetime = getFileTime(fname);
 		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
 
@@ -60,9 +62,20 @@ void average_traces(TString folder, TString foutname=""){
 
 	}
 
+	TH1D** g_traces_ra = new TH1D* [Nvars-1];
+	for (int i=0; i<Nvars-1; i++){
+		g_traces_ra[i] = runningAverage_5_10_15(g_traces[i]->ProjectionX());
+		g_traces_ra[i]->SetLineColor(colors[i]);
+	}
+
 	for (int i=0; i<Nvars-1; i++){
 		new TCanvas();
 		g_traces[i]->Draw("HIST");
+	}
+
+	for (int i=0; i<Nvars-1; i++){
+		new TCanvas();
+		g_traces_ra[i]->Draw("HIST");
 	}
 
 	if (saveOutput){

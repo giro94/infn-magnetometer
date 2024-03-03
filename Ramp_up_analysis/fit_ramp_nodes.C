@@ -14,8 +14,12 @@ void fit_ramp_nodes(){
 		"output_Ramp_jan29_H25Q00_5173to0.root"
 	};
 
-	double fit_range = 50; //Ampere
-	double a_to_G = 1.45e4 / 5173.;
+	TFile* f_calibration = TFile::Open("BI.root");
+	TGraphErrors* g_BI = (TGraphErrors*)f_calibration->Get("g_BI");
+	bool calibrate = true;
+
+	double fit_range = calibrate?0.014:50; //Ampere or teslas
+	double a_to_G = calibrate?1e4:(1.45e4 / 5173.);
 	double sensor_gain = 28.13;
 
 	int Nfiles = filenames.size();
@@ -39,6 +43,13 @@ void fit_ramp_nodes(){
 		g_ramp_down[i] = new TGraphErrors();
 		g_ramp_up[i] = new TGraphErrors();
 
+		if (calibrate){
+			for (int j=0; j<g_ramp[i]->GetN(); j++){
+				g_ramp[i]->SetPointX(j,g_BI->Eval(g_ramp[i]->GetPointX(j),0,"S"));
+				g_ramp[i]->GetXaxis()->SetTitle("Bfield [T]");
+			}
+		}
+
 		//hack to normalize H25Q00 to H25Q130 (blumlein ratio = 0.69)
 		//if (filenames[i]=="output_Ramp_jan29_H25Q00_5173to0.root"){
 		//	for (int j=0; j<g_ramp[i]->GetN(); j++){
@@ -50,21 +61,21 @@ void fit_ramp_nodes(){
 		TString histTitle = filenames[i];
 		histTitle.Remove(0,histTitle.Index("Ramp_")+5);
 		g_ramp[i]->SetTitle(histTitle);
-		g_ramp[i]->GetXaxis()->SetRangeUser(0,5500);
+		g_ramp[i]->GetXaxis()->SetRangeUser(0,calibrate?1.5:5500);
 		g_ramp[i]->GetYaxis()->SetRangeUser(-15,15);
 		g_ramp[i]->SetLineWidth(2);
 		g_ramp[i]->SetMarkerStyle(20);
 		g_ramp[i]->SetMarkerColor(i%8+1);
 
 		g_ramp_down[i]->SetTitle(histTitle);
-		g_ramp_down[i]->GetXaxis()->SetRangeUser(0,5500);
+		g_ramp_down[i]->GetXaxis()->SetRangeUser(0,calibrate?1.5:5500);
 		g_ramp_down[i]->GetYaxis()->SetRangeUser(-15,15);
 		g_ramp_down[i]->SetLineWidth(2);
 		g_ramp_down[i]->SetMarkerStyle(20);
 		g_ramp_down[i]->SetMarkerColor(i%8+1);
 	
 		g_ramp_up[i]->SetTitle(histTitle);
-		g_ramp_up[i]->GetXaxis()->SetRangeUser(0,5500);
+		g_ramp_up[i]->GetXaxis()->SetRangeUser(0,calibrate?1.5:5500);
 		g_ramp_up[i]->GetYaxis()->SetRangeUser(-15,15);
 		g_ramp_up[i]->SetLineWidth(2);
 		g_ramp_up[i]->SetMarkerStyle(20);
@@ -101,11 +112,13 @@ void fit_ramp_nodes(){
 			if ((prev_y < 0 && y > 0) || (prev_y > 0 && y < 0)){
 				double ratio = -prev_y/(y-prev_y);
 				double x_node = ratio * (x-prev_x) + prev_x;
-				if (abs(x-prev_x)>0.1){
+				if (abs(x-prev_x)>(calibrate?3e-5:0.1)){
 					nodes_down[i].push_back(x_node);
 				}
 			}
 		}
+		//Artificially put last node
+		nodes_down[i].push_back(calibrate?1.438:5130);
 		sort(nodes_down[i].begin(),nodes_down[i].end());
 
 		for (int j=1; j<g_ramp_up[i]->GetN(); j++){
@@ -116,13 +129,14 @@ void fit_ramp_nodes(){
 			if ((prev_y < 0 && y > 0) || (prev_y > 0 && y < 0)){
 				double ratio = -prev_y/(y-prev_y);
 				double x_node = ratio * (x-prev_x) + prev_x;
-				if (abs(x-prev_x)>0.1){
+				if (abs(x-prev_x)>(calibrate?3e-5:0.1)){
 					nodes_up[i].push_back(x_node);
 				}
 			}
 		}
 		sort(nodes_up[i].begin(),nodes_up[i].end());
 
+		f[i]->Close();
 	}
 
 
@@ -169,13 +183,30 @@ void fit_ramp_nodes(){
 		
 		g_slope[i]->SetName(Form("g_slope_%d",i));
 		g_slope[i]->SetTitle(Form("g_slope_%d",i));
-		g_slope[i]->GetXaxis()->SetTitle("Current [A]");
+		g_slope[i]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
 		g_slope[i]->GetYaxis()->SetTitle("Slope [mV/mG]");
-		g_slope[i]->GetXaxis()->SetLimits(0,5500);
+		g_slope[i]->GetXaxis()->SetLimits(0,calibrate?1.5:5500);
 		g_slope[i]->GetYaxis()->SetRangeUser(0.1,0.7);
 		g_slope[i]->SetMarkerStyle(20);
 		g_slope[i]->SetMarkerColor(i%8+1);
 		g_slope[i]->Draw(i==0?"APLZ":"PLZ");
+
+		TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",0,calibrate?1.4:4000);
+		cout<<"Slope fit: "<<res->Parameter(0)<<" +- "<<res->ParError(0)<<"\n";
+		double y=0;
+		double y2=0;
+		double nfit=0;
+		for (int j=0; j<g_slope[i]->GetN(); j++){
+			if (g_slope[i]->GetPointX(j) < calibrate?1.5:4000){
+				y += g_slope[i]->GetPointY(j);
+				y2 += g_slope[i]->GetPointY(j)*g_slope[i]->GetPointY(j);
+				nfit += 1;
+			}
+		}
+		y /= nfit;
+		y2 /= nfit;
+		double rms = sqrt(y2 - y*y);
+		cout<<"RMS: "<<rms<<", mean error: "<<rms/sqrt(nfit)<<"\n";
 	}
 	gPad->SetGridy();
 

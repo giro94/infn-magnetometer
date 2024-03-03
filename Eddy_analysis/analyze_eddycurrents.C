@@ -8,6 +8,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	double kick_trigger = -200.0;
 	double polarity = 1;
 
+	double absolute_calibration = 129.; //Blumlein in mG
+
 	//Begin reading of files
 	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
@@ -59,6 +61,15 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TProfile* g_fulltrace_skipped = new TProfile("trace_skipped","Skipped traces;Time [ms];Voltage [mV]",Nlines,tstart-5,tend-5);
 
 	TProfile* g_fulltrace_blum50 = new TProfile("trace_blum50","Normalized trace (blumlein 50 mV);Time [ms];Voltage [mV]",Nlines,tstart,tend);
+	TProfile* g_fulltrace_calibrated = new TProfile("trace_calibrated","Calibrated trace;Time [ms];B field [mG]",Nlines,tstart,tend);
+	TProfile** g_trace_kicks_calibrated = new TProfile*[8];
+	for (int i=0; i<8; i++){
+		TString hname = Form("trace_kick%d_calibrated",i+1);
+		TString htitle = Form("Trace Kick %d (calibrated);Time [ms];B field [mG]",i+1);
+		g_trace_kicks_calibrated[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
+	}
+
+	TH1D* g_fulltrace_ra = new TH1D("trace_ra","Trace (runningAvg);Time [ms];Voltage [mV]",Nlines,tstart,tend);
 
 	for (int i=0; i<8; i++){
 		TString hname = Form("trace_SNR0_kick%d",i+1);
@@ -114,8 +125,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		if (Nfilesmax > 0 && fi >= Nfilesmax) break;
 
 		TString fname = files[fi];
-		//if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
-		cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+		if (fi%10==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+		
 		vector<pair<double,double>> trace;
 
 		TDatime datetime = getFileTime(fname);
@@ -260,6 +271,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 			h2_fulltrace->Fill(trace_time[i],trace_avgC[i]);
 			g_fulltrace->Fill(trace_time[i],trace_avgC[i]);
 			g_fulltrace_blum50->Fill(trace_time[i],trace_avgC[i] * 50.0 / blumlein);
+			g_fulltrace_calibrated->Fill(trace_time[i],trace_avgC[i] * absolute_calibration / blumlein);
 			if (SNR < SNR_th1) g_fulltrace_SNR0->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR > SNR_th1) g_fulltrace_SNR1->Fill(trace_time[i],trace_avgC[i]);
 			if (SNR > SNR_th2){
@@ -289,6 +301,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 						for (int k=0; k<trace_time.size(); k++){
 							if (trace_time[k] >= kick_time + t_before && trace_time[k] < kick_time + t_after){
 								g_trace_kicks[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
+								g_trace_kicks_calibrated[i]->Fill(trace_time[k]-kick_time,trace_avgC[k] * absolute_calibration / blumlein);
 								if (SNR < SNR_th1) g_trace_kicks_SNR0[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
 								if (SNR > SNR_th1) g_trace_kicks_SNR1[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
 								if (SNR > SNR_th2) g_trace_kicks_SNR2[i]->Fill(trace_time[k]-kick_time,trace_avgC[k]);
@@ -319,6 +332,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		g_trace_kickavg->Add(g_trace_kicks[i]);
 	}
 
+	g_fulltrace_ra = runningAverage_5_10_15(g_fulltrace->ProjectionX());
+	g_fulltrace_ra->SetName("trace_ra");
 
 	g_trend_A->SetName("g_trend_A");
 	g_trend_B->SetName("g_trend_B");

@@ -2,6 +2,9 @@
 
 void plot_kicks(TString folder, TString output_file=""){
 
+	TDatime oct8_k3ramp = TDatime(2023,10,8,10,38,0);
+	TDatime oct9_k3ramp = TDatime(2023,10,9,15,25,0);
+
 	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
 
@@ -11,6 +14,12 @@ void plot_kicks(TString folder, TString output_file=""){
 	map<TString,int> map_varnames = headers.second;
 	int Nvars = map_varnames.size();
 
+	bool saveOutput=false;
+	TFile* fout;
+	if (output_file != ""){
+		saveOutput=true;
+		fout = new TFile(output_file,"recreate");
+	}
 
 	TGraph** g_kicks = new TGraph* [Nfiles];
 	TGraph** g_kicksA = new TGraph* [Nfiles];
@@ -42,11 +51,20 @@ void plot_kicks(TString folder, TString output_file=""){
 
 	double I = 0.8/sin(0.4);
 
+
 	for (int fi=0; fi<Nfiles; fi++){
 		
         TString fname = files[fi];
 		TDatime datetime = getFileTime(fname);
 		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
+
+		//Subtract kick ramp time
+		if (fname.Index("10_08_2023") != -1){
+			datetime = TDatime(datetime.Convert()-oct8_k3ramp.Convert());
+		}
+		if (fname.Index("10_09_2023") != -1){
+			datetime = TDatime(datetime.Convert()-oct9_k3ramp.Convert());
+		}
 
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
 		vector<double> trace_time = traces[map_varnames["Time"]];
@@ -63,38 +81,54 @@ void plot_kicks(TString folder, TString output_file=""){
 			g_kicksA[fi]->SetPoint(i, trace_time[i], trace_A[i]);
 			g_kicksB[fi]->SetPoint(i, trace_time[i], trace_B[i]);
 			g_kicks_linearized[fi]->SetPoint(i, trace_time[i], asin(trace_ABdiff[i]/I));
-		}      
+		}
 
 
 		int N = g_kicks[fi]->GetN();
+		double peak_min = 0;
 		double peak_max = 0;
-		double peak_x = 0;
+		double peak_min_x = 0;
+		double peak_max_x = 0;
 		for (int j=0; j<N; j++){
 			if (g_kicks[fi]->GetPointY(j) > peak_max){
 				peak_max = g_kicks[fi]->GetPointY(j);
-				peak_x = g_kicks[fi]->GetPointX(j);
+				peak_max_x = g_kicks[fi]->GetPointX(j);
+			}
+			if (g_kicks[fi]->GetPointY(j) < peak_min){
+				peak_min = g_kicks[fi]->GetPointY(j);
+				peak_min_x = g_kicks[fi]->GetPointX(j);
 			}
 		}
 
-		cout<<"Peak estimate: x="<<peak_x<<", y="<<peak_max<<"\n";
+		if (abs(peak_min) > abs(peak_max)){ //invert trace
+			for (int i=0; i<g_kicks[fi]->GetN(); i++){
+				g_kicks[fi]->SetPointY(i,-g_kicks[fi]->GetPointY(i));
+				g_kicksA[fi]->SetPointY(i,-g_kicksA[fi]->GetPointY(i));
+				g_kicksB[fi]->SetPointY(i,-g_kicksB[fi]->GetPointY(i));
+				g_kicks_linearized[fi]->SetPointY(i,-g_kicks_linearized[fi]->GetPointY(i));
+			}
+			peak_max_x = peak_min_x;
+		}
+
+		cout<<"Peak estimate: x="<<peak_max_x<<", y="<<peak_max<<"\n";
 
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baseline = g_kicks[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
-		f_peak->SetParameters(0.8,peak_x,-1000.0);
-		TFitResultPtr fit_peak = g_kicks[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
+		f_peak->SetParameters(0.8,peak_max_x,-1000.0);
+		TFitResultPtr fit_peak = g_kicks[fi]->Fit("f_peak","QS+","",peak_max_x-peak_fit_width,peak_max_x+peak_fit_width);
 
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baselineA = g_kicksA[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
-		f_peak->SetParameters(-0.8,peak_x,1000.0);
-		TFitResultPtr fit_peakA = g_kicksA[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
+		f_peak->SetParameters(-0.8,peak_max_x,1000.0);
+		TFitResultPtr fit_peakA = g_kicksA[fi]->Fit("f_peak","QS+","",peak_max_x-peak_fit_width,peak_max_x+peak_fit_width);
 
 		f_baseline->SetParameter(0,0);
 		TFitResultPtr fit_baselineB = g_kicksB[fi]->Fit("f_baseline","QS+","",baseline_fit_start,baseline_fit_end);
 
-		f_peak->SetParameters(0.8,peak_x,-1000.0);
-		TFitResultPtr fit_peakB = g_kicksB[fi]->Fit("f_peak","QS+","",peak_x-peak_fit_width,peak_x+peak_fit_width);
+		f_peak->SetParameters(0.8,peak_max_x,-1000.0);
+		TFitResultPtr fit_peakB = g_kicksB[fi]->Fit("f_peak","QS+","",peak_max_x-peak_fit_width,peak_max_x+peak_fit_width);
 
 		double baseline = fit_baseline->Parameter(0);
 		double peak = fit_peak->Parameter(0);
@@ -300,4 +334,20 @@ void plot_kicks(TString folder, TString output_file=""){
 	new TCanvas();
 	g_kicks[0]->Draw("AL");
 	g_kicks_linearized[0]->Draw("L");
+
+
+
+
+
+
+
+
+	if (saveOutput){
+		for (int i=0; i<8; i++){
+    		g_kicks_normalized[i]->Write(Form("normalized_kick_%d",i+1));
+    	}
+
+		fout->Write();
+		fout->Close();
+	}
 }

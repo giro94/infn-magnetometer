@@ -16,8 +16,11 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	TGraph** g_traces_norm = new TGraph* [Nangles];
 	TGraphErrors* g_scan = new TGraphErrors();
 	TGraphErrors* g_vibration = new TGraphErrors();
+	TGraphErrors* g_vibration_phase = new TGraphErrors();
 	TGraph* g_stddev = new TGraph();
 	TGraph* g_snr = new TGraph();
+	TGraph* g_A = new TGraph();
+	TGraph* g_B = new TGraph();
 
 	vector<TString> files = getListOfFiles(folder);
 	int Nfiles = files.size();
@@ -64,6 +67,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 
 		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
 		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> trace_A = traces[map_varnames["Channel A"]];
+		vector<double> trace_B = traces[map_varnames["Channel B"]];
 		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
 
 		//Find kick polarity
@@ -72,18 +77,28 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double kick_trigger = -200.0;
 		for (int i=0; i<trace_avgC.size(); i++){
 			if (trace_time[i] > firstkick_max) break;
-			if (trace_avgC[i] < -2000){
+			if (trace_avgC[i] < -1000){
 				kick_trigger = -abs(kick_trigger);
 				polarity = 1;
 				break;
 			}
-			if (trace_avgC[i] > 2000){
+			if (trace_avgC[i] > 1000){
 				kick_trigger = abs(kick_trigger);
 				polarity = -1;
 				break;
 			}
 		}
 
+		double A_avg = 0;
+		double B_avg = 0;
+		for (int i=0; i<trace_A.size(); i++){
+			A_avg += trace_A[i];
+		}
+		for (int i=0; i<trace_B.size(); i++){
+			B_avg += trace_B[i];
+		}
+		A_avg /= trace_A.size();
+		B_avg /= trace_B.size();
 
 
 		g_traces[fi] = new TGraph();
@@ -148,13 +163,17 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double peak_err = fit_blumlein->ParError(0);
 		double amplitude = peak-baseline;
 		double baseline_stddev = g_baselines[fi]->GetRMS(2);
-		double SNR = amplitude/baseline_stddev;
+		double SNR = abs(amplitude)/baseline_stddev;
 
 		double vibration_amp = 0;
 		double vibration_amp_err = 0;
+		double vibration_phase = 0;
+		double vibration_phase_err = 0;
 		if (fit_vibration >= 0){
 			vibration_amp = fit_vibration->Parameter(1);
 			vibration_amp_err = fit_vibration->ParError(1);
+			vibration_phase = fit_vibration->Parameter(3);
+			vibration_phase_err = fit_vibration->ParError(3);
 		}
 
 		g_stddev->SetPoint(g_stddev->GetN(),HWPangle,baseline_stddev);
@@ -165,11 +184,17 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_vibration->SetPoint(g_vibration->GetN(),HWPangle,vibration_amp);
 		g_vibration->SetPointError(g_vibration->GetN()-1,0,vibration_amp_err);
 
+		g_vibration_phase->SetPoint(g_vibration_phase->GetN(),HWPangle,vibration_phase);
+		g_vibration_phase->SetPointError(g_vibration_phase->GetN()-1,0,vibration_phase_err);
+
 		g_trend_stddev->SetPoint(g_trend_stddev->GetN(),datetime.Convert(),baseline_stddev);
 
 		for (int i=0; i<trace_time.size(); i++){
 			g_traces_norm[fi]->SetPoint(i,trace_time[i],trace_avgC[i]-baseline);
 		}
+
+		g_A->SetPoint(g_A->GetN(),HWPangle,A_avg);
+		g_B->SetPoint(g_B->GetN(),HWPangle,B_avg);
 	}
 
 	new TCanvas();
@@ -231,6 +256,37 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	gPad->SetGridx();
 
 	new TCanvas();
+	if (do_sort) g_vibration_phase->Sort();
+	g_vibration_phase->SetName(Form("%svibration",HorQ.Data()));
+	g_vibration_phase->SetTitle(Form("%s vibration",HorQ.Data()));
+	g_vibration_phase->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
+	g_vibration_phase->GetYaxis()->SetTitle("Vibration amplitude [mV]");
+	g_vibration_phase->SetMarkerStyle(20);
+	g_vibration_phase->Draw("APL");
+	gPad->SetGridx();
+
+	new TCanvas();
+	if (do_sort) g_A->Sort();
+	if (do_sort) g_B->Sort();
+	g_A->SetName(Form("%sA",HorQ.Data()));
+	g_A->SetTitle(Form("%s A",HorQ.Data()));
+	g_B->SetName(Form("%sB",HorQ.Data()));
+	g_B->SetTitle(Form("%s B",HorQ.Data()));
+	g_A->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
+	g_A->GetYaxis()->SetTitle("Channel A [mV]");
+	g_B->GetXaxis()->SetTitle(Form("%s angle [#circ]",HorQ.Data()));
+	g_B->GetYaxis()->SetTitle("Channel B [mV]");
+	g_A->SetMarkerStyle(20);
+	g_B->SetMarkerStyle(20);
+	g_A->SetMarkerColor(kBlue);
+	g_B->SetMarkerColor(kRed);
+	g_A->SetLineWidth(2);
+	g_B->SetLineWidth(2);
+	g_A->Draw("AL");
+	g_B->Draw("L");
+	gPad->SetGridx();
+
+	new TCanvas();
 	g_vibration->SetMarkerColor(kRed);
 	g_scan->Draw("APL");
 	g_vibration->Draw("PL");
@@ -278,6 +334,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	g_scan->Write();
 	g_stddev->Write();
 	g_snr->Write();
+	g_vibration->Write();
+	g_A->Write();
+	g_B->Write();
 	fout->Write();
 	fout->Close();
 

@@ -1,11 +1,12 @@
 #include "../analysis_tools.C"
 
-void plot_rampup(TString folder, TString output_file, TString current_filename=""){
+void plot_rampup(TString folder, TString output_file="", TString current_filename=""){
 
 	TGraphErrors* g_rampup = new TGraphErrors();
 	TGraph* g_rampupA = new TGraph();
 	TGraph* g_rampupB = new TGraph();
 
+	TGraph* g_diff_vs_C = new TGraph();
 
 	map<int,double> map_time_current;
 	bool know_current_info = false;
@@ -70,6 +71,7 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		vector<double> trace_A = traces[map_varnames["Channel A"]];
 		vector<double> trace_B = traces[map_varnames["Channel B"]];
 		vector<double> trace_diff = traces[map_varnames["average(B-A)"]];
+		vector<double> trace_C = traces[map_varnames["Channel C"]];
 
 		TDatime datetime = getFileTime(fname);
 		int time_stamp = datetime.Convert();
@@ -81,17 +83,20 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		
 		double A_avg = 0;
 		double B_avg = 0;
+		double C_avg = 0;
 		double ABdiff_avg = 0;
 		double ABdiff_avg_squared = 0;
 		double Npoints = trace_time.size();
 		for (int i=0; i<Npoints; i++){
 			A_avg += trace_A[i];
 			B_avg += trace_B[i];
+			C_avg += trace_C[i];
 			ABdiff_avg += trace_diff[i];
 			ABdiff_avg_squared += trace_diff[i]*trace_diff[i];
 		}
 		A_avg /= Npoints;
 		B_avg /= Npoints;
+		C_avg /= Npoints;
 		ABdiff_avg /= Npoints;
 		ABdiff_avg_squared /= Npoints;
 		double ABerr = sqrt(ABdiff_avg_squared - ABdiff_avg*ABdiff_avg);
@@ -101,6 +106,10 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 		g_rampup->SetPointError(ipoint,0,ABerr);
 		g_rampupA->SetPoint(ipoint,current,A_avg);
 		g_rampupB->SetPoint(ipoint,current,B_avg);
+
+		if (abs(C_avg) < 1000){
+			g_diff_vs_C->SetPoint(g_diff_vs_C->GetN(),B_avg-A_avg,C_avg);
+		}
 	}
 
 	new TCanvas();
@@ -111,6 +120,7 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 	g_rampup->GetYaxis()->SetTitle("B-A [V]");
 	g_rampup->SetMarkerStyle(20);
 	g_rampup->Draw("APL");
+	gPad->SetGridy();
 
 	new TCanvas();
 	//g_rampupA->Sort();
@@ -123,6 +133,8 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 	g_rampupA->GetYaxis()->SetTitle("B-A [V]");
 	g_rampupB->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
 	g_rampupB->GetYaxis()->SetTitle("B-A [V]");
+	g_rampupA->GetYaxis()->SetRangeUser(0,12);
+	g_rampupB->GetYaxis()->SetRangeUser(0,12);
 	g_rampupA->SetMarkerStyle(20);
 	g_rampupB->SetMarkerStyle(20);
 	g_rampupA->SetMarkerColor(kBlue);
@@ -131,14 +143,22 @@ void plot_rampup(TString folder, TString output_file, TString current_filename="
 	g_rampupB->SetLineColor(kRed);
 	g_rampupA->Draw("APL");
 	g_rampupB->Draw("PL");
+	gPad->SetGridy();
 
-	cout<<"Creating "<<output_file<<"\n";
-	TFile* fout = new TFile(output_file,"recreate");
-	g_rampup->Write();
-	g_rampupA->Write();
-	g_rampupB->Write();
-	fout->Write();
-	fout->Close();
+	new TCanvas();
+	g_diff_vs_C->SetMarkerStyle(20);
+	g_diff_vs_C->Draw("AP");
+	g_diff_vs_C->Fit("pol1");
 
+
+	if (output_file != ""){
+		cout<<"Creating "<<output_file<<"\n";
+		TFile* fout = new TFile(output_file,"recreate");
+		g_rampup->Write();
+		g_rampupA->Write();
+		g_rampupB->Write();
+		fout->Write();
+		fout->Close();
+	}
 
 }
