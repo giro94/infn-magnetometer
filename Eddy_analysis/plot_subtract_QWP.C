@@ -55,7 +55,6 @@ void plot_subtract_QWP(){
 
 	TH1D* h1_kick1_p_n_0 = (TH1D*)h1_kick1_p->Clone("h1_kick1_p_n_0");
 	h1_kick1_p_n_0->Add(h1_kick1_n,-1);
-	//h1_kick1_p_n_0->Scale(2);
 	h1_kick1_p_n_0->Add(h1_kick1_0,0.5);
 
 
@@ -347,7 +346,7 @@ void plot_subtract_QWP(){
 	h1_kick1_p_n_0_ra->SetLineWidth(2);
 	h1_kick1_p_n_0_ra->GetXaxis()->SetRangeUser(2,4);
 	h1_kick1_p_n_0_ra->GetYaxis()->SetRangeUser(-60,60);
-	h1_kick1_p_n_0_ra->SetTitle("(p-n)/2+k0");
+	h1_kick1_p_n_0_ra->SetTitle("p-n+k0/2");
 
 
 	h1_kick1_pnc_0_ra->SetLineColor(1);
@@ -559,4 +558,79 @@ void plot_subtract_QWP(){
 
 	new TCanvas();
 	h1_trace_pX_nY_k0Z_ra->Draw("HIST");
+
+
+	new TCanvas();
+	h1_kick1_p_0_ra->DrawCopy("HIST");
+	h1_kick1_p_n_ra->DrawCopy("HIST SAME");
+
+
+
+	new TCanvas();
+	h1_kick1_pn_0_ra->SetLineColor(kBlack);
+	h1_kick1_pn_0_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_pn_0_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_pn_0_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_pn_0_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+	new TCanvas();
+	h1_kick1_p_n_ra->SetLineColor(kBlack);
+	h1_kick1_p_n_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_p_n_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_p_n_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_p_n_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	h1_kick1_p_0_ra->SetLineColor(kBlack);
+	h1_kick1_p_0_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_p_0_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_p_0_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_p_0_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+	new TCanvas();
+	h1_kick1_n_0_ra->SetLineColor(kBlack);
+	h1_kick1_n_0_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_n_0_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_n_0_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_n_0_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+	new TCanvas();
+	h1_kick1_p_n_0_ra->SetLineColor(kBlack);
+	h1_kick1_p_n_0_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_p_n_0_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_p_n_0_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_p_n_0_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+	new TCanvas();
+	h1_kick1_p_calib_ra->SetLineColor(kBlack);
+	h1_kick1_p_calib_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_p_calib_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_p_calib_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_p_calib_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+	new TCanvas();
+	h1_kick1_n_calib_ra->Scale(-1);
+	h1_kick1_n_calib_ra->SetLineColor(kBlack);
+	h1_kick1_n_calib_ra->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_n_calib_ra->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_n_calib_ra->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_n_calib_ra->DrawCopy("HIST");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	h1_kick1_pX_nY_k0Z[best_i][best_j]->SetLineColor(kBlack);
+	h1_kick1_pX_nY_k0Z[best_i][best_j]->GetXaxis()->SetRangeUser(-0.6,3.0);
+	h1_kick1_pX_nY_k0Z[best_i][best_j]->GetYaxis()->SetRangeUser(-50,50);
+	h1_kick1_pX_nY_k0Z[best_i][best_j]->GetYaxis()->SetTitle("Bfield [mG]");
+	h1_kick1_pX_nY_k0Z[best_i][best_j]->DrawCopy("HIST");
+	h1_kick1_pX_nY_k0Z_ra[best_i][best_j]->DrawCopy("HIST SAME");
+	gPad->SetGridy();
 }

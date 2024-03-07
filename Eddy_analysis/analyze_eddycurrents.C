@@ -1,7 +1,7 @@
 #include "../analysis_tools.C"
 
 
-void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -1){
+void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -1, int FD=0){
 
 	double firstkick_max = 20.0;
 	double kick_dt_guess = 10.0;
@@ -58,7 +58,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TProfile** g_trace_kicks_SNR2 = new TProfile*[8];
 	TProfile* g_fulltrace_SNR2_timealigned = new TProfile("trace_SNR2_timealigned",Form("Aligned trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart-5,tend-5);
 	
-	TProfile* g_fulltrace_skipped = new TProfile("trace_skipped","Skipped traces;Time [ms];Voltage [mV]",Nlines,tstart-5,tend-5);
+	TProfile* g_fulltrace_skipped = new TProfile("trace_skipped","Skipped traces;Time [ms];Voltage [mV]",Nlines,tstart,tend);
 
 	TProfile* g_fulltrace_blum50 = new TProfile("trace_blum50","Normalized trace (blumlein 50 mV);Time [ms];Voltage [mV]",Nlines,tstart,tend);
 	TProfile* g_fulltrace_calibrated = new TProfile("trace_calibrated","Calibrated trace;Time [ms];B field [mG]",Nlines,tstart,tend);
@@ -140,6 +140,11 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		vector<double> trace_B = traces[map_varnames["Channel B"]];
 		vector<double> trace_C = traces[map_varnames["Channel C"]];
 		vector<double> trace_avgC = traces[map_varnames["average(C)"]];
+
+		//Hack to analyze FastDiode blumlein measurement
+		if (FD==1){
+			trace_avgC = traces[map_varnames["average(B-A)"]];
+		}
 	
 		if (trace_time.size() != Nlines){
 			cout<<"Warning! File "<<fname<<" has "<<trace_time.size()<<" lines instead of the expected "<<Nlines<<"!\n";

@@ -346,7 +346,9 @@ void plot_kicks(TString folder, TString output_file=""){
 		for (int i=0; i<8; i++){
     		g_kicks_normalized[i]->Write(Form("normalized_kick_%d",i+1));
     	}
-
+		for (int i=0; i<Nfiles; i++){
+    		g_kicks_aligned[i]->Write(Form("kick%d_rep%d",1+i%8,1+(i-i%8)/8));
+    	}
 		fout->Write();
 		fout->Close();
 	}

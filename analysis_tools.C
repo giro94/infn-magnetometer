@@ -192,6 +192,13 @@ void cleanTrace(TH1D* trace, double threshold=-50, double setvalue=0){
     return;
 }
 
+void addScalar(TH1D* trace, double scalar){
+    for (int bn=1; bn<=trace->GetNbinsX(); bn++){
+        trace->SetBinContent(bn,trace->GetBinContent(bn)+scalar);
+    }
+    return;
+}
+
 
 TH1D* SetupFFT(TH1D* h_in, double xmin, double xmax){
     double timeTot = xmax - xmin;
