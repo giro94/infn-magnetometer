@@ -52,49 +52,55 @@ void plot_fit_stat(){
 		double tau = h1_kick1_fit_exp->GetFunction("f_exp_17")->GetParameter(1);
 		double dtau = h1_kick1_fit_exp->GetFunction("f_exp_17")->GetParError(1);
 
-		g_exp_amp->SetPoint(i,i,a);
+		g_exp_amp->SetPoint(i,i+1,a);
 		g_exp_amp->SetPointError(i,0,da);
-		g_exp_tau->SetPoint(i,i,1000*tau);
+		g_exp_tau->SetPoint(i,i+1,1000*tau);
 		g_exp_tau->SetPointError(i,0,1000*dtau);
 
 		f_in->Close();
 	}
 
 
-	TGraph* g_AB_blum_all = new TGraph();
-	TGraph** g_AB_blum = new TGraph*[filenames2.size()];
-	TGraph** g_A = new TGraph*[filenames2.size()];
-	TGraph** g_B = new TGraph*[filenames2.size()];
-	TGraph** g_blum = new TGraph*[filenames2.size()];
+	TGraphErrors* g_AB_blum_all = new TGraphErrors();
+	TGraphErrors** g_AB = new TGraphErrors*[filenames2.size()];
+	TGraphErrors** g_blum = new TGraphErrors*[filenames2.size()];
+	TGraphErrors** g_blumAB = new TGraphErrors*[filenames2.size()];
 
-	TGraph* g_blum_all = new TGraph();
-	TGraph* g_AB_all = new TGraph();
-	TGraph* g_ABratio_all = new TGraph();
+	TGraphErrors* g_blum_all = new TGraphErrors();
+	TGraphErrors* g_AB_all = new TGraphErrors();
+	TGraphErrors* g_ABratio_all = new TGraphErrors();
 	TH1D* h1_ABblumratio = new TH1D("h1_ABblumratio","",10,3,6);
 
 	for (int i=0; i<filenames2.size(); i++){
 		TFile* f_in = TFile::Open(filenames2[i]);
 
-		g_AB_blum[i] = (TGraph*)f_in->Get("g_correlation_AB_blumlein");
-		g_A[i] = (TGraph*)f_in->Get("g_trend_A");
-		g_B[i] = (TGraph*)f_in->Get("g_trend_B");
-		g_blum[i] = (TGraph*)f_in->Get("g_trend_blumlein");
-		for (int j=0; j<g_AB_blum[i]->GetN(); j++){
-			g_AB_blum_all->AddPoint(g_AB_blum[i]->GetPointX(j),g_AB_blum[i]->GetPointY(j));
-		}
+		g_AB[i] = (TGraphErrors*)f_in->Get("g_trend_ABsum");
+		g_blum[i] = (TGraphErrors*)f_in->Get("g_trend_blumlein");
+		g_blumAB[i] = (TGraphErrors*)f_in->Get("g_trend_blumAB");
 		f_in->Close();
 
-		TFitResultPtr fitA = g_A[i]->Fit("pol0","S");
-		TFitResultPtr fitB = g_B[i]->Fit("pol0","S");
+		TFitResultPtr fitAB = g_AB[i]->Fit("pol0","S");
 		TFitResultPtr fitblum = g_blum[i]->Fit("pol0","S");
-		double AB = fitA->Parameter(0)+fitB->Parameter(0);
+		TFitResultPtr fitblumAB = g_blumAB[i]->Fit("pol0","S");
+		double AB = fitAB->Parameter(0);
 		double blum = abs(fitblum->Parameter(0));
-		double ABblumratio = blum/AB;
+		double ABblumratio = abs(fitblumAB->Parameter(0));
+		double ABerr = g_AB[i]->GetRMS(2);
+		double blumerr = g_blum[i]->GetRMS(2);
+		double ABblumratioerr = g_blumAB[i]->GetRMS(2);
 
-		g_blum_all->SetPoint(i,i,blum);
-		g_AB_all->SetPoint(i,i,AB);
-		g_ABratio_all->SetPoint(i,i,ABblumratio);
+		g_blum_all->SetPoint(i,i+1,blum);
+		g_AB_all->SetPoint(i,i+1,AB);
+		g_ABratio_all->SetPoint(i,i+1,ABblumratio);
+
+		g_blum_all->SetPointError(i,0,blumerr);
+		g_AB_all->SetPointError(i,0,ABerr);
+		g_ABratio_all->SetPointError(i,0,ABblumratioerr);
+
 		h1_ABblumratio->Fill(ABblumratio);
+
+		g_AB_blum_all->SetPoint(i,AB,blum);
+		g_AB_blum_all->SetPointError(i,ABerr,blumerr);
 	}
 
 	new TCanvas();
@@ -109,18 +115,6 @@ void plot_fit_stat(){
 	g_exp_tau->GetYaxis()->SetTitle("Lifetime [#mus]");
 	g_exp_tau->Draw("APL");
 	//g_exp_tau->Fit("pol0");
-
-
-	new TCanvas();
-	g_AB_blum_all->SetMarkerStyle(20);
-	g_AB_blum_all->Draw("AP");
-
-
-	for (int i=0; i<filenames2.size(); i++){
-		g_AB_blum[i]->SetMarkerStyle(20);
-		g_AB_blum[i]->SetMarkerColor(1+(i%8));
-		g_AB_blum[i]->Draw(i==0?"AP":"P");
-	}
 
 
 	new TCanvas();
@@ -142,5 +136,28 @@ void plot_fit_stat(){
 	new TCanvas();
 	h1_ABblumratio->SetTitle("Blumlein / A+B");
 	h1_ABblumratio->Draw("HIST");
+
+
+	new TCanvas();
+	g_AB_blum_all->SetMarkerStyle(20);
+	g_AB_blum_all->SetTitle("Correlation blumlein vs A+B;A+B [V];Blumlein [mV]");
+	g_AB_blum_all->Draw("APZ");
+	
+	TText* t_text = new TText();
+	t_text->SetTextAlign(31);
+	t_text->DrawTextNDC(0.89,0.85,Form("Correlation: %.1f%%",g_AB_blum_all->GetCorrelationFactor()*100));
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

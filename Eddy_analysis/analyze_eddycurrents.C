@@ -105,10 +105,12 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	TGraph* g_trend_A = new TGraph();
 	TGraph* g_trend_B = new TGraph();
 	TGraph* g_trend_ABdiff = new TGraph();
+	TGraphErrors* g_trend_ABsum = new TGraphErrors();
 	TGraphErrors* g_trend_baseline = new TGraphErrors();
 	TGraph* g_trend_stddev = new TGraph();
 	TGraphErrors* g_trend_blumlein = new TGraphErrors();
 	TGraph* g_trend_SNR = new TGraph();
+	TGraphErrors* g_trend_blumAB = new TGraphErrors();
 
 	TGraph* g_correlation_AB_blumlein = new TGraph();
 	TGraph* g_correlation_ABdiff_blumlein = new TGraph();
@@ -205,6 +207,10 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 		double A_avg = 0;
 		double B_avg = 0;
+		double A_avgerr = 0;
+		double B_avgerr = 0;
+		double A_avgsquared = 0;
+		double B_avgsquared = 0;
 		double avgC_baseline = 0;
 		double avgC_stddev = 0;
 		double avgC_squared = 0;
@@ -217,6 +223,9 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 			A_avg += trace_A[i];
 			B_avg += trace_B[i];
+
+			A_avgsquared += trace_A[i]*trace_A[i];
+			B_avgsquared += trace_B[i]*trace_B[i];
 
 			if (trace_time[i] < first_kick_guess-0.55){
 				avgC_baseline += trace_avgC[i];
@@ -231,10 +240,15 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 
 		A_avg /= trace_time.size();
 		B_avg /= trace_time.size();
+		A_avgsquared /= trace_time.size();
+		B_avgsquared /= trace_time.size();
 		avgC_baseline /= Nlines_baseline;
 		avgC_squared /= Nlines_baseline;
 		avgC_stddev = sqrt(avgC_squared - avgC_baseline*avgC_baseline);
 		avgC_baselineerr = avgC_stddev / sqrt(Nlines_baseline);
+
+		A_avgerr = sqrt(A_avgsquared - A_avg*A_avg);
+		B_avgerr = sqrt(B_avgsquared - B_avg*B_avg);
 
 		f_blumlein->SetParameters(polarity*60.0,0.5*(blumlein_fit_start+blumlein_fit_end),-polarity*1000.0);
 		TFitResultPtr fit_blumlein = g_blumlein_temp->Fit("f_blumlein","QS","",blumlein_fit_start,blumlein_fit_end);
@@ -248,17 +262,25 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		double blumerr = sqrt(peakerr*peakerr + avgC_baselineerr*avgC_baselineerr);
 		double AB = A_avg + B_avg;
 		double ABdiff = B_avg - A_avg;
+		double ABsum = B_avg + A_avg;
+		double ABsumerr = sqrt(A_avgerr*A_avgerr + B_avgerr*B_avgerr);
 		double SNR = abs(blumlein)/avgC_stddev;
+		double blumAB = abs(blumlein) / ABsum;
+		double blumABerr = blumAB*sqrt((blumerr/blumlein)*(blumerr/blumlein) + (ABsumerr/ABsum)*(ABsumerr/ABsum));
 
 		g_trend_A->SetPoint(g_trend_A->GetN(),datetime.Convert(),A_avg);
 		g_trend_B->SetPoint(g_trend_B->GetN(),datetime.Convert(),B_avg);
 		g_trend_ABdiff->SetPoint(g_trend_ABdiff->GetN(),datetime.Convert(),ABdiff);
+		g_trend_ABsum->SetPoint(g_trend_ABsum->GetN(),datetime.Convert(),ABsum);
+		g_trend_ABsum->SetPointError(g_trend_ABsum->GetN()-1,0,ABsumerr);
 		g_trend_baseline->SetPoint(g_trend_baseline->GetN(),datetime.Convert(),avgC_baseline);
 		g_trend_baseline->SetPointError(g_trend_baseline->GetN()-1,0,avgC_baselineerr);
 		g_trend_stddev->SetPoint(g_trend_stddev->GetN(),datetime.Convert(),avgC_stddev);
 		g_trend_blumlein->SetPoint(g_trend_blumlein->GetN(),datetime.Convert(),blumlein);
 		g_trend_blumlein->SetPointError(g_trend_blumlein->GetN()-1,0,blumerr);
 		g_trend_SNR->SetPoint(g_trend_SNR->GetN(),datetime.Convert(),SNR);
+		g_trend_blumAB->SetPoint(g_trend_blumAB->GetN(),datetime.Convert(),blumAB);
+		g_trend_blumAB->SetPointError(g_trend_blumAB->GetN()-1,0,blumABerr);
 
 		g_correlation_AB_blumlein->SetPoint(g_correlation_AB_blumlein->GetN(),AB,blumlein);
 		g_correlation_ABdiff_blumlein->SetPoint(g_correlation_ABdiff_blumlein->GetN(),ABdiff,blumlein);
@@ -343,9 +365,11 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_A->SetName("g_trend_A");
 	g_trend_B->SetName("g_trend_B");
 	g_trend_ABdiff->SetName("g_trend_ABdiff");
+	g_trend_ABsum->SetName("g_trend_ABsum");
 	g_trend_baseline->SetName("g_trend_baseline");
 	g_trend_stddev->SetName("g_trend_stddev");
 	g_trend_blumlein->SetName("g_trend_blumlein");
+	g_trend_blumAB->SetName("g_trend_blumAB");
 	g_trend_SNR->SetName("g_trend_SNR");
 	g_correlation_AB_blumlein->SetName("g_correlation_AB_blumlein");
 	g_correlation_ABdiff_blumlein->SetName("g_correlation_ABdiff_blumlein");
@@ -355,9 +379,11 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_A->SetTitle("Trend of channel A;Time;A [V]");
 	g_trend_B->SetTitle("Trend of channel B;Time;B [V]");
 	g_trend_ABdiff->SetTitle("Trend of B-A;Time;B-A [V]");
+	g_trend_ABsum->SetTitle("Trend of A+B;Time;A+B [V]");
 	g_trend_baseline->SetTitle("Trend of avgC baseline;Time;Baseline [mV]");
 	g_trend_stddev->SetTitle("Trend of avgC StdDev;Time;StdDev [mV]");
 	g_trend_blumlein->SetTitle("Trend of blumlein peak;Time;Blumlein [mV]");
+	g_trend_blumAB->SetTitle("Trend of blumlein/(A+B);Time;Blumlein/(A+B) [arb.u.]");
 	g_trend_SNR->SetTitle("Trend of SNR;Time;Blumlein / StdDev");
 	g_correlation_AB_blumlein->SetTitle("Correlation blumlein vs A+B;A+B [V];Blumlein [mV]");
 	g_correlation_ABdiff_blumlein->SetTitle("Correlation blumlein vs B-A;B-A [V];Blumlein [mV]");
@@ -385,6 +411,12 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_SNR->GetXaxis()->SetTimeFormat("%H:%M");
 	g_trend_SNR->GetXaxis()->SetTimeOffset(-18000,"GMT");
 	g_trend_SNR->GetXaxis()->SetTimeDisplay(1);
+	g_trend_ABsum->GetXaxis()->SetTimeFormat("%H:%M");
+	g_trend_ABsum->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_trend_ABsum->GetXaxis()->SetTimeDisplay(1);
+	g_trend_blumAB->GetXaxis()->SetTimeFormat("%H:%M");
+	g_trend_blumAB->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_trend_blumAB->GetXaxis()->SetTimeDisplay(1);
 
 	g_trend_A->Write();
 	g_trend_B->Write();
@@ -393,6 +425,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	g_trend_stddev->Write();
 	g_trend_blumlein->Write();
 	g_trend_SNR->Write();
+	g_trend_ABsum->Write();
+	g_trend_blumAB->Write();
 
 	g_correlation_AB_blumlein->Write();
 	g_correlation_ABdiff_blumlein->Write();

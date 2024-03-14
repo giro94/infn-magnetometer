@@ -72,6 +72,14 @@ void plot_kicks(TString folder, TString output_file=""){
 		vector<double> trace_B = traces[map_varnames["Channel B"]];
 		vector<double> trace_ABdiff = traces[map_varnames["average(B-A)"]];
 
+		//Make sure we're looking at V and not mV
+		vector<TString> headers = getHeaderUnits(filepath);
+		if (headers[map_varnames["average(B-A)"]].Contains("mV")){
+			for (int j=0; j<trace_ABdiff.size(); j++){
+				trace_ABdiff[j] *= 0.001;
+			}
+		}
+
 		g_kicks[fi] = new TGraph();
 		g_kicksA[fi] = new TGraph();
 		g_kicksB[fi] = new TGraph();
@@ -349,6 +357,7 @@ void plot_kicks(TString folder, TString output_file=""){
 		for (int i=0; i<Nfiles; i++){
     		g_kicks_aligned[i]->Write(Form("kick%d_rep%d",1+i%8,1+(i-i%8)/8));
     	}
+    	g_peaks_time->Write("kick_amplitude_trend");
 		fout->Write();
 		fout->Close();
 	}

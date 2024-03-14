@@ -11,12 +11,16 @@ void fit_ramp_nodes(){
 		//"output_Ramp_jan21_3619to3043.root",
 		//"output_Ramp_jan22_3043to5173.root",
 		//"output_Ramp_jan26_H25Q130_5173to2000to5173.root",
-		"output_Ramp_jan29_H25Q00_5173to0.root"
+		//"output_Ramp_jan29_H25Q00_5173to0.root"
+		"output_FD_R0_ramp_oct9_H22p5.root",
+		"output_FD_R1_ramp_oct8_H0.root"
 	};
+
+	bool use_normalized = true;
+	bool calibrate = true;
 
 	TFile* f_calibration = TFile::Open("BI.root");
 	TGraphErrors* g_BI = (TGraphErrors*)f_calibration->Get("g_BI");
-	bool calibrate = true;
 
 	double fit_range = calibrate?0.014:50; //Ampere or teslas
 	double a_to_G = calibrate?1e4:(1.45e4 / 5173.);
@@ -38,8 +42,10 @@ void fit_ramp_nodes(){
 
 	for (int i=0; i<Nfiles; i++){
 
+		cout<<filenames[i]<<"\n";
 		f[i] = TFile::Open(filenames[i]);
-		g_ramp[i] = (TGraphErrors*)f[i]->Get("Rampup");
+		g_ramp[i] = (TGraphErrors*)f[i]->Get(use_normalized?"Ramp_norm":"Ramp");
+		if (g_ramp[i] == nullptr) g_ramp[i] = (TGraphErrors*)f[i]->Get("Rampup");
 		g_ramp_down[i] = new TGraphErrors();
 		g_ramp_up[i] = new TGraphErrors();
 
@@ -141,11 +147,21 @@ void fit_ramp_nodes(){
 
 
 	gStyle->SetOptStat(0);
+
+
 	new TCanvas();
 	for (int i=0; i<Nfiles; i++){
 		g_ramp[i]->Draw(i==0?"APL":"PL");
 	}
 
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_ramp_down[i]->Draw(i==0?"APL":"PL");
+	}
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_ramp_up[i]->Draw(i==0?"APL":"PL");
+	}
 
 	TGraphErrors** g_slope = new TGraphErrors* [Nfiles];
 	TH1D* h1_slope = new TH1D("h1_slope","Slope distribution;Slope [mV/mG]",20,0.1,0.7);
@@ -169,9 +185,9 @@ void fit_ramp_nodes(){
 		for (int j=0; j<nodes_up[i].size(); j++){
 			TFitResultPtr fit_res = g_ramp_up[i]->Fit("pol1","QS+","",nodes_up[i][j]-fit_range,nodes_up[i][j]+fit_range);
 			if (fit_res >= 0){
-				//g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_up[i][j],sensor_gain*abs(fit_res->Parameter(1)/a_to_G));
-				//g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,sensor_gain*fit_res->ParError(1)/a_to_G);
-				//h1_slope->Fill(sensor_gain*abs(fit_res->Parameter(1)/a_to_G));
+				g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_up[i][j],sensor_gain*abs(fit_res->Parameter(1)/a_to_G));
+				g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,sensor_gain*fit_res->ParError(1)/a_to_G);
+				h1_slope->Fill(sensor_gain*abs(fit_res->Parameter(1)/a_to_G));
 			}
 		}
 	}
@@ -197,7 +213,7 @@ void fit_ramp_nodes(){
 		double y2=0;
 		double nfit=0;
 		for (int j=0; j<g_slope[i]->GetN(); j++){
-			if (g_slope[i]->GetPointX(j) < calibrate?1.5:4000){
+			if (g_slope[i]->GetPointX(j) < (calibrate?1.5:4000)){
 				y += g_slope[i]->GetPointY(j);
 				y2 += g_slope[i]->GetPointY(j)*g_slope[i]->GetPointY(j);
 				nfit += 1;
