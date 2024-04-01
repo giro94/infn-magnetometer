@@ -1,12 +1,14 @@
 void plot_fit_stat(){
 
+
+/*
 	vector<TString> filenames = {
 		"fits/fitted_noSNR_analysis_EC_jan22_B5173_H15.root",
 		"fits/fitted_noSNR_analysis_EC_jan23_B5173_H25_Q00.root",
 		"fits/fitted_noSNR_analysis_EC_jan26_B5173_H25_Q130.root",
 		"fits/fitted_noSNR_analysis_EC_jan28_B5173_H25_Q00.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct10_H22p5_nofilter_Bfield.root",
+		"fits/fitted_noSNR_analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
+		"fits/fitted_noSNR_analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
 		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
 		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
 		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
@@ -23,8 +25,8 @@ void plot_fit_stat(){
 		"analysis/analysis_EC_jan23_B5173_H25_Q00.root",
 		"analysis/analysis_EC_jan26_B5173_H25_Q130.root",
 		"analysis/analysis_EC_jan28_B5173_H25_Q00.root",
-		"analysis/analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
-		"analysis/analysis_SD_R0_eddy_oct10_H22p5_nofilter_Bfield.root",
+		"analysis/analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
 		"analysis/analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
 		"analysis/analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
 		"analysis/analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
@@ -35,6 +37,21 @@ void plot_fit_stat(){
 		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
 		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
 	};
+*/
+
+//noB
+	vector<TString> filenames = {
+		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root",
+		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
+		"fits/fitted_noSNR_analysis_SD_R1_eddy_oct4_H0_nofilter.root",
+	};
+
+	vector<TString> filenames2 = {
+		"analysis/analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root",
+		"analysis/analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
+		"analysis/analysis_SD_R1_eddy_oct4_H0_nofilter.root",
+	};
+
 
 	new TCanvas();
 	gStyle->SetPalette(kRainBow);

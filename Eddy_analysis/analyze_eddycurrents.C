@@ -8,7 +8,15 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	double kick_trigger = -200.0;
 	double polarity = 1;
 
-	double absolute_calibration = 129.; //Blumlein in mG
+	double absolute_calibration_R0 = 129.; //Blumlein in mG
+	double absolute_calibration_R1 = 157.; //Blumlein in mG
+	double absolute_calibration;
+
+	if (folder.Contains("R1")){
+		absolute_calibration = absolute_calibration_R1;
+	} else {
+		absolute_calibration = absolute_calibration_R0;
+	}
 
 	//Begin reading of files
 	vector<TString> files = getListOfFiles(folder);
@@ -122,6 +130,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	double blumlein_fit_start = -0.4;
 	double blumlein_fit_end = -0.2; 
 
+	double ABref = 0;
+	double ABreferr = 0;
 	for (int fi=0; fi<Nfiles; fi++){
 
 		if (Nfilesmax > 0 && fi >= Nfilesmax) break;
@@ -264,9 +274,13 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		double ABdiff = B_avg - A_avg;
 		double ABsum = B_avg + A_avg;
 		double ABsumerr = sqrt(A_avgerr*A_avgerr + B_avgerr*B_avgerr);
+		if (fi==0){
+			ABref = ABsum;
+			ABreferr = ABsumerr;
+		}
 		double SNR = abs(blumlein)/avgC_stddev;
-		double blumAB = abs(blumlein) / ABsum;
-		double blumABerr = blumAB*sqrt((blumerr/blumlein)*(blumerr/blumlein) + (ABsumerr/ABsum)*(ABsumerr/ABsum));
+		double blumAB = abs(blumlein) * ABref / ABsum;
+		double blumABerr = blumAB*sqrt((blumerr/blumlein)*(blumerr/blumlein) + (ABreferr/ABref)*(ABreferr/ABref) + (ABsumerr/ABsum)*(ABsumerr/ABsum));
 
 		g_trend_A->SetPoint(g_trend_A->GetN(),datetime.Convert(),A_avg);
 		g_trend_B->SetPoint(g_trend_B->GetN(),datetime.Convert(),B_avg);
@@ -292,6 +306,7 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		for (int i=0; i<trace_avgC.size(); i++){
 			trace_avgC[i] -= avgC_baseline;
 		}
+
 
 		//Fill the full trace
 		for (int i=0; i<trace_time.size(); i++){

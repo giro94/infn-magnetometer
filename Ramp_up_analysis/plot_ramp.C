@@ -8,6 +8,14 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	TGraph* g_rampAB = new TGraph();
 	TGraph* g_ramp_norm = new TGraph();
 
+
+	TGraphErrors* g_ramp_current = new TGraphErrors();
+	TGraph* g_rampA_current = new TGraph();
+	TGraph* g_rampB_current = new TGraph();
+	TGraph* g_rampAB_current = new TGraph();
+	TGraph* g_ramp_norm_current = new TGraph();
+
+
 	TGraph* g_diff_vs_C = new TGraph();
 
 	map<int,double> map_time_current;
@@ -108,12 +116,19 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 		if (fi==0) ABref = ABsum;
 
 		int ipoint = g_ramp->GetN();
-		g_ramp->SetPoint(ipoint,current,ABdiff_avg);
+		g_ramp->SetPoint(ipoint,time_stamp,ABdiff_avg);
 		g_ramp->SetPointError(ipoint,0,ABerr);
-		g_rampA->SetPoint(ipoint,current,A_avg);
-		g_rampB->SetPoint(ipoint,current,B_avg);
-		g_rampAB->SetPoint(ipoint,current,A_avg+B_avg);
-		g_ramp_norm->SetPoint(ipoint,current,ABdiff_avg*ABref/ABsum);
+		g_rampA->SetPoint(ipoint,time_stamp,A_avg);
+		g_rampB->SetPoint(ipoint,time_stamp,B_avg);
+		g_rampAB->SetPoint(ipoint,time_stamp,A_avg+B_avg);
+		g_ramp_norm->SetPoint(ipoint,time_stamp,ABdiff_avg*ABref/ABsum);
+
+		g_ramp_current->SetPoint(ipoint,current,ABdiff_avg);
+		g_ramp_current->SetPointError(ipoint,0,ABerr);
+		g_rampA_current->SetPoint(ipoint,current,A_avg);
+		g_rampB_current->SetPoint(ipoint,current,B_avg);
+		g_rampAB_current->SetPoint(ipoint,current,A_avg+B_avg);
+		g_ramp_norm_current->SetPoint(ipoint,current,ABdiff_avg*ABref/ABsum);
 
 		if (abs(C_avg) < 1000){
 			g_diff_vs_C->SetPoint(g_diff_vs_C->GetN(),B_avg-A_avg,C_avg);
@@ -123,11 +138,15 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	new TCanvas();
 	g_ramp->SetName("Ramp");
 	g_ramp->SetTitle("Ramp");
-	g_ramp->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp->GetXaxis()->SetTitle("Time");
 	g_ramp->GetYaxis()->SetTitle("B-A [V]");
+	g_ramp->GetXaxis()->SetTimeFormat("%H:%M");
+	g_ramp->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_ramp->GetXaxis()->SetTimeDisplay(1);
 	g_ramp->SetMarkerStyle(20);
 	g_ramp->Draw("APL");
 	gPad->SetGridy();
+
 
 	new TCanvas();
 	g_rampA->SetName("A");
@@ -136,15 +155,24 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	g_rampB->SetTitle("B");
 	g_rampAB->SetName("AB");
 	g_rampAB->SetTitle("AB");
-	g_rampA->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampA->GetXaxis()->SetTitle("Time");
 	g_rampA->GetYaxis()->SetTitle("A [V]");
-	g_rampB->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampB->GetXaxis()->SetTitle("Time");
 	g_rampB->GetYaxis()->SetTitle("B [V]");
-	g_rampAB->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampAB->GetXaxis()->SetTitle("Time");
 	g_rampAB->GetYaxis()->SetTitle("A+B [V]");
 	g_rampA->GetYaxis()->SetRangeUser(0,15);
 	g_rampB->GetYaxis()->SetRangeUser(0,15);
 	g_rampAB->GetYaxis()->SetRangeUser(0,15);
+	g_rampA->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampA->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampA->GetXaxis()->SetTimeDisplay(1);
+	g_rampB->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampB->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampB->GetXaxis()->SetTimeDisplay(1);
+	g_rampAB->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampAB->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampAB->GetXaxis()->SetTimeDisplay(1);
 	g_rampA->SetMarkerStyle(20);
 	g_rampB->SetMarkerStyle(20);
 	g_rampAB->SetMarkerStyle(20);
@@ -163,10 +191,62 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	new TCanvas();
 	g_ramp_norm->SetName("Ramp_norm");
 	g_ramp_norm->SetTitle("Ramp normalized");
-	g_ramp_norm->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp_norm->GetXaxis()->SetTitle("Time");
 	g_ramp_norm->GetYaxis()->SetTitle("(B-A)/(A+B)");
+	g_ramp_norm->GetXaxis()->SetTimeFormat("%H:%M");
+	g_ramp_norm->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_ramp_norm->GetXaxis()->SetTimeDisplay(1);
 	g_ramp_norm->SetMarkerStyle(20);
 	g_ramp_norm->Draw("APL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_ramp_current->SetName("Ramp_current");
+	g_ramp_current->SetTitle("Ramp");
+	g_ramp_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp_current->GetYaxis()->SetTitle("B-A [V]");
+	g_ramp_current->SetMarkerStyle(20);
+	g_ramp_current->Draw("APL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_rampA_current->SetName("A_current");
+	g_rampA_current->SetTitle("A");
+	g_rampB_current->SetName("B_current");
+	g_rampB_current->SetTitle("B");
+	g_rampAB_current->SetName("AB_current");
+	g_rampAB_current->SetTitle("AB");
+	g_rampA_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampA_current->GetYaxis()->SetTitle("A [V]");
+	g_rampB_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampB_current->GetYaxis()->SetTitle("B [V]");
+	g_rampAB_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampAB_current->GetYaxis()->SetTitle("A+B [V]");
+	g_rampA_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampB_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampAB_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampA_current->SetMarkerStyle(20);
+	g_rampB_current->SetMarkerStyle(20);
+	g_rampAB_current->SetMarkerStyle(20);
+	g_rampA_current->SetMarkerColor(kBlue);
+	g_rampB_current->SetMarkerColor(kRed);
+	g_rampAB_current->SetMarkerColor(kBlack);
+	g_rampA_current->SetLineColor(kBlue);
+	g_rampB_current->SetLineColor(kRed);
+	g_rampAB_current->SetLineColor(kBlack);
+	g_rampA_current->Draw("APL");
+	g_rampB_current->Draw("PL");
+	g_rampAB_current->Draw("PL");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	g_ramp_norm_current->SetName("Ramp_norm_current");
+	g_ramp_norm_current->SetTitle("Ramp normalized");
+	g_ramp_norm_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp_norm_current->GetYaxis()->SetTitle("(B-A)/(A+B)");
+	g_ramp_norm_current->SetMarkerStyle(20);
+	g_ramp_norm_current->Draw("APL");
 	gPad->SetGridy();
 
 
@@ -179,11 +259,19 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	if (output_file != ""){
 		cout<<"Creating "<<output_file<<"\n";
 		TFile* fout = new TFile(output_file,"recreate");
+
 		g_ramp->Write();
 		g_rampA->Write();
 		g_rampB->Write();
 		g_rampAB->Write();
 		g_ramp_norm->Write();
+
+		g_ramp_current->Write();
+		g_rampA_current->Write();
+		g_rampB_current->Write();
+		g_rampAB_current->Write();
+		g_ramp_norm_current->Write();
+
 		fout->Write();
 		fout->Close();
 	}

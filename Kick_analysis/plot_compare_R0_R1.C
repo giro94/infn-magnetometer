@@ -31,15 +31,22 @@ void plot_compare_R0_R1(){
 	TH1D* h1_kick1_R1_blum = ((TProfile*)f1_blum->Get("trace_kick1"))->ProjectionX();
 	h1_kick1_R0_blum->Scale(-1);
 
-	TH1D* h1_kick1_R0_blum_ra = smoothing(h1_kick1_R0_blum,"");
-	TH1D* h1_kick1_R1_blum_ra = smoothing(h1_kick1_R1_blum,"");
+	//TH1D* h1_kick1_R0_blum_ra = runningAverage(runningAverage(runningAverage(h1_kick1_R0_blum,100,true),200,true),300,true,"");
+	//TH1D* h1_kick1_R1_blum_ra = runningAverage(runningAverage(runningAverage(h1_kick1_R1_blum,100,true),200,true),300,true,"");
+
+	TH1D* h1_kick1_R0_blum_ra = h1_kick1_R0_blum;//;smoothing(h1_kick1_R0_blum,"");
+	TH1D* h1_kick1_R1_blum_ra = h1_kick1_R1_blum;//;smoothing(h1_kick1_R1_blum,"");
 	h1_kick1_R0_blum_ra->SetTitle("Blumlein R0");
 	h1_kick1_R1_blum_ra->SetTitle("Blumlein R1");
 
 
 
+	double absolute_calibration_R0 = 129.; //Blumlein in mG
+	double absolute_calibration_R1 = 157.; //Blumlein in mG
 
 
+	TH1D* h1_kick1_R0_blum_ra_calib = runningAverage(runningAverage(runningAverage(h1_kick1_R0_blum,25,true),50,true),75,true,"");
+	TH1D* h1_kick1_R1_blum_ra_calib = runningAverage(runningAverage(runningAverage(h1_kick1_R1_blum,25,true),50,true),75,true,"");
 
 
 
@@ -53,7 +60,7 @@ void plot_compare_R0_R1(){
 	gPad->BuildLegend();
 
 
-
+	gStyle->SetOptFit(111);
 
 	new TCanvas();
 	h1_kick1_R0_blum_ra->GetXaxis()->SetRangeUser(-1,1);
@@ -69,14 +76,14 @@ void plot_compare_R0_R1(){
 	gPad->BuildLegend();
 
 	TF1* f_baseline = new TF1("f_baseline","[0]",-1,-0.55);
-	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",-0.4,-0.2);
+	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])",-0.45,-0.15);
 	f_blumlein->SetParameters(0.5,-0.3,-1000.0);
 	TF1* f_peak = new TF1("f_peak","[0]+[2]*(x-[1])*(x-[1])",-0.05,0.05);
 	f_peak->SetParameters(1,0,-1000.0);
 
-	TFitResultPtr fit_R0_blum = h1_kick1_R0_blum_ra->Fit("f_blumlein","QS","",-0.4,-0.2);
+	TFitResultPtr fit_R0_blum = h1_kick1_R0_blum_ra->Fit("f_blumlein","QS","",-0.45,-0.15);//-0.4,-0.2);
 	f_blumlein->DrawCopy("SAME");
-	TFitResultPtr fit_R1_blum = h1_kick1_R1_blum_ra->Fit("f_blumlein","QS","",-0.4,-0.2);
+	TFitResultPtr fit_R1_blum = h1_kick1_R1_blum_ra->Fit("f_blumlein","QS","",-0.45,-0.15);//-0.4,-0.2);
 	f_blumlein->DrawCopy("SAME");
 
 	TFitResultPtr fit_R0_base = h1_kick1_R0_blum_ra->Fit("f_baseline","QS","",-1,-0.55);
@@ -91,7 +98,34 @@ void plot_compare_R0_R1(){
 	cout<<"Blum R0 : "<<R0_blum<<" +- "<<R0_blum_err<<"\n";
 	cout<<"Blum R1 : "<<R1_blum<<" +- "<<R1_blum_err<<"\n";
 
+	h1_kick1_R0_blum_ra_calib->Scale(absolute_calibration_R0/R0_blum);
+	h1_kick1_R1_blum_ra_calib->Scale(absolute_calibration_R1/R1_blum);
 
+
+	new TCanvas();
+	h1_kick1_R0_blum_ra_calib->GetXaxis()->SetRangeUser(-1,1);
+	h1_kick1_R0_blum_ra_calib->GetYaxis()->SetRangeUser(-100,300);
+	h1_kick1_R1_blum_ra_calib->GetXaxis()->SetRangeUser(-1,1);
+	h1_kick1_R1_blum_ra_calib->GetYaxis()->SetRangeUser(-100,300);
+	h1_kick1_R0_blum_ra_calib->GetYaxis()->SetTitle("B field [mG]");
+	h1_kick1_R1_blum_ra_calib->GetYaxis()->SetTitle("B field [mG]");
+	h1_kick1_R0_blum_ra_calib->SetLineWidth(2);
+	h1_kick1_R1_blum_ra_calib->SetLineWidth(2);
+	h1_kick1_R0_blum_ra_calib->SetLineColor(8);
+	h1_kick1_R1_blum_ra_calib->SetLineColor(kBlue);
+	h1_kick1_R0_blum_ra_calib->Draw("HIST");
+	h1_kick1_R1_blum_ra_calib->Draw("HIST SAME");
+	gPad->BuildLegend();
+
+	h1_kick1_R0_blum_ra_calib->Fit("f_blumlein","Q","",-0.4,-0.2);
+	f_blumlein->DrawCopy("SAME");
+	h1_kick1_R1_blum_ra_calib->Fit("f_blumlein","Q","",-0.4,-0.2);
+	f_blumlein->DrawCopy("SAME");
+
+	h1_kick1_R0_blum_ra_calib->Fit("f_baseline","Q","",-1,-0.55);
+	f_baseline->DrawCopy("SAME");
+	h1_kick1_R1_blum_ra_calib->Fit("f_baseline","Q","",-1,-0.55);
+	f_baseline->DrawCopy("SAME");
 
 	new TCanvas();
 	h1_lastkick_R0->GetXaxis()->SetRangeUser(-1,1);
@@ -122,10 +156,10 @@ void plot_compare_R0_R1(){
 	cout<<"Peak R1 : "<<R1_peak<<" +- "<<R1_peak_err<<"\n";
 
 	for (int i=0; i<h1_lastkick_R0->GetN(); i++){
-		h1_lastkick_R0_calib->SetPoint(i,h1_lastkick_R0->GetPointX(i),h1_lastkick_R0->GetPointY(i)*129/R0_blum);
+		h1_lastkick_R0_calib->SetPoint(i,h1_lastkick_R0->GetPointX(i),h1_lastkick_R0->GetPointY(i)*absolute_calibration_R0/R0_blum);
 	}
 	for (int i=0; i<h1_lastkick_R1->GetN(); i++){
-		h1_lastkick_R1_calib->SetPoint(i,h1_lastkick_R1->GetPointX(i),h1_lastkick_R1->GetPointY(i)*129/R1_blum);
+		h1_lastkick_R1_calib->SetPoint(i,h1_lastkick_R1->GetPointX(i),h1_lastkick_R1->GetPointY(i)*absolute_calibration_R1/R1_blum);
 	}
 
 
@@ -149,6 +183,20 @@ void plot_compare_R0_R1(){
 	h1_lastkick_R1_calib->Draw("L");
 	gPad->BuildLegend();
 
+	TFitResultPtr fit_R0_calib_peak = h1_lastkick_R0_calib->Fit("f_peak","QS","",-0.05,0.05);
+	f_peak->DrawCopy("SAME");
+	TFitResultPtr fit_R1_calib_peak = h1_lastkick_R1_calib->Fit("f_peak","QS","",-0.05,0.05);
+	f_peak->DrawCopy("SAME");
+	TFitResultPtr fit_R0_calib_peakbase = h1_lastkick_R0_calib->Fit("f_baseline","QS","",-1,-0.2);
+	f_baseline->DrawCopy("SAME");
+	TFitResultPtr fit_R1_calib_peakbase = h1_lastkick_R1_calib->Fit("f_baseline","QS","",-1,-0.2);
+	f_baseline->DrawCopy("SAME");
+	double R0_calib_peak = fit_R0_calib_peak->Parameter(0) - fit_R0_calib_peakbase->Parameter(0);
+	double R1_calib_peak = fit_R1_calib_peak->Parameter(0) - fit_R1_calib_peakbase->Parameter(0);
+	double R0_calib_peak_err = sqrt(fit_R0_calib_peak->ParError(0)*fit_R0_calib_peak->ParError(0) + fit_R0_calib_peakbase->ParError(0)*fit_R0_peakbase->ParError(0));
+	double R1_calib_peak_err = sqrt(fit_R1_calib_peak->ParError(0)*fit_R1_calib_peak->ParError(0) + fit_R1_calib_peakbase->ParError(0)*fit_R1_peakbase->ParError(0));
+	cout<<"Peak R0 (calib) : "<<R0_calib_peak<<" +- "<<R0_calib_peak_err<<"\n";
+	cout<<"Peak R1 (calib) : "<<R1_calib_peak<<" +- "<<R1_calib_peak_err<<"\n";
 
 	double R0_peak_blum_ratio = R0_peak*1000/R0_blum;
 	double R1_peak_blum_ratio = R1_peak*1000/R1_blum;
