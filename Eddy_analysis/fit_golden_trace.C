@@ -43,6 +43,52 @@ void fit_golden_trace(){
 	TH1D* h1_FFT_raw = doFFT(h1_kick1_R0,0.5,1.0);
 	TH1D* h1_FFT = doFFT(h1_kick1_R0_ra,0.5,1.0);
 
+	TGraph* g_golden_R0 = new TGraph();
+	for(int i=1; i<=h1_kick1_R0_ra->GetNbinsX(); i++){
+		g_golden_R0->AddPoint(h1_kick1_R0_ra->GetBinCenter(i),h1_kick1_R0_ra->GetBinContent(i));
+	}
+	g_golden_R0->GetXaxis()->SetTitle("Time [ms]");
+	g_golden_R0->GetYaxis()->SetTitle("B [mG]");
+
+	TFile * fout = new TFile("INFN_golden_R0_Bon.root","recreate");
+	g_golden_R0->Write("g_R0_Bon");
+	fout->Write();
+	fout->Close();
+
+
+
+	TFile* f_R1 = TFile::Open("../Eddy_analysis/analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root");
+	TH1D* h1_kick1_R1 = ((TProfile*)f_R1->Get("trace_kick1"))->ProjectionX();
+	cleanTrace(h1_kick1_R1,-200);
+	TH1D* h1_kick1_R1_ra = smoothing(h1_kick1_R1,"");
+	double r1_norm = blum_norm_y_R1/h1_kick1_R1_ra->Interpolate(blum_norm_x);
+	h1_kick1_R1_ra->Scale(r1_norm);
+	h1_kick1_R1_ra->GetYaxis()->SetTitle("B field [mG]");
+
+	TGraph* g_golden_R1 = new TGraph();
+	for(int i=1; i<=h1_kick1_R1_ra->GetNbinsX(); i++){
+		g_golden_R1->AddPoint(h1_kick1_R1_ra->GetBinCenter(i),h1_kick1_R1_ra->GetBinContent(i));
+	}
+	g_golden_R1->GetXaxis()->SetTitle("Time [ms]");
+	g_golden_R1->GetYaxis()->SetTitle("B [mG]");
+
+	TFile * fout2 = new TFile("INFN_golden_R1_Bon.root","recreate");
+	g_golden_R1->Write("g_R1_Bon");
+	fout2->Write();
+	fout2->Close();
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	double xmin = -0.1;
 	double xmax = 1.0;

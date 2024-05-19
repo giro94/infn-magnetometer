@@ -16,6 +16,7 @@ void plot_beam_distributions(){
 	TH2D* h2_run3a = new TH2D("h2_run3a","Beam distribution Run3a;x [mm];y [mm]",180,-45,45,180,-45,45);
 	TH2D* h2_run3b = new TH2D("h2_run3b","Beam distribution Run3b;x [mm];y [mm]",180,-45,45,180,-45,45);
 
+
 	char comma;
 	for (int i=0; i<180; i++){
 		for (int j=0; j<180; j++){
@@ -31,6 +32,11 @@ void plot_beam_distributions(){
 	f_run2.close();
 	f_run3a.close();
 	f_run3b.close();
+
+
+	TH1D* h1_run2 = h2_run2->ProjectionX("h1_run2");
+	TH1D* h1_run3a = h2_run3a->ProjectionX("h1_run3a");
+	TH1D* h1_run3b = h2_run3b->ProjectionX("h1_run3b");
 
 	double dR = 17.50;
 	double w_crystal = 4;
@@ -50,7 +56,8 @@ void plot_beam_distributions(){
 	g_crystal2->SetPoint(4,dR-w_crystal/2,-L_crystal/2);
 
 
-
+	TLine* l_R0 = new TLine();
+	TLine* l_R1 = new TLine();
 
 	gStyle->SetOptStat(0);
 	gStyle->SetPalette(kRainBow);
@@ -72,6 +79,30 @@ void plot_beam_distributions(){
 	g_crystal1->Draw("L");
 	g_crystal2->Draw("L");
 
+	TCanvas* canbis = new TCanvas("canbis","",1800,600);
+	canbis->Divide(3,1);
+	canbis->cd(1);
+	h2_run2->Draw("colz");
+	canbis->cd(2);
+	h2_run3a->Draw("colz");
+	canbis->cd(3);
+	h2_run3b->Draw("colz");
+
+
+	TCanvas* can2 = new TCanvas("can2","",1800,600);
+	can2->Divide(3,1);
+	can2->cd(1);
+	h1_run2->Draw("HIST");
+	l_R0->DrawLine(0,0,0,h1_run2->GetMaximum());
+	l_R1->DrawLine(dR,0,dR,h1_run2->GetMaximum());
+	can2->cd(2);
+	h1_run3a->Draw("HIST");
+	l_R0->DrawLine(0,0,0,h1_run3a->GetMaximum());
+	l_R1->DrawLine(dR,0,dR,h1_run3a->GetMaximum());
+	can2->cd(3);
+	h1_run3b->Draw("HIST");
+	l_R0->DrawLine(0,0,0,h1_run3b->GetMaximum());
+	l_R1->DrawLine(dR,0,dR,h1_run3b->GetMaximum());
 
 
 
