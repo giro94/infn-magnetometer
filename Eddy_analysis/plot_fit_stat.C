@@ -1,7 +1,7 @@
 void plot_fit_stat(){
 
 
-/*
+
 	vector<TString> filenames = {
 		"fits/fitted_noSNR_analysis_EC_jan22_B5173_H15.root",
 		"fits/fitted_noSNR_analysis_EC_jan23_B5173_H25_Q00.root",
@@ -37,9 +37,10 @@ void plot_fit_stat(){
 		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
 		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
 	};
-*/
+
 
 //noB
+/*
 	vector<TString> filenames = {
 		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root",
 		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
@@ -51,7 +52,7 @@ void plot_fit_stat(){
 		"analysis/analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
 		"analysis/analysis_SD_R1_eddy_oct4_H0_nofilter.root",
 	};
-
+*/
 
 	new TCanvas();
 	gStyle->SetPalette(kRainBow);

@@ -1,6 +1,6 @@
 #include "../analysis_tools.C"
 
-void lowpass(TString input_file){
+void plot_lowpass(TString input_file){
 
 	TFile* f = TFile::Open(input_file);
 
