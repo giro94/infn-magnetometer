@@ -69,7 +69,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	map<TString,int> map_varnames = headers.second;
 	int Nvars = map_varnames.size();
 
-	double ABref = 0;
+	double ABref = 12.0;
 	for (int fi=0; fi<Nfiles; fi++){
 
 		TString fname = files[fi];
@@ -113,7 +113,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 		ABdiff_avg_squared /= Npoints;
 		double ABerr = sqrt(ABdiff_avg_squared - ABdiff_avg*ABdiff_avg);
 		ABsum = A_avg + B_avg;
-		if (fi==0) ABref = ABsum;
+		//if (fi==0) ABref = ABsum;
 
 		int ipoint = g_ramp->GetN();
 		g_ramp->SetPoint(ipoint,time_stamp,ABdiff_avg);

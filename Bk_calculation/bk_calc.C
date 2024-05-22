@@ -83,8 +83,13 @@ void bk_calc(){
 
 	double xmin = 0;
 	double xmax = 300;
-	double ymin = -600;
+	double ymin = -400;
 	double ymax = 100;
+
+
+	TLine* l0 = new TLine(xmin,0,xmax,0);
+	l0->SetLineWidth(1);
+	l0->SetLineColor(kBlack);
 
 	TLine* l30 = new TLine(fit_start,ymin,fit_start,ymax);
 	l30->SetLineWidth(2);
@@ -131,7 +136,6 @@ void bk_calc(){
 	new TCanvas();
 	g_trace_R0->Draw("AL");
 	g_trace_R1->Draw("L");
-	l30->Draw("SAME");
 
 	TCanvas* can = new TCanvas("can","",1200,1200);
 	can->Divide(1,3);
@@ -141,6 +145,7 @@ void bk_calc(){
 	h1_transient_R0->GetYaxis()->SetRangeUser(ymin,ymax);
 	h1_transient_R0->Draw("HIST");
 	h1_transient_R1->Draw("HIST SAME");
+	l0->Draw("SAME");
 	l30->Draw("SAME");
 	gPad->SetGridy();
 	TLegend* leg1 = new TLegend(0.5,0.2,0.6,0.4);
@@ -158,7 +163,7 @@ void bk_calc(){
 
 	can->cd(3);
 	h1_convolution_R0->GetXaxis()->SetRangeUser(xmin,xmax);
-	h1_convolution_R0->GetYaxis()->SetRangeUser(1e-3*ymin,1e-3*ymax);
+	h1_convolution_R0->GetYaxis()->SetRangeUser(-0.6,0.1);
 	h1_convolution_R0->Draw("HIST");
 	h1_convolution_R1->Draw("HIST SAME");
 	gPad->SetGridy();
@@ -188,6 +193,11 @@ void bk_calc(){
 	g_Bk_x->SetPointError(1,2,0.10*abs(Bk_R1));
 
 	new TCanvas();
+	g_Bk_x->GetXaxis()->SetLimits(-50,50);
+	g_Bk_x->GetXaxis()->SetRangeUser(-50,50);
+	g_Bk_x->GetYaxis()->SetRangeUser(-400,0);
+	g_Bk_x->GetXaxis()->SetTitle("x [mm]");
+	g_Bk_x->GetYaxis()->SetTitle("Bk [ppb]");
 	g_Bk_x->SetMarkerStyle(20);
 	g_Bk_x->Draw("AP");
 
@@ -212,7 +222,10 @@ void bk_calc(){
 	h1_Bk_x_conv->Draw("HIST");
 	l_R0->DrawLine(0,h1_Bk_x_conv->GetMinimum(),0,h1_Bk_x_conv->GetMaximum());
 	l_R1->DrawLine(17.5,h1_Bk_x_conv->GetMinimum(),17.5,h1_Bk_x_conv->GetMaximum());
-
+	double Bk_Rmodel = h1_Bk_x_conv->Integral();
+	TLegend* leg_Bkx = new TLegend(0.3,0.7,0.7,0.8);
+	leg_Bkx->AddEntry(h1_Bk_x_conv,Form("Integral : %.1f ppb",Bk_Rmodel),"L");
+	leg_Bkx->Draw();
 	cout<<"Convolution space integral: "<<h1_Bk_x_conv->Integral()<<"\n";
 
 
