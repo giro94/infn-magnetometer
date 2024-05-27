@@ -50,7 +50,14 @@ void bk_calc(){
 	double f_azimuth = 0.085;
 	double f_kickers = (53.1+53.0+55.0)/(3*55.0);
 
+
 	//Transform transient in interpolated th1
+	TH1D* h1_transient_Emma = new TH1D("h1_transient_Emma","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_transient_Emma->GetNbinsX(); bx++){
+		double x = 0.001*h1_transient_Emma->GetBinCenter(bx);
+		h1_transient_Emma->SetBinContent(bx,-35*exp(-x/0.0474)*f_azimuth*f_kickers*1e9/B);
+	}
+
 	TH1D* h1_transient_R0 = new TH1D("h1_transient_R0","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
 	for (int bx=1; bx<=h1_transient_R0->GetNbinsX(); bx++){
 		double x = 0.001*h1_transient_R0->GetBinCenter(bx);
@@ -64,19 +71,30 @@ void bk_calc(){
 	}
 
 
+	TH1D* h1_runningavg_R0 = new TH1D("h1_runningavg_R0","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_runningavg_R0->GetNbinsX(); bx++){
+		double integral = h1_transient_R0->Integral(1,bx);
+		h1_runningavg_R0->SetBinContent(bx,integral/bx);
+	}
+	TH1D* h1_runningavg_R1 = new TH1D("h1_runningavg_R1","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_runningavg_R1->GetNbinsX(); bx++){
+		double integral = h1_transient_R1->Integral(1,bx);
+		h1_runningavg_R1->SetBinContent(bx,integral/bx);
+	}
+
 	//h1_wiggle->Rebin(30);
 	//h1_transient->Rebin(30);
 	//h1_transient->Scale(1./30);
 
 	TH1D* h1_convolution_R0 = new TH1D("h1_convolution_R0","B * wiggle",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
 	for (int bx=1; bx<=h1_convolution_R0->GetNbinsX(); bx++){
-		h1_convolution_R0->SetBinContent(bx,h1_transient_R0->GetBinContent(bx)*h1_wiggle->GetBinContent(bx));
+		h1_convolution_R0->SetBinContent(bx,h1_runningavg_R0->GetBinContent(bx)*h1_wiggle->GetBinContent(bx));
 	}
 	TH1D* h1_convolution_R0_cumulative = (TH1D*)h1_convolution_R0->GetCumulative();
 
 	TH1D* h1_convolution_R1 = new TH1D("h1_convolution_R1","B * wiggle",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
 	for (int bx=1; bx<=h1_convolution_R1->GetNbinsX(); bx++){
-		h1_convolution_R1->SetBinContent(bx,h1_transient_R1->GetBinContent(bx)*h1_wiggle->GetBinContent(bx));
+		h1_convolution_R1->SetBinContent(bx,h1_runningavg_R1->GetBinContent(bx)*h1_wiggle->GetBinContent(bx));
 	}
 	TH1D* h1_convolution_R1_cumulative = (TH1D*)h1_convolution_R1->GetCumulative();
 
@@ -106,6 +124,10 @@ void bk_calc(){
 	g_trace_R1->GetXaxis()->SetTitle("Time [#mus]");
 	g_trace_R1->GetYaxis()->SetTitle("#Delta B [ppb]");
 
+	h1_transient_Emma->SetLineWidth(2);
+	h1_transient_Emma->SetLineColor(kBlack);
+	h1_transient_Emma->GetXaxis()->SetTitle("Time [#mus]");
+	h1_transient_Emma->GetYaxis()->SetTitle("#Delta B [ppb]");
 	h1_transient_R0->SetLineWidth(2);
 	h1_transient_R0->SetLineColor(kBlue);
 	h1_transient_R0->GetXaxis()->SetTitle("Time [#mus]");
@@ -114,6 +136,15 @@ void bk_calc(){
 	h1_transient_R1->SetLineColor(kRed);
 	h1_transient_R1->GetXaxis()->SetTitle("Time [#mus]");
 	h1_transient_R1->GetYaxis()->SetTitle("#Delta B [ppb]");
+
+	h1_runningavg_R0->SetLineWidth(2);
+	h1_runningavg_R0->SetLineColor(kBlue);
+	h1_runningavg_R0->GetXaxis()->SetTitle("Time [#mus]");
+	h1_runningavg_R0->GetYaxis()->SetTitle("#Delta B [ppb]");
+	h1_runningavg_R1->SetLineWidth(2);
+	h1_runningavg_R1->SetLineColor(kRed);
+	h1_runningavg_R1->GetXaxis()->SetTitle("Time [#mus]");
+	h1_runningavg_R1->GetYaxis()->SetTitle("#Delta B [ppb]");
 
 	h1_wiggle->SetTitle("Normalized wiggle [AMethod]");
 	h1_wiggle->GetXaxis()->SetTitle("Time [#mus]");
@@ -137,8 +168,23 @@ void bk_calc(){
 	g_trace_R0->Draw("AL");
 	g_trace_R1->Draw("L");
 
+	new TCanvas();
+	h1_transient_R0->GetXaxis()->SetRangeUser(xmin,xmax);
+	h1_transient_R0->GetYaxis()->SetRangeUser(ymin,ymax);
+	h1_transient_R0->Draw("HIST");
+	h1_transient_R1->Draw("HIST SAME");
+	h1_transient_Emma->Draw("HIST SAME");
+	l0->Draw("SAME");
+	l30->Draw("SAME");
+	gPad->SetGridy();
+	TLegend* leg0 = new TLegend(0.5,0.2,0.6,0.4);
+	leg0->AddEntry(h1_transient_R0,"R0","L");
+	leg0->AddEntry(h1_transient_R1,"R1","L");
+	leg0->AddEntry(h1_transient_Emma,"Emma","L");
+	leg0->Draw();
+
 	TCanvas* can = new TCanvas("can","",1200,1200);
-	can->Divide(1,3);
+	can->Divide(1,4);
 
 	can->cd(1);
 	h1_transient_R0->GetXaxis()->SetRangeUser(xmin,xmax);
@@ -155,13 +201,30 @@ void bk_calc(){
 	cout<<"Transient R0 integral: "<<h1_transient_R0->Integral()<<"\n";
 	cout<<"Transient R1 integral: "<<h1_transient_R1->Integral()<<"\n";
 
+
 	can->cd(2);
+	h1_runningavg_R0->GetXaxis()->SetRangeUser(xmin,xmax);
+	h1_runningavg_R0->GetYaxis()->SetRangeUser(ymin,ymax);
+	h1_runningavg_R0->Draw("HIST");
+	h1_runningavg_R1->Draw("HIST SAME");
+	l0->Draw("SAME");
+	l30->Draw("SAME");
+	gPad->SetGridy();
+	TLegend* leg2 = new TLegend(0.5,0.2,0.6,0.4);
+	leg2->AddEntry(h1_runningavg_R0,"R0","L");
+	leg2->AddEntry(h1_runningavg_R1,"R1","L");
+	leg2->Draw();
+	cout<<"Transient R0 integral: "<<h1_runningavg_R0->Integral()<<"\n";
+	cout<<"Transient R1 integral: "<<h1_runningavg_R1->Integral()<<"\n";
+
+
+	can->cd(3);
 	h1_wiggle->GetXaxis()->SetRangeUser(xmin,xmax);
 	h1_wiggle->Draw("HIST");
 	gPad->SetGridy();
 	cout<<"Wiggle integral: "<<h1_wiggle->Integral()<<"\n";
 
-	can->cd(3);
+	can->cd(4);
 	h1_convolution_R0->GetXaxis()->SetRangeUser(xmin,xmax);
 	h1_convolution_R0->GetYaxis()->SetRangeUser(-0.6,0.1);
 	h1_convolution_R0->Draw("HIST");
