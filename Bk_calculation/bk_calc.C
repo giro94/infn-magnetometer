@@ -27,9 +27,6 @@ void bk_calc(){
 
 
 
-
-
-
 	double fit_start = 30.1384; // us
 	double fit_end = 650.064; // us
 
@@ -37,6 +34,8 @@ void bk_calc(){
 	for (int bx=0; bx<=h1_wiggle->GetNbinsX()+1; bx++){
 		if (h1_wiggle->GetBinCenter(bx) < fit_start || h1_wiggle->GetBinCenter(bx) > fit_end){
 			h1_wiggle->SetBinContent(bx,0);
+		} else {
+			//h1_wiggle->SetBinContent(bx,1);
 		}
 	}
 
@@ -56,6 +55,8 @@ void bk_calc(){
 	for (int bx=1; bx<=h1_transient_Emma->GetNbinsX(); bx++){
 		double x = 0.001*h1_transient_Emma->GetBinCenter(bx);
 		h1_transient_Emma->SetBinContent(bx,-35*exp(-x/0.0474)*f_azimuth*f_kickers*1e9/B);
+		//h1_transient_Emma->SetBinContent(bx,-100);
+		//h1_transient_Emma->SetBinContent(bx,x<0.05?-100:0);
 	}
 
 	TH1D* h1_transient_R0 = new TH1D("h1_transient_R0","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
@@ -71,20 +72,127 @@ void bk_calc(){
 	}
 
 
-	TH1D* h1_runningavg_R0 = new TH1D("h1_runningavg_R0","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
-	for (int bx=1; bx<=h1_runningavg_R0->GetNbinsX(); bx++){
-		double integral = h1_transient_R0->Integral(1,bx);
-		h1_runningavg_R0->SetBinContent(bx,integral/bx);
+	TH1D* h1_runningavg_Emma = new TH1D("h1_runningavg_Emma","w_{a} bias = #frac{1}{t-30}#int_{30}^{t}Bk(t')dt'",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_runningavg_Emma->GetNbinsX(); bx++){
+		int bin30 = h1_runningavg_Emma->FindBin(30);
+		double binW = h1_runningavg_Emma->GetBinWidth(1);
+		double t = h1_runningavg_Emma->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_runningavg_Emma->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_Emma->Integral(bin30,bx);
+			h1_runningavg_Emma->SetBinContent(bx,integral/(bx+1-bin30));
+		}
 	}
-	TH1D* h1_runningavg_R1 = new TH1D("h1_runningavg_R1","Transient",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	TH1D* h1_runningavg_R0 = new TH1D("h1_runningavg_R0","w_{a} bias = #frac{1}{t-30}#int_{30}^{t}Bk(t')dt'",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_runningavg_R0->GetNbinsX(); bx++){
+		int bin30 = h1_runningavg_R0->FindBin(30);
+		double binW = h1_runningavg_R0->GetBinWidth(1);
+		double t = h1_runningavg_R0->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_runningavg_R0->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R0->Integral(bin30,bx);
+			h1_runningavg_R0->SetBinContent(bx,integral/(bx+1-bin30));
+		}
+	}
+	TH1D* h1_runningavg_R1 = new TH1D("h1_runningavg_R1","w_{a} bias = #frac{1}{t-30}#int_{30}^{t}Bk(t')dt'",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
 	for (int bx=1; bx<=h1_runningavg_R1->GetNbinsX(); bx++){
-		double integral = h1_transient_R1->Integral(1,bx);
-		h1_runningavg_R1->SetBinContent(bx,integral/bx);
+		int bin30 = h1_runningavg_R1->FindBin(30);
+		double binW = h1_runningavg_R1->GetBinWidth(1);
+		double t = h1_runningavg_R1->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_runningavg_R1->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R1->Integral(bin30,bx);
+			h1_runningavg_R1->SetBinContent(bx,integral/(bx+1-bin30));
+		}
+	}
+
+
+	TH1D* h1_A_R0 = new TH1D("h1_A_R0","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_A_R0->GetNbinsX(); bx++){
+		int bin30 = h1_A_R0->FindBin(30);
+		double binW = h1_A_R0->GetBinWidth(1);
+		double t = h1_A_R0->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_A_R0->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R0->Integral(1,bx,"width");
+			h1_A_R0->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4)*(t-30));
+		}
+	}
+	TH1D* h1_A_R1 = new TH1D("h1_A_R1","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_A_R1->GetNbinsX(); bx++){
+		int bin30 = h1_A_R1->FindBin(30);
+		double binW = h1_A_R1->GetBinWidth(1);
+		double t = h1_A_R1->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_A_R1->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R1->Integral(1,bx,"width");
+			h1_A_R1->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4)*(t-30));
+		}
+	}
+	TH1D* h1_A_Emma = new TH1D("h1_A_Emma","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_A_Emma->GetNbinsX(); bx++){
+		int bin30 = h1_A_Emma->FindBin(30);
+		double binW = h1_A_Emma->GetBinWidth(1);
+		double t = h1_A_Emma->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_A_Emma->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_Emma->Integral(1,bx,"width");
+			h1_A_Emma->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4)*(t-30));
+		}
+	}
+
+	TH1D* h1_B_R0 = new TH1D("h1_B_R0","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_B_R0->GetNbinsX(); bx++){
+		int bin30 = h1_B_R0->FindBin(30);
+		double binW = h1_B_R0->GetBinWidth(1);
+		double t = h1_B_R0->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_B_R0->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R0->Integral(1,bx,"width");
+			h1_B_R0->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4));
+		}
+	}
+	TH1D* h1_B_R1 = new TH1D("h1_B_R1","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_B_R1->GetNbinsX(); bx++){
+		int bin30 = h1_B_R1->FindBin(30);
+		double binW = h1_B_R1->GetBinWidth(1);
+		double t = h1_B_R1->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_B_R1->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_R1->Integral(1,bx,"width");
+			h1_B_R1->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4));
+		}
+	}
+	TH1D* h1_B_Emma = new TH1D("h1_B_Emma","A",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_B_Emma->GetNbinsX(); bx++){
+		int bin30 = h1_B_Emma->FindBin(30);
+		double binW = h1_B_Emma->GetBinWidth(1);
+		double t = h1_B_Emma->GetBinCenter(bx);
+		if (bx < bin30){
+			h1_B_Emma->SetBinContent(bx,0);
+		} else {
+			double integral = h1_transient_Emma->Integral(1,bx,"width");
+			h1_B_Emma->SetBinContent(bx,integral*pow(M_E,-(t-30)/64.4));
+		}
 	}
 
 	//h1_wiggle->Rebin(30);
 	//h1_transient->Rebin(30);
 	//h1_transient->Scale(1./30);
+
+	TH1D* h1_convolution_Emma = new TH1D("h1_convolution_Emma","B * wiggle",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
+	for (int bx=1; bx<=h1_convolution_Emma->GetNbinsX(); bx++){
+		h1_convolution_Emma->SetBinContent(bx,h1_runningavg_Emma->GetBinContent(bx)*h1_wiggle->GetBinContent(bx));
+	}
+	TH1D* h1_convolution_Emma_cumulative = (TH1D*)h1_convolution_Emma->GetCumulative();
 
 	TH1D* h1_convolution_R0 = new TH1D("h1_convolution_R0","B * wiggle",h1_wiggle->GetNbinsX(),h1_wiggle->GetXaxis()->GetXmin(),h1_wiggle->GetXaxis()->GetXmax());
 	for (int bx=1; bx<=h1_convolution_R0->GetNbinsX(); bx++){
@@ -100,7 +208,7 @@ void bk_calc(){
 
 
 	double xmin = 0;
-	double xmax = 300;
+	double xmax = 700;
 	double ymin = -400;
 	double ymax = 100;
 
@@ -137,6 +245,10 @@ void bk_calc(){
 	h1_transient_R1->GetXaxis()->SetTitle("Time [#mus]");
 	h1_transient_R1->GetYaxis()->SetTitle("#Delta B [ppb]");
 
+	h1_runningavg_Emma->SetLineWidth(2);
+	h1_runningavg_Emma->SetLineColor(kBlack);
+	h1_runningavg_Emma->GetXaxis()->SetTitle("Time [#mus]");
+	h1_runningavg_Emma->GetYaxis()->SetTitle("#Delta B [ppb]");
 	h1_runningavg_R0->SetLineWidth(2);
 	h1_runningavg_R0->SetLineColor(kBlue);
 	h1_runningavg_R0->GetXaxis()->SetTitle("Time [#mus]");
@@ -150,6 +262,11 @@ void bk_calc(){
 	h1_wiggle->GetXaxis()->SetTitle("Time [#mus]");
 	h1_wiggle->GetYaxis()->SetTitle("Positrons");
 
+	h1_convolution_Emma->SetLineWidth(2);
+	h1_convolution_Emma->SetLineColor(kBlack);
+	h1_convolution_Emma->SetTitle("B \\circledast N");
+	h1_convolution_Emma->GetXaxis()->SetTitle("Time [#mus]");
+	h1_convolution_Emma->GetYaxis()->SetTitle("#Delta B [ppb]");
 	h1_convolution_R0->SetLineWidth(2);
 	h1_convolution_R0->SetLineColor(kBlue);
 	h1_convolution_R0->SetTitle("B \\circledast N");
@@ -191,6 +308,7 @@ void bk_calc(){
 	h1_transient_R0->GetYaxis()->SetRangeUser(ymin,ymax);
 	h1_transient_R0->Draw("HIST");
 	h1_transient_R1->Draw("HIST SAME");
+	h1_transient_Emma->Draw("HIST SAME");
 	l0->Draw("SAME");
 	l30->Draw("SAME");
 	gPad->SetGridy();
@@ -198,8 +316,8 @@ void bk_calc(){
 	leg1->AddEntry(h1_transient_R0,"R0","L");
 	leg1->AddEntry(h1_transient_R1,"R1","L");
 	leg1->Draw();
-	cout<<"Transient R0 integral: "<<h1_transient_R0->Integral()<<"\n";
-	cout<<"Transient R1 integral: "<<h1_transient_R1->Integral()<<"\n";
+	cout<<"Transient R0 integral: "<<h1_transient_R0->Integral("width")<<"\n";
+	cout<<"Transient R1 integral: "<<h1_transient_R1->Integral("width")<<"\n";
 
 
 	can->cd(2);
@@ -207,6 +325,7 @@ void bk_calc(){
 	h1_runningavg_R0->GetYaxis()->SetRangeUser(ymin,ymax);
 	h1_runningavg_R0->Draw("HIST");
 	h1_runningavg_R1->Draw("HIST SAME");
+	h1_runningavg_Emma->Draw("HIST SAME");
 	l0->Draw("SAME");
 	l30->Draw("SAME");
 	gPad->SetGridy();
@@ -214,8 +333,8 @@ void bk_calc(){
 	leg2->AddEntry(h1_runningavg_R0,"R0","L");
 	leg2->AddEntry(h1_runningavg_R1,"R1","L");
 	leg2->Draw();
-	cout<<"Transient R0 integral: "<<h1_runningavg_R0->Integral()<<"\n";
-	cout<<"Transient R1 integral: "<<h1_runningavg_R1->Integral()<<"\n";
+	cout<<"Runningavg R0 integral: "<<h1_runningavg_R0->Integral("width")<<"\n";
+	cout<<"Runningavg R1 integral: "<<h1_runningavg_R1->Integral("width")<<"\n";
 
 
 	can->cd(3);
@@ -226,20 +345,24 @@ void bk_calc(){
 
 	can->cd(4);
 	h1_convolution_R0->GetXaxis()->SetRangeUser(xmin,xmax);
-	h1_convolution_R0->GetYaxis()->SetRangeUser(-0.6,0.1);
+	h1_convolution_R0->GetYaxis()->SetRangeUser(2e-4*ymin,2e-4*ymax);
 	h1_convolution_R0->Draw("HIST");
 	h1_convolution_R1->Draw("HIST SAME");
+	h1_convolution_Emma->Draw("HIST SAME");
 	gPad->SetGridy();
 	TLegend* leg3 = new TLegend(0.5,0.2,0.7,0.4);
 
+	double Bk_Emma = h1_convolution_Emma->Integral();
 	double Bk_R0 = h1_convolution_R0->Integral();
 	double Bk_R1 = h1_convolution_R1->Integral();
 
 	leg3->AddEntry(h1_convolution_R0,Form("R0 : %.1f ppb",Bk_R0),"L");
 	leg3->AddEntry(h1_convolution_R1,Form("R1 : %.1f ppb",Bk_R1),"L");
+	leg3->AddEntry(h1_convolution_Emma,Form("Const : %.1f ppb",Bk_Emma),"L");
 	leg3->Draw();
 	cout<<"Convolution R0 integral: "<<Bk_R0<<"\n";
 	cout<<"Convolution R1 integral: "<<Bk_R1<<"\n";
+	cout<<"Convolution Emma integral: "<<Bk_Emma<<"\n";
 
 
 	new TCanvas();
@@ -292,5 +415,44 @@ void bk_calc(){
 	cout<<"Convolution space integral: "<<h1_Bk_x_conv->Integral()<<"\n";
 
 
+	new TCanvas();
+	h1_A_R0->SetLineColor(kBlue);
+	h1_B_R0->SetLineColor(kRed);
+	h1_A_R0->Draw("HIST");
+	h1_B_R0->Draw("HIST SAME");
+	new TCanvas();
+	h1_A_R1->SetLineColor(kBlue);
+	h1_B_R1->SetLineColor(kRed);
+	h1_A_R1->Draw("HIST");
+	h1_B_R1->Draw("HIST SAME");
+	new TCanvas();
+	h1_A_Emma->SetLineColor(kBlue);
+	h1_B_Emma->SetLineColor(kRed);
+	h1_A_Emma->Draw("HIST");
+	h1_B_Emma->Draw("HIST SAME");
+
+	cout<<"R0:\n";
+	double integral_A_R0 = h1_A_R0->Integral(h1_A_R0->FindBin(0),h1_A_R0->FindBin(650),"width")/(64.4*64.4*64.4);	
+	double integral_B_R0 = h1_B_R0->Integral(h1_B_R0->FindBin(0),h1_B_R0->FindBin(650),"width")/(64.4*64.4);
+	cout<<"A integral = "<<integral_A_R0<<"\n";
+	cout<<"B integral = "<<integral_B_R0<<"\n";
+	double wa_bias_R0 = integral_A_R0 - integral_B_R0;
+	cout<<"wa bias = "<<wa_bias_R0<<"\n";
+
+	cout<<"R1:\n";
+	double integral_A_R1 = h1_A_R1->Integral(h1_A_R1->FindBin(0),h1_A_R1->FindBin(650),"width")/(64.4*64.4*64.4);	
+	double integral_B_R1 = h1_B_R1->Integral(h1_B_R1->FindBin(0),h1_B_R1->FindBin(650),"width")/(64.4*64.4);
+	cout<<"A integral = "<<integral_A_R1<<"\n";
+	cout<<"B integral = "<<integral_B_R1<<"\n";
+	double wa_bias_R1 = integral_A_R1 - integral_B_R1;
+	cout<<"wa bias = "<<wa_bias_R1<<"\n";
+
+	cout<<"Emma:\n";
+	double integral_A_Emma = h1_A_Emma->Integral(h1_A_Emma->FindBin(0),h1_A_Emma->FindBin(650),"width")/(64.4*64.4*64.4);	
+	double integral_B_Emma = h1_B_Emma->Integral(h1_B_Emma->FindBin(0),h1_B_Emma->FindBin(650),"width")/(64.4*64.4);
+	cout<<"A integral = "<<integral_A_Emma<<"\n";
+	cout<<"B integral = "<<integral_B_Emma<<"\n";
+	double wa_bias_Emma = integral_A_Emma - integral_B_Emma;
+	cout<<"wa bias = "<<wa_bias_Emma<<"\n";
 
 }

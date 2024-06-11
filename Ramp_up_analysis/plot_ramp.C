@@ -244,7 +244,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	g_ramp_norm_current->SetName("Ramp_norm_current");
 	g_ramp_norm_current->SetTitle("Ramp normalized");
 	g_ramp_norm_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
-	g_ramp_norm_current->GetYaxis()->SetTitle("(B-A)/(A+B)");
+	g_ramp_norm_current->GetYaxis()->SetTitle("(B-A) [V] (12 V)");
 	g_ramp_norm_current->SetMarkerStyle(20);
 	g_ramp_norm_current->Draw("APL");
 	gPad->SetGridy();

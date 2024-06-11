@@ -92,4 +92,19 @@ void plot_BI(){
 	fout->Write();
 	fout->Close();
 
+	TGraph* g_derivative = new TGraph();
+	for (int i=1; i<g_BI->GetN(); i++){
+		double x = g_BI->GetPointX(i);
+		double prev_x = g_BI->GetPointX(i-1);
+		double val = (g_BI->GetPointY(i)-g_BI->GetPointY(i-1))/(x-prev_x);
+		g_derivative->AddPoint(0.5*(x+prev_x),1e4*val);
+		cout<<0.5*(x+prev_x)<<" A -> "<<1e4*val<<" G/A\n";
+	}
+	new TCanvas();
+	g_derivative->GetXaxis()->SetTitle("Current [A]");
+	g_derivative->GetYaxis()->SetTitle("Field linearity [G/A]");
+	g_derivative->SetMarkerStyle(20);
+	g_derivative->Draw("APL");
+
+
 }
