@@ -4,22 +4,22 @@
 
 void compare_kickstrength(){
 
-	TFile* f1 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct26_H25_B100_k194.root");
-	TFile* f2 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct25_H25_B100_k389.root");
-	TFile* f3 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct25_H25_B100_k583.root");
-	TFile* f4 = TFile::Open("fitted_kick_analysis_output_SD_R0_eddy_oct24_H25_B100_k777.root");
+	TFile* f1 = TFile::Open("fits/fitted_noSNR_analysis_SD_R0_eddy_oct26_H25_B100_k194.root");
+	TFile* f2 = TFile::Open("fits/fitted_noSNR_analysis_SD_R0_eddy_oct25_H25_B100_k389.root");
+	TFile* f3 = TFile::Open("fits/fitted_noSNR_analysis_SD_R0_eddy_oct25_H25_B100_k583.root");
+	TFile* f4 = TFile::Open("fits/fitted_noSNR_analysis_SD_R0_eddy_oct24_H25_B100_k777.root");
 	vector<double> strengths = {1.94, 3.89, 5.83, 7.77};
 
 
-	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_px");
-	TH1D* f2_kick1 = (TH1D*)f2->Get("trace_kick1_px");
-	TH1D* f3_kick1 = (TH1D*)f3->Get("trace_kick1_px");
-	TH1D* f4_kick1 = (TH1D*)f4->Get("trace_kick1_px");
+	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_calibrated_px");
+	TH1D* f2_kick1 = (TH1D*)f2->Get("trace_kick1_calibrated_px");
+	TH1D* f3_kick1 = (TH1D*)f3->Get("trace_kick1_calibrated_px");
+	TH1D* f4_kick1 = (TH1D*)f4->Get("trace_kick1_calibrated_px");
 
-	TH1D* f1_kick8 = (TH1D*)f1->Get("trace_kick8_px");
-	TH1D* f2_kick8 = (TH1D*)f2->Get("trace_kick8_px");
-	TH1D* f3_kick8 = (TH1D*)f3->Get("trace_kick8_px");
-	TH1D* f4_kick8 = (TH1D*)f4->Get("trace_kick8_px");
+	TH1D* f1_kick8 = (TH1D*)f1->Get("trace_kick8_calibrated_px");
+	TH1D* f2_kick8 = (TH1D*)f2->Get("trace_kick8_calibrated_px");
+	TH1D* f3_kick8 = (TH1D*)f3->Get("trace_kick8_calibrated_px");
+	TH1D* f4_kick8 = (TH1D*)f4->Get("trace_kick8_calibrated_px");
 
 	TH1D* f1_kick1_exp = (TH1D*)f1->Get("kick1_fit_exp");
 	TH1D* f2_kick1_exp = (TH1D*)f2->Get("kick1_fit_exp");
@@ -36,10 +36,10 @@ void compare_kickstrength(){
 	TH1D* f3_kick8_exp = (TH1D*)f3->Get("kick8_fit_exp");
 	TH1D* f4_kick8_exp = (TH1D*)f4->Get("kick8_fit_exp");
 
-	TH1D* f1_kick1_FFT = (TH1D*)f1->Get("trace_kick1_px_FFT");
-	TH1D* f2_kick1_FFT = (TH1D*)f2->Get("trace_kick1_px_FFT");
-	TH1D* f3_kick1_FFT = (TH1D*)f3->Get("trace_kick1_px_FFT");
-	TH1D* f4_kick1_FFT = (TH1D*)f4->Get("trace_kick1_px_FFT");
+	TH1D* f1_kick1_FFT = (TH1D*)f1->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f2_kick1_FFT = (TH1D*)f2->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f3_kick1_FFT = (TH1D*)f3->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f4_kick1_FFT = (TH1D*)f4->Get("trace_kick1_calibrated_px_FFT");
 
 
 	f1_kick1->SetTitle(Form("Kick 1 (Kick %.2f kV)",strengths[0]));

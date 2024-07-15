@@ -3,21 +3,21 @@ void plot_fit_stat(){
 
 
 	vector<TString> filenames = {
-		"fits/fitted_noSNR_analysis_EC_jan22_B5173_H15.root",
-		"fits/fitted_noSNR_analysis_EC_jan23_B5173_H25_Q00.root",
-		"fits/fitted_noSNR_analysis_EC_jan26_B5173_H25_Q130.root",
-		"fits/fitted_noSNR_analysis_EC_jan28_B5173_H25_Q00.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct22_H25_B100_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R1_eddy_oct5_H0_nofilter_Bfield.root",
-		"fits/fitted_noSNR_analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
-		"fits/fitted_noSNR_analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
+		"fits/fitted_calibrated_analysis_EC_jan22_B5173_H15.root",
+		"fits/fitted_calibrated_analysis_EC_jan23_B5173_H25_Q00.root",
+		"fits/fitted_calibrated_analysis_EC_jan26_B5173_H25_Q130.root",
+		"fits/fitted_calibrated_analysis_EC_jan28_B5173_H25_Q00.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct22_H25_B100_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R1_eddy_oct5_H0_nofilter_Bfield.root",
+		"fits/fitted_calibrated_analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
+		"fits/fitted_calibrated_analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
 	};
 
 	vector<TString> filenames2 = {
@@ -39,12 +39,15 @@ void plot_fit_stat(){
 	};
 
 
+
+
+
 //noB
 /*
 	vector<TString> filenames = {
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root",
-		"fits/fitted_noSNR_analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
-		"fits/fitted_noSNR_analysis_SD_R1_eddy_oct4_H0_nofilter.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root",
+		"fits/fitted_calibrated_analysis_SD_R0_eddy_oct23_H25_B0_k777.root",
+		"fits/fitted_calibrated_analysis_SD_R1_eddy_oct4_H0_nofilter.root",
 	};
 
 	vector<TString> filenames2 = {
@@ -53,7 +56,6 @@ void plot_fit_stat(){
 		"analysis/analysis_SD_R1_eddy_oct4_H0_nofilter.root",
 	};
 */
-
 	new TCanvas();
 	gStyle->SetPalette(kRainBow);
 

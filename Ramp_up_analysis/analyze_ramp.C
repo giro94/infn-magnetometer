@@ -4,9 +4,9 @@ void analyze_ramp(TString filename){
 
 
 	TFile* f1 = TFile::Open(filename);
-	TGraph* g_A = (TGraph*)f1->Get("A");
-	TGraph* g_B = (TGraph*)f1->Get("B");
-	TGraph* g_ramp = (TGraph*)f1->Get("Rampup");
+	TGraph* g_A = (TGraph*)f1->Get("A_current");
+	TGraph* g_B = (TGraph*)f1->Get("B_current");
+	TGraph* g_ramp = (TGraph*)f1->Get("Ramp_norm_current");
 	TGraph* g_rampdown = new TGraph();
 	TGraph* g_rampup = new TGraph();
 

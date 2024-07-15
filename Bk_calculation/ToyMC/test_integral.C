@@ -56,7 +56,7 @@ std::pair<double, std::pair<double, double> > ip_CBOminusVW  = {0., {-2*M_PI, 4*
 double waref = iR.first;
 
 double Bk(double t){
-    double cum = EC_R0->Integral(EC_R0->FindBin(0),EC_R0->FindBin(t));
+    double cum = EC_R0->Integral(EC_R0->FindBin(30),EC_R0->FindBin(t),"width");
     //EC_R0_cumulative->Interpolate(t);
     //if (t<30) cum = 0;
     return cum;
@@ -145,8 +145,8 @@ void test_integral(){
 		double x = EC_R0->GetBinCenter(bx);
 		double val = g_EC_R0->Eval(1e-3*x)*mG_to_ppb;
 		//if (x<30) val = 0;
-		//EC_R0->SetBinContent(bx,val);
-		EC_R0->SetBinContent(bx,-35*mG_to_ppb*exp(-x/47.4));
+		EC_R0->SetBinContent(bx,val);
+		//EC_R0->SetBinContent(bx,-35*mG_to_ppb*exp(-x/47.4));
 	}
 	for (int bx=1; bx<=EC_R1->GetNbinsX(); bx++){
 		double x = EC_R1->GetBinCenter(bx);

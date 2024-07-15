@@ -2,7 +2,15 @@
 void fit_ramp_nodes(){
 
 	vector<TString> filenames = {
-		//"output_Rampup_R1_H5_oct5.root"
+	//	"output_Rampup_R0_H20_oct11.root",
+	//	"output_Rampup_R0_H20_oct13.root",
+		//"output_Rampup_R0_H25_oct20_B50-88.root",
+		//"output_Rampup_R0_H25_oct20.root",
+		//"output_Rampup_R0_H25_oct21_B88-100.root",
+		//"output_Rampup_R0_H25_oct24_B0-100.root",
+	//	"output_Rampup_R0_H30_oct16.root",
+	//	"output_Rampup_R1_H5_oct5.root",
+
 		//"output_Ramp_jan16_0to5175.root",
 		//"output_Ramp_jan16_5175to2000to5175.root",
 		//"output_Ramp_jan17_5175to0.root",
@@ -12,9 +20,10 @@ void fit_ramp_nodes(){
 		//"output_Ramp_jan21_3619to3043.root",
 		//"output_Ramp_jan22_3043to5173.root",
 		//"output_Ramp_jan26_H25Q130_5173to2000to5173.root",
-		//"output_Ramp_jan29_H25Q00_5173to0.root",
-		"output_FD_R0_ramp_oct9_H22p5.root",
-		"output_FD_R1_ramp_oct8_H0.root"
+		"output_Ramp_jan29_H25Q00_5173to0.root",
+		
+		//"output_FD_R0_ramp_oct9_H22p5.root",
+		//"output_FD_R1_ramp_oct8_H0.root"
 	};
 
 	bool use_normalized = true;
@@ -165,8 +174,18 @@ void fit_ramp_nodes(){
 		g_ramp_up[i]->Draw(i==0?"APL":"PL");
 	}
 
+
+	double sine_th_min = 1;
+	double sine_th_max = 12;
+	double sine_th_step = 0.1;
+	int Nsteps = (sine_th_max-sine_th_min)/sine_th_step;
+
 	TGraphErrors** g_slope = new TGraphErrors* [Nfiles];
+	TGraphErrors*** g_ramp_sine = new TGraphErrors** [Nfiles];
+	TGraphErrors** g_slope_sine = new TGraphErrors* [Nfiles];
+	TGraphErrors** g_chi2_sine = new TGraphErrors* [Nfiles];
 	TH1D* h1_slope = new TH1D("h1_slope","Slope distribution;Slope [mV/mG]",20,0.1,0.7);
+	TF1* f_sine = new TF1("f_sine","[0]*sin([1]*x+[2])",0,1.45);
 	for (int i=0; i<Nfiles; i++){
 		g_slope[i] = new TGraphErrors();
 
@@ -177,6 +196,7 @@ void fit_ramp_nodes(){
 		g_ramp_down[i]->Draw("PL");
 		g_ramp_up[i]->Draw("PL");
 
+		// Fit nodes rampdown
 		for (int j=0; j<nodes_down[i].size(); j++){
 			TFitResultPtr fit_res = g_ramp_down[i]->Fit("pol1","QS+","",nodes_down[i][j]-fit_range,nodes_down[i][j]+fit_range);
 			if (fit_res >= 0){
@@ -186,6 +206,7 @@ void fit_ramp_nodes(){
 			}
 		}
 
+		// Fit nodes rampup
 		for (int j=0; j<nodes_up[i].size(); j++){
 			TFitResultPtr fit_res = g_ramp_up[i]->Fit("pol1","QS+","",nodes_up[i][j]-fit_range,nodes_up[i][j]+fit_range);
 			if (fit_res >= 0){
@@ -194,10 +215,34 @@ void fit_ramp_nodes(){
 				h1_slope->Fill((fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G));
 			}
 		}
+
+		// Fit sine rampdown
+		g_ramp_sine[i] = new TGraphErrors* [Nsteps];
+		g_slope_sine[i] = new TGraphErrors();
+		g_chi2_sine[i] = new TGraphErrors();
+		for (int j=0; j<Nsteps; j++){
+			g_ramp_sine[i][j] = new TGraphErrors();
+			double sine_th = sine_th_min+j*sine_th_step;
+			for (int k=0; k<g_ramp_up[i]->GetN(); k++){
+				if (abs(g_ramp_up[i]->GetPointY(k)) < sine_th){
+					g_ramp_sine[i][j]->SetPoint(g_ramp_sine[i][j]->GetN(),g_ramp_up[i]->GetPointX(k),g_ramp_up[i]->GetPointY(k));
+				}
+			}
+			f_sine->SetParameters(10,8*M_PI/1.45,0);
+			TFitResultPtr fit_res = g_ramp_sine[i][j]->Fit("f_sine","QS+","",0,1.45);
+			if (fit_res >= 0){
+				double slope_fit = (fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(0)*fit_res->Parameter(1)/a_to_G);
+				double slope_fit_err = slope_fit*(abs(fit_res->ParError(0)/fit_res->Parameter(0)) + abs(fit_res->ParError(1)/fit_res->Parameter(1)));
+				g_slope_sine[i]->SetPoint(g_slope_sine[i]->GetN(),sine_th,slope_fit);
+				g_slope_sine[i]->SetPointError(g_slope_sine[i]->GetN()-1,0,slope_fit_err);
+				g_chi2_sine[i]->SetPoint(g_chi2_sine[i]->GetN(),sine_th,fit_res->Chi2()/fit_res->Ndf());
+			}
+		}
 	}
 
 
 	new TCanvas();
+	TLegend* leg_fit = new TLegend(0.5,0.7,0.9,0.9);
 	for (int i=0; i<Nfiles; i++){
 		g_slope[i]->Sort();
 		
@@ -211,8 +256,8 @@ void fit_ramp_nodes(){
 		g_slope[i]->SetMarkerColor(i%8+1);
 		g_slope[i]->Draw(i==0?"APLZ":"PLZ");
 
-		//TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",calibrate?0.1:285,calibrate?1.4:4000);
-		TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",1,1.4);
+		TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",calibrate?0.1:285,calibrate?1.4:4000);
+		//TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",1,1.4);
 		cout<<"Slope fit: "<<res->Parameter(0)<<" +- "<<res->ParError(0)<<"\n";
 		double y=0;
 		double y2=0;
@@ -228,15 +273,71 @@ void fit_ramp_nodes(){
 		y2 /= nfit;
 		double rms = sqrt(y2 - y*y);
 		cout<<"RMS: "<<rms<<", mean error: "<<rms/sqrt(nfit)<<"\n";
+
+		TString histTitle = filenames[i];
+		histTitle.Remove(0,histTitle.Index("Ramp")+5);
+		leg_fit->AddEntry(g_slope[i],Form("%s | %.3f +- %.3f mV/mG",histTitle.Data(),res->Parameter(0),rms/sqrt(nfit)),"PL");
 	}
+	leg_fit->Draw();
 	gPad->SetGridy();
 
 
 	new TCanvas();
 	h1_slope->Draw("HIST");
 
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_slope_sine[i]->SetName(Form("g_slope_sine_%d",i));
+		g_slope_sine[i]->SetTitle(Form("g_slope_sine_%d",i));
+		g_slope_sine[i]->GetXaxis()->SetTitle("Cutoff [V]");
+		g_slope_sine[i]->GetYaxis()->SetTitle("Slope [mV/mG]");
+		g_slope_sine[i]->Draw(i==0?"APLZ":"PLZ");
+	}
 
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_chi2_sine[i]->SetName(Form("g_chi2_sine_%d",i));
+		g_chi2_sine[i]->SetTitle(Form("g_chi2_sine_%d",i));
+		g_chi2_sine[i]->GetXaxis()->SetTitle("Cutoff [V]");
+		g_chi2_sine[i]->GetYaxis()->SetTitle("Fit Chi2/NDF");
+		g_chi2_sine[i]->Draw(i==0?"APLZ":"PLZ");
+	}
 
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_ramp_sine[i][0]->SetName(Form("g_ramp_sine_%d_%d",i,Nsteps/2));
+		g_ramp_sine[i][0]->SetTitle(Form("g_ramp_sine_%d (Cutoff %.1f)",i,sine_th_min+0*sine_th_step));
+		g_ramp_sine[i][0]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
+		g_ramp_sine[i][0]->GetYaxis()->SetTitle("B-A [V] (12 V)");
+		g_ramp_sine[i][0]->SetMarkerStyle(20);
+		g_ramp_sine[i][0]->SetMarkerColor(i%8+1);
+		g_ramp_sine[i][0]->GetYaxis()->SetRangeUser(-12,12);
+		g_ramp_sine[i][0]->Draw(i==0?"APLZ":"PLZ");
+	}
+
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_ramp_sine[i][Nsteps/2]->SetName(Form("g_ramp_sine_%d_%d",i,Nsteps/2));
+		g_ramp_sine[i][Nsteps/2]->SetTitle(Form("g_ramp_sine_%d (Cutoff %.1f)",i,sine_th_min+Nsteps/2*sine_th_step));
+		g_ramp_sine[i][Nsteps/2]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
+		g_ramp_sine[i][Nsteps/2]->GetYaxis()->SetTitle("B-A [V] (12 V)");
+		g_ramp_sine[i][Nsteps/2]->SetMarkerStyle(20);
+		g_ramp_sine[i][Nsteps/2]->SetMarkerColor(i%8+1);
+		g_ramp_sine[i][Nsteps/2]->GetYaxis()->SetRangeUser(-12,12);
+		g_ramp_sine[i][Nsteps/2]->Draw(i==0?"APLZ":"PLZ");
+	}
+
+	new TCanvas();
+	for (int i=0; i<Nfiles; i++){
+		g_ramp_sine[i][Nsteps-1]->SetName(Form("g_ramp_sine_%d_%d",i,Nsteps-1));
+		g_ramp_sine[i][Nsteps-1]->SetTitle(Form("g_ramp_sine_%d (Cutoff %.1f)",i,sine_th_min+Nsteps-1*sine_th_step));
+		g_ramp_sine[i][Nsteps-1]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
+		g_ramp_sine[i][Nsteps-1]->GetYaxis()->SetTitle("B-A [V] (12 V)");
+		g_ramp_sine[i][Nsteps-1]->SetMarkerStyle(20);
+		g_ramp_sine[i][Nsteps-1]->SetMarkerColor(i%8+1);
+		g_ramp_sine[i][Nsteps-1]->GetYaxis()->SetRangeUser(-12,12);
+		g_ramp_sine[i][Nsteps-1]->Draw(i==0?"APLZ":"PLZ");
+	}
 
 
 

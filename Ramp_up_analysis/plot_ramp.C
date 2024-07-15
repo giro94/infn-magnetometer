@@ -7,6 +7,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	TGraph* g_rampB = new TGraph();
 	TGraph* g_rampAB = new TGraph();
 	TGraph* g_ramp_norm = new TGraph();
+	TGraph* g_current = new TGraph();
 
 
 	TGraphErrors* g_ramp_current = new TGraphErrors();
@@ -122,6 +123,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 		g_rampB->SetPoint(ipoint,time_stamp,B_avg);
 		g_rampAB->SetPoint(ipoint,time_stamp,A_avg+B_avg);
 		g_ramp_norm->SetPoint(ipoint,time_stamp,ABdiff_avg*ABref/ABsum);
+		g_current->SetPoint(ipoint,time_stamp,current);
 
 		g_ramp_current->SetPoint(ipoint,current,ABdiff_avg);
 		g_ramp_current->SetPointError(ipoint,0,ABerr);
@@ -185,6 +187,18 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 	g_rampA->Draw("APL");
 	g_rampB->Draw("PL");
 	g_rampAB->Draw("PL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_current->SetName("current");
+	g_current->SetTitle("current");
+	g_current->GetXaxis()->SetTitle("Time");
+	g_current->GetYaxis()->SetTitle("Magnet current [A]");
+	g_current->GetXaxis()->SetTimeFormat("%H:%M");
+	g_current->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_current->GetXaxis()->SetTimeDisplay(1);
+	g_current->SetMarkerStyle(20);
+	g_current->Draw("APL");
 	gPad->SetGridy();
 
 
@@ -265,6 +279,7 @@ void plot_ramp(TString folder, TString output_file="", TString current_filename=
 		g_rampB->Write();
 		g_rampAB->Write();
 		g_ramp_norm->Write();
+		g_current->Write();
 
 		g_ramp_current->Write();
 		g_rampA_current->Write();

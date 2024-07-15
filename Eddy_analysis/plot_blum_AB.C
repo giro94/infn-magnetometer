@@ -3,7 +3,8 @@
 
 void plot_blum_AB(){
 
-	TFile* f1 = TFile::Open("analysis/analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root");
+	//TFile* f1 = TFile::Open("analysis/analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root");
+	TFile* f1 = TFile::Open("analysis/analysis_SD_R1_eddy_oct6_H0_nofilter_Bfield_k583.root");
 
 
 	TGraph* g_trend_A = (TGraph*)f1->Get("g_trend_A");

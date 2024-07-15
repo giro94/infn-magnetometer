@@ -1,6 +1,6 @@
 #include "../analysis_tools.C"
 
-void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
+void fit_eddycurrents(TString input_file, TString output_file="", bool useCalibrated = true, int useSNR=2){
 
 	TFile* f = TFile::Open(input_file);
 
@@ -18,7 +18,7 @@ void fit_eddycurrents(TString input_file, TString output_file="", int useSNR=2){
 	TH1D* trace = ((TProfile*)f->Get(Form("trace%s",SNRstring.Data())))->ProjectionX();
 	TH1D** kicks = new TH1D*[8];
 	for (int i=0; i<8; i++){
-		kicks[i] = ((TProfile*)f->Get(Form("trace%s_kick%d_calibrated",SNRstring.Data(),i+1)))->ProjectionX();
+		kicks[i] = ((TProfile*)f->Get(Form("trace%s_kick%d_%s",SNRstring.Data(),i+1,useCalibrated?"calibrated":"ABnormalized")))->ProjectionX();
 	}
 	TH1D* kick8long = ((TProfile*)f->Get(Form("trace%s_kick8long",SNRstring.Data())))->ProjectionX();
 
