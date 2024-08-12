@@ -8,9 +8,11 @@ void fit_ramp_nodes(){
 		//"output_Rampup_R0_H25_oct20.root",
 		//"output_Rampup_R0_H25_oct21_B88-100.root",
 		//"output_Rampup_R0_H25_oct24_B0-100.root",
-	//	"output_Rampup_R0_H30_oct16.root",
-	//	"output_Rampup_R1_H5_oct5.root",
+		//"output_Rampup_R0_H30_oct16.root",
+		"output_Rampup_R1_H5_oct5.root",
+		//"output_Rampdown_R0_H25_oct19_B100%-25%.root",
 
+		//"output_RampDown_R0_H25_dec18.root",
 		//"output_Ramp_jan16_0to5175.root",
 		//"output_Ramp_jan16_5175to2000to5175.root",
 		//"output_Ramp_jan17_5175to0.root",
@@ -20,7 +22,7 @@ void fit_ramp_nodes(){
 		//"output_Ramp_jan21_3619to3043.root",
 		//"output_Ramp_jan22_3043to5173.root",
 		//"output_Ramp_jan26_H25Q130_5173to2000to5173.root",
-		"output_Ramp_jan29_H25Q00_5173to0.root",
+		//"output_Ramp_jan29_H25Q00_5173to0.root",
 		
 		//"output_FD_R0_ramp_oct9_H22p5.root",
 		//"output_FD_R1_ramp_oct8_H0.root"

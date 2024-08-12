@@ -58,7 +58,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 	TF1* f_vibration = new TF1("f_vibration","[0]+[1]*sin([2]*x+[3])");
 	TGraph* g_trend_stddev = new TGraph();
 
-	double ABref = 0;
+	double ABref = 12; //12 V
 	for (int fi=0; fi<Nangles; fi++){
 
 		TString fname = files[fi];
@@ -104,7 +104,7 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		A_avg /= trace_A.size();
 		B_avg /= trace_B.size();
 		AB = A_avg + B_avg;
-		if (fi==0) ABref = AB;
+		//if (fi==0) ABref = AB;
 		double AB_norm = ABref/AB;
 
 		g_traces[fi] = new TGraph();
@@ -171,6 +171,9 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		double baseline_stddev = g_baselines[fi]->GetRMS(2);
 		double SNR = abs(amplitude)/baseline_stddev;
 
+		double amplitude_norm = amplitude*AB_norm;
+		double amplitude_norm_err = AB_norm*(peak_err+baseline_err);
+
 		double vibration_amp = 0;
 		double vibration_amp_err = 0;
 		double vibration_phase = 0;
@@ -187,8 +190,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_scan->SetPoint(g_scan->GetN(),HWPangle,amplitude);
 		g_scan->SetPointError(g_scan->GetN()-1,0,peak_err+baseline_err);
 
-		g_scan_norm->SetPoint(g_scan_norm->GetN(),HWPangle,amplitude*AB_norm);
-		g_scan_norm->SetPointError(g_scan_norm->GetN()-1,0,AB_norm*(peak_err+baseline_err));
+		g_scan_norm->SetPoint(g_scan_norm->GetN(),HWPangle,amplitude_norm);
+		g_scan_norm->SetPointError(g_scan_norm->GetN()-1,0,amplitude_norm_err);
 
 		g_vibration->SetPoint(g_vibration->GetN(),HWPangle,vibration_amp);
 		g_vibration->SetPointError(g_vibration->GetN()-1,0,vibration_amp_err);
@@ -205,6 +208,8 @@ void plot_HWPscan(TString folder, vector<double> hwp_angles){
 		g_A->SetPoint(g_A->GetN(),HWPangle,A_avg);
 		g_B->SetPoint(g_B->GetN(),HWPangle,B_avg);
 		g_AB->SetPoint(g_AB->GetN(),HWPangle,AB);
+
+		cout<<"Angle: "<<HWPangle<<", blumlein (12V) : "<<amplitude_norm<<" +- "<<amplitude_norm_err<<"\n";
 	}
 
 	new TCanvas();

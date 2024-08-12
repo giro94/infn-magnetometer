@@ -6,40 +6,40 @@ void plot_blumlein_R0(){
 
 
 	vector<TString> filenames = {
-//		"analysis/analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield_k389.root",
-//		"analysis/analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
-		"analysis/analysis_SD_R0_eddy_oct26_H25_B100_k194.root",
-		"analysis/analysis_SD_R0_eddy_oct25_H25_B100_k389.root",
-		"analysis/analysis_SD_R0_eddy_oct25_H25_B100_k583.root",
-		"analysis/analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield_k389.root",
+		"analysis/analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
+//		"analysis/analysis_SD_R0_eddy_oct26_H25_B100_k194.root",
+//		"analysis/analysis_SD_R0_eddy_oct25_H25_B100_k389.root",
+//		"analysis/analysis_SD_R0_eddy_oct25_H25_B100_k583.root",
+//		"analysis/analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
 	};
 
 	vector<TString> nicknames = {
-//		"Kick 3.89 kV (Oct 10)",
-//		"Kick 7.77 kV (Oct 10)",
-		"Kick 1.94 kV (Oct 26)",
-		"Kick 3.89 kV (Oct 25)",
-		"Kick 5.83 kV (Oct 25)",
-		"Kick 7.77 kV (Oct 24)"
+		"Kick 3.89 kV (Oct 10)",
+		"Kick 7.77 kV (Oct 10)",
+//		"Kick 1.94 kV (Oct 26)",
+//		"Kick 3.89 kV (Oct 25)",
+//		"Kick 5.83 kV (Oct 25)",
+//		"Kick 7.77 kV (Oct 24)"
 	};
 	
 	vector<TString> filenames_fit = {
-//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield_k389.root",
-//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
-		"fits/fitted_normalized_analysis_SD_R0_eddy_oct26_H25_B100_k194.root",
-		"fits/fitted_normalized_analysis_SD_R0_eddy_oct25_H25_B100_k389.root",
-		"fits/fitted_normalized_analysis_SD_R0_eddy_oct25_H25_B100_k583.root",
-		"fits/fitted_normalized_analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
+		"fits/fitted_normalized_analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield_k389.root",
+		"fits/fitted_normalized_analysis_SD_R0_eddy_oct10_H20_nofilter_Bfield.root",
+//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct26_H25_B100_k194.root",
+//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct25_H25_B100_k389.root",
+//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct25_H25_B100_k583.root",
+//		"fits/fitted_normalized_analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
 	};
 
 
 	vector<double> kick_strength = {
-//		3.89,
-//		7.77,
-		1.94,
 		3.89,
-		5.83,
-		7.77
+		7.77,
+//		1.94,
+//		3.89,
+//		5.83,
+//		7.77
 	};
 
 	int Nfiles = filenames.size();
