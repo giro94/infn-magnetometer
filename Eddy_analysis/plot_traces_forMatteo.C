@@ -1,6 +1,6 @@
 #include "../analysis_tools.C"
 
-void create_INFN_root(){
+void plot_traces_forMatteo(){
 
 	//R0
 
@@ -13,8 +13,8 @@ void create_INFN_root(){
 
 
 	double blum_norm_x = -0.323;
-	double blum_norm_y_R0 = 126.;
-	double blum_norm_y_R1 = 158.;
+	double blum_norm_y_R0 = 129.;
+	double blum_norm_y_R1 = 129.;
 	double blum_norm_x_trace = 4.769;
 	TH1D* (*smoothing)(TH1D*,TString) = &runningAverage_5_10_15;
 
@@ -23,24 +23,26 @@ void create_INFN_root(){
 	h1_kick1_R0->Scale(0.5);
 	h1_kick1_R0->Add(h1_kick1_R0_n,-0.5);
 	h1_kick1_R0->Add(h1_kick1_R0_0,0.2);
-	cleanTrace(h1_kick1_R0,-200);
+
+	TH1D* h1_kick1_R0_zero = (TH1D*)h1_kick1_R0->Clone("h1_kick1_R0_zero");
+	cleanTrace(h1_kick1_R0_zero,-200);
+	TH1D* h1_kick1_R0_zero_ra = smoothing(h1_kick1_R0_zero,"");
+
+
+
 	TH1D* h1_kick1_R0_ra = smoothing(h1_kick1_R0,"");
-
-	cleanTrace(h1_kick1_R0_p,-200);
-	TH1D* h1_kick1_R0_p_ra = smoothing(h1_kick1_R0_p,"");
-
 	double r0_norm = blum_norm_y_R0/h1_kick1_R0_ra->Interpolate(blum_norm_x);
-	h1_kick1_R0->Scale(r0_norm);
 	h1_kick1_R0_ra->Scale(r0_norm);
+	h1_kick1_R0->Scale(r0_norm);
+	h1_kick1_R0_zero->Scale(r0_norm);
+	h1_kick1_R0_zero_ra->Scale(r0_norm);
 
+	TH1D* h1_kick1_R0_p_ra = smoothing(h1_kick1_R0_p,"");
 	r0_norm = blum_norm_y_R0/h1_kick1_R0_p_ra->Interpolate(blum_norm_x);
-	h1_kick1_R0_p->Scale(r0_norm);
 	h1_kick1_R0_p_ra->Scale(r0_norm);
 
-	h1_kick1_R0->GetYaxis()->SetTitle("B field [mG]");
-	h1_kick1_R0_ra->GetYaxis()->SetTitle("B field [mG]");
-	h1_kick1_R0_p->GetYaxis()->SetTitle("B field [mG]");
-	h1_kick1_R0_p_ra->GetYaxis()->SetTitle("B field [mG]");
+	TH1D* h1_kick1_R0_subtracted = (TH1D*)h1_kick1_R0_p_ra->Clone("h1_kick1_R0_subtracted");
+	h1_kick1_R0_subtracted->Add(h1_kick1_R0_zero_ra,-1);
 
 	//R1
 
@@ -48,36 +50,15 @@ void create_INFN_root(){
 	TH1D* h1_kick1_R1 = ((TProfile*)f_R1->Get("trace_kick1"))->ProjectionX();
 
 
-	cleanTrace(h1_kick1_R1,-200);
-	TH1D* h1_kick1_R1_ra = smoothing(h1_kick1_R1,"");
+	TH1D* h1_kick1_R1_zero = (TH1D*)h1_kick1_R1->Clone("h1_kick1_R1_zero");
+	cleanTrace(h1_kick1_R1_zero,-200);
+	TH1D* h1_kick1_R1_zero_ra = smoothing(h1_kick1_R1_zero,"");
 
+	TH1D* h1_kick1_R1_ra = smoothing(h1_kick1_R1,"");
 	double r1_norm = blum_norm_y_R1/h1_kick1_R1_ra->Interpolate(blum_norm_x);
 	h1_kick1_R1->Scale(r1_norm);
 	h1_kick1_R1_ra->Scale(r1_norm);
 
-	h1_kick1_R1->GetYaxis()->SetTitle("B field [mG]");
-	h1_kick1_R1_ra->GetYaxis()->SetTitle("B field [mG]");
-
-
-	TFile* fout = new TFile("INFN.root","recreate");
-
-
-	h1_kick1_R0_p->SetTitle("INFN K3 0.0 mm");
-	h1_kick1_R0_p_ra->SetTitle("INFN K3 0.0 mm");
-	h1_kick1_R0->SetTitle("INFN K3 0.0 mm");
-	h1_kick1_R0_ra->SetTitle("INFN K3 0.0 mm");
-	h1_kick1_R1->SetTitle("INFN K3 17.5 mm");
-	h1_kick1_R1_ra->SetTitle("INFN K3 17.5 mm");
-
-	h1_kick1_R0_p->Write("h1_kick1_R0_p");
-	h1_kick1_R0_p_ra->Write("h1_kick1_R0_p_ra");
-	h1_kick1_R0->Write("h1_kick1_R0");
-	h1_kick1_R0_ra->Write("h1_kick1_R0_ra");
-	h1_kick1_R1->Write("h1_kick1_R1");
-	h1_kick1_R1_ra->Write("h1_kick1_R1_ra");
-
-
-	fout->Close();
 
 
 

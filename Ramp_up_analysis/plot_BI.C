@@ -1,7 +1,66 @@
 void plot_BI(){
 
 
+	TFile* fin = TFile::Open("output_Ramp_jan29_H25Q00_5173to0.root");
+	TGraph* g_ramp = (TGraph*)fin->Get("Ramp_norm_current");
 
+	vector<double> fit_pol2_centers = {
+		156.8,
+		791.5,
+		1418.6,
+		2037.6,
+		2643.4,
+		3280.0,
+		3936.0,
+		4697.4,
+	};
+
+	vector<double> fit_zero_centers = {
+		461.7,
+		1110.0,
+		1740.5,
+		2334.9,
+		2947.8,
+		3607.5,
+		4281.8,
+		5172.8
+	};
+
+	map<double,double> fit_points;
+
+	new TCanvas();
+	g_ramp->Draw("APL");
+
+	TF1* f_pol2 = new TF1("f_pol2","[0]*(x-[1])*(x-[1])+[2]");
+	for (int i=0; i<fit_pol2_centers.size(); i++){
+		double center = fit_pol2_centers[i];
+		double width = 100;
+		f_pol2->SetParameters(0.1,center,g_ramp->Eval(center));
+		TFitResultPtr fit = g_ramp->Fit(f_pol2,"S+","",center-width,center+width);
+		fit_points[fit->Parameter(1)] = fit->ParError(1);
+		f_pol2->DrawCopy("SAME");
+	}
+
+	TF1* f_pol1 = new TF1("f_pol1","[0]*(x-[1])");
+	for (int i=0; i<fit_zero_centers.size(); i++){
+		double center = fit_zero_centers[i];
+		double width = 50;
+		f_pol1->SetParameters(0.1,center);
+		TFitResultPtr fit = g_ramp->Fit(f_pol1,"S+","",center-width,center+width);
+		fit_points[fit->Parameter(1)] = fit->ParError(1);
+		f_pol1->DrawCopy("SAME");
+	}
+
+
+	//Get sorted points
+	vector<double> points;
+	vector<double> points_errors;
+	for (auto pair : fit_points){
+		points.push_back(pair.first);
+		points_errors.push_back(pair.second);
+	}
+
+	/*
 	vector<double> points = {
 		156.8,
 		461.7,
@@ -39,6 +98,7 @@ void plot_BI(){
 		0.1,
 		0.1
 	};
+	*/
 
 
 	double Bnom = 1.45;
@@ -86,11 +146,11 @@ void plot_BI(){
 	}
 	g_interpolation->Draw("L");
 
-	TFile* fout = new TFile("BI.root","recreate");
-	g_BI->Write("g_BI");
-	g_interpolation->Write("g_BI_spline");
-	fout->Write();
-	fout->Close();
+	//TFile* fout = new TFile("BI.root","recreate");
+	//g_BI->Write("g_BI");
+	//g_interpolation->Write("g_BI_spline");
+	//fout->Write();
+	//fout->Close();
 
 	TGraph* g_derivative = new TGraph();
 	for (int i=1; i<g_BI->GetN(); i++){

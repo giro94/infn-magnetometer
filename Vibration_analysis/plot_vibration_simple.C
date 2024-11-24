@@ -1,12 +1,21 @@
 #include "../analysis_tools.C"
 
-void plot_vibration_simple(TString folder, TString outfolder=""){
+void plot_vibration_simple(TString folder, TString fileout="", TString outfolder=""){
 
+	bool saveOutput = false;
+	TFile* fout;
+	if (fileout != ""){
+		saveOutput=true;
+		fout = new TFile(fileout,"recreate");
+	}
 
 	bool savePlots = false;
 	if (outfolder != ""){
 		savePlots = true;
 	}
+
+
+	TH1D* (*smoothing)(TH1D*,TString) = &runningAverage_5_10_15;
 
 	TProfile* p_traceX = new TProfile("p_traceX","",29906,0,100);
 	TProfile* p_traceY = new TProfile("p_traceY","",29906,0,100);
@@ -69,6 +78,12 @@ void plot_vibration_simple(TString folder, TString outfolder=""){
 	//adjust for wrong scale
 	if (p_traceX->GetMaximum() < 0.1) p_traceX->Scale(1000.);
 	if (p_traceY->GetMaximum() < 0.1) p_traceY->Scale(1000.);
+
+	TH1D* p_traceX_ra = smoothing(p_traceX,"");
+	TH1D* p_traceY_ra = smoothing(p_traceY,"");
+	TH1D* p_traceR_ra = smoothing(p_traceR,"");
+	TH1D* p_traceSum_ra = smoothing(p_traceSum,"");
+
 
 	//Calculate total displacement
 	for (int bn=1; bn<=p_traceX->GetNbinsX(); bn++){
@@ -189,5 +204,12 @@ void plot_vibration_simple(TString folder, TString outfolder=""){
 	gPad->SetGridx();
 	gPad->BuildLegend(0.6,0.7,0.88,0.88);
 	if(savePlots)gPad->SaveAs(Form("%s/firstkick_FFT.png",outfolder.Data()));
+
+
+	if (saveOutput){
+		fout->Write();
+		fout->Close();
+	}
+
 
 }

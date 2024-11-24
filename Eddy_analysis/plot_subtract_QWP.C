@@ -525,7 +525,7 @@ void plot_subtract_QWP(){
 	//h1_kick1_p_n_0_ra->DrawCopy("HIST SAME");
 	TLegend* leg = new TLegend(0.5,0.6,0.85,0.8);
 	leg->AddEntry(h1_kick1_p_calib_ra,"Pos","L");
-	leg->AddEntry(h1_kick1_pX_nY_k0Z_ra[best_i][best_j],"0.6*Pos -0.4*Neg +0.425*Zero","L");
+	leg->AddEntry(h1_kick1_pX_nY_k0Z_ra[best_i][best_j],Form("%.02f*Pos %.02f*Neg +%.02f*Zero",best_x,best_y,best_z),"L");
 	//leg->AddEntry(h1_kick1_p_n_0_ra,"0.54*Pos -0.46*Neg +0.5*Zero","L");
 	leg->Draw();
 	gPad->SetGridy();

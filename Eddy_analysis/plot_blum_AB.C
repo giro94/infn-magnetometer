@@ -15,8 +15,8 @@ void plot_blum_AB(){
 	TGraphErrors* g_trend_blumAB = (TGraphErrors*)f1->Get("g_trend_blumAB");
 
 
-	TH1D* h1_blum = new TH1D("h1_blum","Blumlein distribution;Blumlein [mV]",100,0,100);
-	TH1D* h1_blum_norm = new TH1D("h1_blum_norm","Normalized blumlein distribution;Blumlein [mV]",100,0,100);
+	TH1D* h1_blum = new TH1D("h1_blum","Blumlein distribution;Blumlein [mV]",200,0,100);
+	TH1D* h1_blum_norm = new TH1D("h1_blum_norm","Normalized blumlein distribution;Blumlein [mV]",200,0,100);
 
 
 	//Find maximum for ABsum
@@ -66,6 +66,11 @@ void plot_blum_AB(){
 	g_trend_ABsum->Draw("PZ");
 	gPad->BuildLegend();
 
+
+	new TCanvas();
+	g_trend_ABsum->Draw("APZ");
+	gPad->BuildLegend();
+
 	new TCanvas();
 	g_trend_blumlein->Draw("APZ");
 	g_trend_blumAB->Draw("PZ");
@@ -75,5 +80,6 @@ void plot_blum_AB(){
 	h1_blum->Draw("HIST");
 	h1_blum_norm->Draw("HIST SAME");
 	gPad->BuildLegend();
+
 
 }

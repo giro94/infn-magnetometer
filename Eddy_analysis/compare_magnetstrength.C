@@ -26,10 +26,10 @@ void compare_magnetstrength(){
 	*/
 
 	//January comparison
-	TFile* f1 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan21_B3043_H24.root");
-	TFile* f2 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan20_B3619_H16.root");
-	TFile* f3 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan19_B4353_H23.root");
-	TFile* f4 = TFile::Open("fits/fitted_noSNR_kick_analysis_output_EC_jan19_B5175_H15.root");
+	TFile* f1 = TFile::Open("fits/fitted_calibrated_analysis_EC_jan21_B3043_H24.root");
+	TFile* f2 = TFile::Open("fits/fitted_calibrated_analysis_EC_jan20_B3619_H16.root");
+	TFile* f3 = TFile::Open("fits/fitted_calibrated_analysis_EC_jan19_B4353_H23.root");
+	TFile* f4 = TFile::Open("fits/fitted_calibrated_analysis_EC_jan19_B5175_H15.root");
 	vector<double> strengths = {3043, 3619, 4353, 5175};
 
 

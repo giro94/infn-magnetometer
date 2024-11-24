@@ -455,4 +455,33 @@ void plot_BField_ONOFF(){
 	h1_kick1_B1_k0_ra->DrawCopy("HIST");
 	gPad->SetGridy();
 
+
+
+
+	new TCanvas();
+	h1_kick1_B1_1->SetLineColor(1);
+	h1_kick1_B0_1->SetLineColor(2);
+	h1_kick1_B1_1->DrawCopy("HIST");
+	h1_kick1_B0_1->DrawCopy("HIST SAME");
+	gPad->BuildLegend();
+
+
+
+	TH1D* h1_kick1_B0_1_FFT = doFFT(h1_kick1_B0_1,1,3,"h1_kick1_B0_1_FFT");
+	TH1D* h1_kick1_B1_1_FFT = doFFT(h1_kick1_B1_1,1,3,"h1_kick1_B1_1_FFT");
+	new TCanvas();
+	h1_kick1_B1_1_FFT->SetLineColor(1);
+	h1_kick1_B0_1_FFT->SetLineColor(2);
+	h1_kick1_B1_1_FFT->DrawCopy("HIST");
+	h1_kick1_B0_1_FFT->DrawCopy("HIST SAME");
+	gPad->BuildLegend();
+
+	new TCanvas();
+	h1_kick1_B1_1_ra->SetLineColor(1);
+	h1_kick1_B0_1_ra->SetLineColor(2);
+	h1_kick1_B1_1_ra->DrawCopy("HIST");
+	h1_kick1_B0_1_ra->DrawCopy("HIST SAME");
+	gPad->BuildLegend();
+
+
 }

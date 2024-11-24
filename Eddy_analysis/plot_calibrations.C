@@ -4,21 +4,21 @@ void plot_calibrations(){
 
 
 	vector<TString> filenames = {
-		"analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
-		"analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
-		"analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
-		"analysis_SD_R0_eddy_oct22_H25_B100_k777.root",
-		"analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
-		"analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root",
-		"analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
-		"analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
-		"analysis_EC_jan22_B5173_H15.root",
-		"analysis_EC_jan23_B5173_H25_Q00.root",
-		"analysis_EC_jan26_B5173_H25_Q130.root",
-		"analysis_EC_jan28_B5173_H25_Q00.root",
-		"analysis_SD_R1_eddy_oct5_H0_nofilter_Bfield.root",
-		"analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
-		"analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
+		"analysis/analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield_k777.root",
+		"analysis/analysis_SD_R0_eddy_oct17_H25_nofilter_Bfield.root",
+		"analysis/analysis_SD_R0_eddy_oct21_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_oct22_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_oct24_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_oct27-29_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_dec15_H25_B100_k777.root",
+		"analysis/analysis_SD_R0_eddy_dec17_H25_B100_k777_long.root",
+		"analysis/analysis_EC_jan22_B5173_H15.root",
+		"analysis/analysis_EC_jan23_B5173_H25_Q00.root",
+		"analysis/analysis_EC_jan26_B5173_H25_Q130.root",
+		"analysis/analysis_EC_jan28_B5173_H25_Q00.root",
+		"analysis/analysis_SD_R1_eddy_oct5_H0_nofilter_Bfield.root",
+		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield_afterrampup.root",
+		"analysis/analysis_SD_R1_eddy_oct8_H0_nofilter_Bfield.root",
 	};
 
 	vector<TString> labels = {
