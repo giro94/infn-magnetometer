@@ -13,7 +13,42 @@ void plot_compare_R0_R1(){
 
 	TH1D* (*smoothing)(TH1D*,TString) = &runningAverage_5_10_15;
 
+	TGraph* h1_R0_kick1 = (TGraph*)f0->Get("normalized_kick_1");
+	TGraph* h1_R0_kick2 = (TGraph*)f0->Get("normalized_kick_2");
+	TGraph* h1_R0_kick3 = (TGraph*)f0->Get("normalized_kick_3");
+	TGraph* h1_R0_kick4 = (TGraph*)f0->Get("normalized_kick_4");
+	TGraph* h1_R0_kick5 = (TGraph*)f0->Get("normalized_kick_5");
+	TGraph* h1_R0_kick6 = (TGraph*)f0->Get("normalized_kick_6");
+	TGraph* h1_R0_kick7 = (TGraph*)f0->Get("normalized_kick_7");
+	TGraph* h1_R0_kick8 = (TGraph*)f0->Get("normalized_kick_8");
 
+	gStyle->SetPalette(kRainBow);
+	new TCanvas();
+	h1_R0_kick1->SetTitle("Kick 1");
+	h1_R0_kick2->SetTitle("Kick 2");
+	h1_R0_kick3->SetTitle("Kick 3");
+	h1_R0_kick4->SetTitle("Kick 4");
+	h1_R0_kick5->SetTitle("Kick 5");
+	h1_R0_kick6->SetTitle("Kick 6");
+	h1_R0_kick7->SetTitle("Kick 7");
+	h1_R0_kick8->SetTitle("Kick 8");
+	h1_R0_kick1->SetLineWidth(2);
+	h1_R0_kick2->SetLineWidth(2);
+	h1_R0_kick3->SetLineWidth(2);
+	h1_R0_kick4->SetLineWidth(2);
+	h1_R0_kick5->SetLineWidth(2);
+	h1_R0_kick6->SetLineWidth(2);
+	h1_R0_kick7->SetLineWidth(2);
+	h1_R0_kick8->SetLineWidth(2);
+	h1_R0_kick1->Draw("AL PLC");
+	h1_R0_kick2->Draw("L PLC");
+	h1_R0_kick3->Draw("L PLC");
+	h1_R0_kick4->Draw("L PLC");
+	h1_R0_kick5->Draw("L PLC");
+	h1_R0_kick6->Draw("L PLC");
+	h1_R0_kick7->Draw("L PLC");
+	h1_R0_kick8->Draw("L PLC");
+	gPad->BuildLegend();
 
 	TGraph* h1_kick1_R0 = (TGraph*)f0->Get("kick1_rep1");
 	TGraph* h1_lastkick_R0 = (TGraph*)f0->Get("kick8_rep4");

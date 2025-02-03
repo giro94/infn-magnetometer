@@ -8,8 +8,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 	double kick_trigger = -200.0;
 	double polarity = 1;
 
-	double absolute_calibration_R0 = 129.; //Blumlein in mG
-	double absolute_calibration_R1 = 157.; //Blumlein in mG
+	double absolute_calibration_R0 = 126.; //Blumlein in mG
+	double absolute_calibration_R1 = 158.; //Blumlein in mG
 	double absolute_calibration;
 
 	if (folder.Contains("R1")){
@@ -56,6 +56,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 		g_trace_kicks[i] = new TProfile(hname,htitle,Nkickbins,t_before,t_after);
 	}
 	TProfile* g_trace_kick8long = new TProfile("trace_kick8long","Trace Kick 8;Time [ms];Voltage [mV]",Nkickbins8,t_before,t_after8);
+
+	TH1D* h1_kick1_times =new TH1D("h1_kick1_times","Kick 1 arrival time;Time [ms]",200000,4,6);
 
 	TH2F* h2_fulltrace_SNR2 = new TH2F("h2_fulltrace_SNR2",Form("Trace (SNR > %.1f);Time [ms];Voltage [mV]",SNR_th2),Nlines,tstart,tend,200,-100,100);
 	TProfile* g_fulltrace_SNR0 = new TProfile("trace_SNR0",Form("Trace (SNR < %.1f);Time [ms];Voltage [mV]",SNR_th1),Nlines,tstart,tend);
@@ -368,6 +370,8 @@ void analyze_eddycurrents(TString folder, TString output_file, int Nfilesmax = -
 				}
 			}
 		}
+
+		h1_kick1_times->Fill(kick_timings[0]);
 
 		//Fill the aligned trace
 		for (int i=0; i<trace_time.size(); i++){

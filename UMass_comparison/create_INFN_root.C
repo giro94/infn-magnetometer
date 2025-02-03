@@ -59,6 +59,19 @@ void create_INFN_root(){
 	h1_kick1_R1_ra->GetYaxis()->SetTitle("B field [mG]");
 
 
+
+	//B0
+
+	TFile* f0_1 = TFile::Open("../Eddy_analysis/analysis/analysis_SD_R0_eddy_oct14_H25_nofilter_B0.root");
+	TFile* f0_2 = TFile::Open("../Eddy_analysis/analysis/analysis_SD_R0_eddy_oct23_H25_B0_k777.root");
+	TH1D* h1_kick1_B0_1 = ((TProfile*)f0_1->Get("trace_kick1_calibrated"))->ProjectionX();
+	TH1D* h1_kick1_B0_2 = ((TProfile*)f0_2->Get("trace_kick1_calibrated"))->ProjectionX();
+	TH1D* h1_kick1_B0 = (TH1D*)h1_kick1_B0_1->Clone("h1_kick1_B0");
+	h1_kick1_B0->Add(h1_kick1_B0_2);
+	h1_kick1_B0->Scale(0.5);
+	TH1D* h1_kick1_B0_ra = smoothing(h1_kick1_B0,"");
+
+
 	TFile* fout = new TFile("INFN.root","recreate");
 
 
@@ -76,6 +89,8 @@ void create_INFN_root(){
 	h1_kick1_R1->Write("h1_kick1_R1");
 	h1_kick1_R1_ra->Write("h1_kick1_R1_ra");
 
+	h1_kick1_B0->Write("h1_kick1_R0_B0");
+	h1_kick1_B0_ra->Write("h1_kick1_R0_B0_ra");
 
 	fout->Close();
 

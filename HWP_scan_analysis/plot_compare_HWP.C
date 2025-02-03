@@ -5,6 +5,7 @@ void plot_compare_HWP(){
 		"HWPscan_jan20_B3619_output.root",
 		"HWPscan_jan19_B4353_output.root",
 		"HWPscan_jan22_B5173_output.root",
+		//"HWPscan_jan18_B5175_output.root",
 		//"HWPscan_jan23_B5173_output.root"
 	};
 
@@ -36,8 +37,13 @@ void plot_compare_HWP(){
 		g_vibration[i] = (TGraphErrors*)f[i]->Get("HWPvibration");
 
 		TString gTitle = filenames[i];
-		gTitle.Remove(0,gTitle.Index("_jan")+1);
-		gTitle.Remove(11);
+		//gTitle.Remove(0,gTitle.Index("_jan")+1);
+		//gTitle.Remove(11);
+
+		gTitle.Remove(0,gTitle.Index("_B")+2);
+		gTitle.Remove(4);
+		gTitle += " A";
+
 		g_blumlein[i]->SetTitle(gTitle);
 		g_SNR[i]->SetTitle(gTitle);
 		g_vibration[i]->SetTitle(gTitle);
@@ -72,6 +78,30 @@ void plot_compare_HWP(){
 	gPad->BuildLegend();
 
 
+
+
+	TCanvas* can = new TCanvas("","",1800,900);
+	can->Divide(2,1);
+	can->cd(1);
+	for (int i=0; i<Nfiles; i++){
+		g_blumlein[i]->GetXaxis()->SetLimits(0,60);
+		g_blumlein[i]->GetYaxis()->SetRangeUser(-50,70);
+		g_blumlein[i]->SetMarkerColor(i+1);
+		g_blumlein[i]->Draw(i==0?"APL":"PL");
+	}
+	gPad->BuildLegend();
+	TLine* l = new TLine(0,0,60,0);
+	l->SetLineWidth(2);
+	l->Draw("SAME");
+	gPad->SetGridy();
+	can->cd(2);
+	for (int i=0; i<Nfiles; i++){
+		g_vibration[i]->GetXaxis()->SetLimits(0,60);
+		g_vibration[i]->GetYaxis()->SetRangeUser(0,20);
+		g_vibration[i]->SetMarkerColor(i+1);
+		g_vibration[i]->Draw(i==0?"APL":"PL");
+	}
+	gPad->BuildLegend();
 
 
 

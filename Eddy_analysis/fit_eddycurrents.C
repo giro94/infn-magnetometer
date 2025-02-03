@@ -287,7 +287,7 @@ void fit_eddycurrents(TString input_file, TString output_file="", bool useCalibr
 		kicks_fit_exp[i]->GetYaxis()->SetRangeUser(-20,20);
 
 		f_exp->SetParameters(10,0.07,0);
-		f_exp->FixParameter(2,0.0);
+		//f_exp->FixParameter(2,0.0);
 		TFitResultPtr fit_kick = kicks_fit_exp[i]->Fit(f_exp,"QS","",0.02,0.7);
 		g_off->SetPoint(g_off->GetN(),i+1,fit_kick->Parameter(2));
 		g_off->SetPointError(g_off->GetN()-1,0,fit_kick->ParError(2));

@@ -32,6 +32,14 @@ void plot_INFN_UMass(){
 	TH1D* h1_K1_Rm6p6_ra = smoothing(h1_K1_Rm6p6,"");
 	TH1D* h1_K3_R0_ra = smoothing(h1_K3_R0,"");
 
+	/////////Normalize according to 30/01/2025 email from David
+	h1_K1_R0_ra->Scale(123.0/h1_K1_R0_ra->Interpolate(-0.32));
+	h1_K1_R3p2_ra->Scale(120.7/h1_K1_R0_ra->Interpolate(-0.32));
+	h1_K1_R6p6_ra->Scale(126.7/h1_K1_R0_ra->Interpolate(-0.32));
+	h1_K1_Rm6p6_ra->Scale(121.0/h1_K1_R0_ra->Interpolate(-0.32));
+	h1_K3_R0_ra->Scale(126.3/h1_K3_R0_ra->Interpolate(-0.32));
+	/////////
+
 	h1_K1_R0_ra->SetTitle(Form("%s (smoothed)", h1_K1_R0->GetTitle()));
 	h1_K1_R3p2_ra->SetTitle(Form("%s (smoothed)", h1_K1_R3p2->GetTitle()));
 	h1_K1_R6p6_ra->SetTitle(Form("%s (smoothed)", h1_K1_R6p6->GetTitle()));
@@ -86,10 +94,14 @@ void plot_INFN_UMass(){
 	g_INFN_blumlein->SetPointError(1,2,blum_ratio_error);
 	cout<<"blumlein ratio: "<<blum_ratio<<" +- "<<blum_ratio_error<<"\n";
 
-	g_UMass_blumlein->AddPoint(-6.6,h1_K1_Rm6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
-	g_UMass_blumlein->AddPoint(0,h1_K1_R0_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
-	g_UMass_blumlein->AddPoint(3.2,h1_K1_R3p2_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
-	g_UMass_blumlein->AddPoint(6.6,h1_K1_R6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
+	g_UMass_blumlein->SetPoint(0,-6.6,h1_K1_Rm6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
+	g_UMass_blumlein->SetPoint(1,0,h1_K1_R0_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
+	g_UMass_blumlein->SetPoint(2,3.2,h1_K1_R3p2_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
+	g_UMass_blumlein->SetPoint(3,6.6,h1_K1_R6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
+	g_UMass_blumlein->SetPointError(0,3,g_UMass_blumlein->GetPointY(0)*1.3/121.0);
+	g_UMass_blumlein->SetPointError(1,3,g_UMass_blumlein->GetPointY(1)*1.3/123.0);
+	g_UMass_blumlein->SetPointError(2,3,g_UMass_blumlein->GetPointY(2)*1.9/120.7);
+	g_UMass_blumlein->SetPointError(3,3,g_UMass_blumlein->GetPointY(3)*1.6/126.7);
 
 	g_INFN_blumlein->SetMarkerStyle(20);
 	g_UMass_blumlein->SetMarkerStyle(20);
@@ -117,10 +129,14 @@ void plot_INFN_UMass(){
 	g_INFN_amp30->SetPointError(1,2,trans_ratio_error);
 	cout<<"transient ratio: "<<trans_ratio<<" +- "<<trans_ratio_error<<"\n";
 
-	g_UMass_amp30->AddPoint(-6.6,h1_K1_Rm6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
-	g_UMass_amp30->AddPoint(0,h1_K1_R0_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
-	g_UMass_amp30->AddPoint(3.2,h1_K1_R3p2_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
-	g_UMass_amp30->AddPoint(6.6,h1_K1_R6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_UMass_amp30->SetPoint(0,-6.6,h1_K1_Rm6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_UMass_amp30->SetPoint(1,0,h1_K1_R0_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_UMass_amp30->SetPoint(2,3.2,h1_K1_R3p2_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_UMass_amp30->SetPoint(3,6.6,h1_K1_R6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_UMass_amp30->SetPointError(0,3,g_UMass_amp30->GetPointY(0)*1.3/121.0);
+	g_UMass_amp30->SetPointError(1,3,g_UMass_amp30->GetPointY(1)*1.3/123.0);
+	g_UMass_amp30->SetPointError(2,3,g_UMass_amp30->GetPointY(2)*1.9/120.7);
+	g_UMass_amp30->SetPointError(3,3,g_UMass_amp30->GetPointY(3)*1.6/126.7);
 
 	g_INFN_amp30->SetMarkerStyle(22);
 	g_UMass_amp30->SetMarkerStyle(22);
