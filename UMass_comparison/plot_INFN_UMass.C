@@ -86,6 +86,8 @@ void plot_INFN_UMass(){
 	g_INFN_blumlein->SetPointError(1,2,blum_ratio_error);
 	cout<<"blumlein ratio: "<<blum_ratio<<" +- "<<blum_ratio_error<<"\n";
 
+	cout<<"INFN blum at K3, R0: "<<h1_kick1_R0_ra->Interpolate(-0.32)<<" mG\n";
+	cout<<"UMass blum at K1, R0: "<<h1_K1_R0_ra->Interpolate(-0.32)<<" mG\n";
 	g_UMass_blumlein->AddPoint(-6.6,h1_K1_Rm6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
 	g_UMass_blumlein->AddPoint(0,h1_K1_R0_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
 	g_UMass_blumlein->AddPoint(3.2,h1_K1_R3p2_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
@@ -312,4 +314,12 @@ void plot_INFN_UMass(){
 	l30zoom->SetLineWidth(2);
 	l30zoom->SetLineStyle(kDashed);
 	l30zoom->Draw("SAME");
+
+
+
+	new TCanvas();
+	h1_kick1_R0_ra->Draw("HIST");
+	h1_K1_R0->Scale(55./53.);
+	h1_K1_R0->Draw("HIST SAME");
+	h1_K3_R0->Draw("HIST SAME");
 }
