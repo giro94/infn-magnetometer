@@ -32,16 +32,23 @@ void compare_magnetstrength(){
 	TFile* f4 = TFile::Open("fits/fitted_calibrated_analysis_EC_jan19_B5175_H15.root");
 	vector<double> strengths = {3043, 3619, 4353, 5175};
 
+	TH1D* (*smoothing)(TH1D*,TString) = &runningAverage_5_10_15;
 
-	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_px");
-	TH1D* f2_kick1 = (TH1D*)f2->Get("trace_kick1_px");
-	TH1D* f3_kick1 = (TH1D*)f3->Get("trace_kick1_px");
-	TH1D* f4_kick1 = (TH1D*)f4->Get("trace_kick1_px");
+	TH1D* f1_kick1 = (TH1D*)f1->Get("trace_kick1_calibrated_px");
+	TH1D* f2_kick1 = (TH1D*)f2->Get("trace_kick1_calibrated_px");
+	TH1D* f3_kick1 = (TH1D*)f3->Get("trace_kick1_calibrated_px");
+	TH1D* f4_kick1 = (TH1D*)f4->Get("trace_kick1_calibrated_px");
 
-	TH1D* f1_kick8 = (TH1D*)f1->Get("trace_kick8_px");
-	TH1D* f2_kick8 = (TH1D*)f2->Get("trace_kick8_px");
-	TH1D* f3_kick8 = (TH1D*)f3->Get("trace_kick8_px");
-	TH1D* f4_kick8 = (TH1D*)f4->Get("trace_kick8_px");
+
+	TH1D* f1_kick1_ra = smoothing(f1_kick1,"f1_kick1_ra");
+	TH1D* f2_kick1_ra = smoothing(f2_kick1,"f2_kick1_ra");
+	TH1D* f3_kick1_ra = smoothing(f3_kick1,"f3_kick1_ra");
+	TH1D* f4_kick1_ra = smoothing(f4_kick1,"f4_kick1_ra");
+
+	TH1D* f1_kick8 = (TH1D*)f1->Get("trace_kick8_calibrated_px");
+	TH1D* f2_kick8 = (TH1D*)f2->Get("trace_kick8_calibrated_px");
+	TH1D* f3_kick8 = (TH1D*)f3->Get("trace_kick8_calibrated_px");
+	TH1D* f4_kick8 = (TH1D*)f4->Get("trace_kick8_calibrated_px");
 
 	TH1D* f1_kick1_exp = (TH1D*)f1->Get("kick1_fit_exp");
 	TH1D* f2_kick1_exp = (TH1D*)f2->Get("kick1_fit_exp");
@@ -58,15 +65,20 @@ void compare_magnetstrength(){
 	TH1D* f3_kick8_exp = (TH1D*)f3->Get("kick8_fit_exp");
 	TH1D* f4_kick8_exp = (TH1D*)f4->Get("kick8_fit_exp");
 
-	TH1D* f1_kick1_FFT = (TH1D*)f1->Get("trace_kick1_px_FFT");
-	TH1D* f2_kick1_FFT = (TH1D*)f2->Get("trace_kick1_px_FFT");
-	TH1D* f3_kick1_FFT = (TH1D*)f3->Get("trace_kick1_px_FFT");
-	TH1D* f4_kick1_FFT = (TH1D*)f4->Get("trace_kick1_px_FFT");
+	TH1D* f1_kick1_FFT = (TH1D*)f1->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f2_kick1_FFT = (TH1D*)f2->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f3_kick1_FFT = (TH1D*)f3->Get("trace_kick1_calibrated_px_FFT");
+	TH1D* f4_kick1_FFT = (TH1D*)f4->Get("trace_kick1_calibrated_px_FFT");
 
 	f1_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[0]));
 	f2_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[1]));
 	f3_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[2]));
 	f4_kick1->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[3]));
+
+	f1_kick1_ra->SetTitle(Form("Magnet %.f A",strengths[0]));
+	f2_kick1_ra->SetTitle(Form("Magnet %.f A",strengths[1]));
+	f3_kick1_ra->SetTitle(Form("Magnet %.f A",strengths[2]));
+	f4_kick1_ra->SetTitle(Form("Magnet %.f A",strengths[3]));
 
 	f1_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[0]));
 	f2_kick1_exp->SetTitle(Form("Kick 1 (Magnet %.f A)",strengths[1]));
@@ -304,6 +316,25 @@ void compare_magnetstrength(){
 	gPad->SetGridy();
 	gPad->BuildLegend();
 
+	new TCanvas();
+	f1_kick1_ra->SetLineColor(1);
+	f2_kick1_ra->SetLineColor(2);
+	f3_kick1_ra->SetLineColor(3);
+	f4_kick1_ra->SetLineColor(4);
+	f1_kick1_ra->Draw("HIST");
+	f2_kick1_ra->Draw("HIST SAME");
+	f3_kick1_ra->Draw("HIST SAME");
+	f4_kick1_ra->Draw("HIST SAME");
+	f1_kick1_ra->GetXaxis()->SetRangeUser(-1,2);
+	f1_kick1_ra->GetYaxis()->SetRangeUser(-100,150);
+	f2_kick1_ra->GetXaxis()->SetRangeUser(-1,2);
+	f2_kick1_ra->GetYaxis()->SetRangeUser(-100,150);
+	f3_kick1_ra->GetXaxis()->SetRangeUser(-1,2);
+	f3_kick1_ra->GetYaxis()->SetRangeUser(-100,150);
+	f4_kick1_ra->GetXaxis()->SetRangeUser(-1,2);
+	f4_kick1_ra->GetYaxis()->SetRangeUser(-100,150);
+	gPad->SetGridy();
+	gPad->BuildLegend();
 
 	TCanvas* can2 = new TCanvas("can2","",1800,900);
 	can2->Divide(2,1);
