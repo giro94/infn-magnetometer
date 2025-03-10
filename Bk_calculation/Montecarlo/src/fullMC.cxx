@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 
     
     TFile *file = new TFile("fit_2D_eBinned_allFloat.root");
-    TF1 *f1 = (TF1*)((TH1F*)file->Get("f12parLM/hWiggle"))->GetFunction("f1");
+    TF1 *f1 = (TF1*)((TH1F*)file->Get("hWiggle_12par"))->GetFunction("f1");
     TFile *fLM = TFile::Open("Jt2D_Lt_nh1-1_dt125-125_x80-80_lkeff90.root");
     hIntegral = (TH1F*)fLM->Get("Jt");
     
