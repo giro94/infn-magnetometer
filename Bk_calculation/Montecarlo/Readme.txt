@@ -1,3 +1,7 @@
+To run the code please do:
+> mkdir bin
+> make
+
 Usage:
 ./bin/fullMC <radius [0, 1]> <space model> <kicker transient hist name> <beam hist name>
 
