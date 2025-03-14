@@ -25,6 +25,7 @@ void plot_INFN_UMass(){
 	TGraphErrors* g_INFN_amp30 = new TGraphErrors();
 	TGraphErrors* g_UMass_blumlein = new TGraphErrors();
 	TGraphErrors* g_UMass_amp30 = new TGraphErrors();
+	TGraphErrors* g_all_amp30 = new TGraphErrors();
 
 	TH1D* h1_K1_R0_ra = smoothing(h1_K1_R0,"");
 	TH1D* h1_K1_R3p2_ra = smoothing(h1_K1_R3p2,"");
@@ -94,6 +95,9 @@ void plot_INFN_UMass(){
 	g_INFN_blumlein->SetPointError(1,2,blum_ratio_error);
 	cout<<"blumlein ratio: "<<blum_ratio<<" +- "<<blum_ratio_error<<"\n";
 
+	cout<<"INFN blum at K3, R0: "<<h1_kick1_R0_ra->Interpolate(-0.32)<<" mG\n";
+	cout<<"UMass blum at K1, R0: "<<h1_K1_R0_ra->Interpolate(-0.32)<<" mG\n";
+
 	g_UMass_blumlein->SetPoint(0,-6.6,h1_K1_Rm6p6_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
 	g_UMass_blumlein->SetPoint(1,0,h1_K1_R0_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
 	g_UMass_blumlein->SetPoint(2,3.2,h1_K1_R3p2_ra->Interpolate(-0.32)/h1_K1_R0_ra->Interpolate(-0.32));
@@ -114,6 +118,10 @@ void plot_INFN_UMass(){
 	g_INFN_amp30->AddPoint(0,h1_kick1_R0_ra->Interpolate(0.03)/h1_kick1_R0_ra->Interpolate(0.03));
 	g_INFN_amp30->AddPoint(17.5,h1_kick1_R1_ra->Interpolate(0.03)/h1_kick1_R0_ra->Interpolate(0.03));
 
+	g_all_amp30->AddPoint(0,h1_kick1_R0_ra->Interpolate(0.03)/h1_kick1_R0_ra->Interpolate(0.03));
+	g_all_amp30->AddPoint(17.5,h1_kick1_R1_ra->Interpolate(0.03)/h1_kick1_R0_ra->Interpolate(0.03));
+
+
 	//Use averages!
 	double trans_R0 = 16.2271;
 	double trans_R0err = 0.482309;
@@ -127,6 +135,8 @@ void plot_INFN_UMass(){
 	g_INFN_amp30->SetPointError(0,2,trans_R0err_relative);
 	g_INFN_amp30->SetPoint(1,17.5,trans_ratio);
 	g_INFN_amp30->SetPointError(1,2,trans_ratio_error);
+	
+	
 	cout<<"transient ratio: "<<trans_ratio<<" +- "<<trans_ratio_error<<"\n";
 
 	g_UMass_amp30->SetPoint(0,-6.6,h1_K1_Rm6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
@@ -138,27 +148,44 @@ void plot_INFN_UMass(){
 	g_UMass_amp30->SetPointError(2,3,g_UMass_amp30->GetPointY(2)*1.9/120.7);
 	g_UMass_amp30->SetPointError(3,3,g_UMass_amp30->GetPointY(3)*1.6/126.7);
 
+
+	g_all_amp30->SetPoint(0,0,1);
+	g_all_amp30->SetPoint(1,17.5,trans_ratio);
+	g_all_amp30->SetPoint(2+0,-6.6,h1_K1_Rm6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_all_amp30->SetPoint(2+1,0,h1_K1_R0_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_all_amp30->SetPoint(2+2,3.2,h1_K1_R3p2_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_all_amp30->SetPoint(2+3,6.6,h1_K1_R6p6_ra->Interpolate(0.03)/h1_K1_R0_ra->Interpolate(0.03));
+	g_all_amp30->SetPointError(0,2,trans_R0err_relative);
+	g_all_amp30->SetPointError(1,2,trans_ratio_error);
+	g_all_amp30->SetPointError(2+0,3,g_all_amp30->GetPointY(2+0)*1.3/121.0);
+	g_all_amp30->SetPointError(2+1,3,g_all_amp30->GetPointY(2+1)*1.3/123.0);
+	g_all_amp30->SetPointError(2+2,3,g_all_amp30->GetPointY(2+2)*1.9/120.7);
+	g_all_amp30->SetPointError(2+3,3,g_all_amp30->GetPointY(2+3)*1.6/126.7);
+
 	g_INFN_amp30->SetMarkerStyle(22);
 	g_UMass_amp30->SetMarkerStyle(22);
+	g_all_amp30->SetMarkerStyle(20);
 	g_INFN_amp30->SetMarkerColor(kBlue);
 	g_UMass_amp30->SetMarkerColor(kRed);
-	g_INFN_amp30->SetMarkerSize(1.5);
-	g_UMass_amp30->SetMarkerSize(1.5);
+	g_all_amp30->SetMarkerColor(kRed);
 
 
 	g_INFN_blumlein->SetTitle("INFN (blumlein)");
 	g_UMass_blumlein->SetTitle("UMass (blumlein)");
 	g_INFN_amp30->SetTitle("INFN (transient at 30 #mus)");
 	g_UMass_amp30->SetTitle("UMass (transient at 30 #mus)");
+	g_all_amp30->SetTitle("All (transient at 30 #mus)");
 
 	g_INFN_blumlein->GetXaxis()->SetLimits(-25,25);
 	g_UMass_blumlein->GetXaxis()->SetLimits(-25,25);
 	g_INFN_amp30->GetXaxis()->SetLimits(-25,25);
 	g_UMass_amp30->GetXaxis()->SetLimits(-25,25);
+	g_all_amp30->GetXaxis()->SetLimits(-25,25);
 	g_INFN_blumlein->GetXaxis()->SetTitle("x [mm]");
 	g_UMass_blumlein->GetXaxis()->SetTitle("x [mm]");
 	g_INFN_amp30->GetXaxis()->SetTitle("x [mm]");
 	g_UMass_amp30->GetXaxis()->SetTitle("x [mm]");
+	g_all_amp30->GetXaxis()->SetTitle("x [mm]");
 
 
 	gStyle->SetOptStat(0);
@@ -336,4 +363,12 @@ void plot_INFN_UMass(){
 	h1_K1_R0->Scale(55./53.);
 	h1_K1_R0->Draw("HIST SAME");
 	h1_K3_R0->Draw("HIST SAME");
+
+
+
+	new TCanvas();
+	g_all_amp30->SetMarkerColor(kBlack);
+	g_all_amp30->Draw("APZ");
+	g_all_amp30->Fit(f_quadratic);
+	gPad->BuildLegend();
 }

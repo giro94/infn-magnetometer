@@ -483,7 +483,7 @@ void plot_subtract_QWP(){
 
 	new TCanvas("","",1000,800);
 	g_rms3_ra->SetTitle("Uncalibrated scan");
-	g_rms3_ra->GetXaxis()->SetTitle("wPos #equiv 1-wNeg)");
+	g_rms3_ra->GetXaxis()->SetTitle("wPos #equiv 1+wNeg");
 	g_rms3_ra->GetYaxis()->SetTitle("wZero");
 	g_rms3_ra->GetZaxis()->SetTitle("Trace RMS in (2,6) ms [mG]");
 	g_rms3_ra->SetContour(100);
@@ -499,7 +499,7 @@ void plot_subtract_QWP(){
 
 	new TCanvas("","",1000,800);
 	g_rms3_calib_ra->SetTitle("Calibrated scan");
-	g_rms3_calib_ra->GetXaxis()->SetTitle("wPos #equiv 1-wNeg)");
+	g_rms3_calib_ra->GetXaxis()->SetTitle("wPos #equiv 1+wNeg");
 	g_rms3_calib_ra->GetYaxis()->SetTitle("wZero");
 	g_rms3_calib_ra->GetZaxis()->SetTitle("Trace RMS in (2,6) ms [mG]");
 	g_rms3_calib_ra->SetContour(100);

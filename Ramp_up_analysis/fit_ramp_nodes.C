@@ -273,8 +273,9 @@ void fit_ramp_nodes(){
 		}
 		y /= nfit;
 		y2 /= nfit;
+		double avg = y;
 		double rms = sqrt(y2 - y*y);
-		cout<<"RMS: "<<rms<<", mean error: "<<rms/sqrt(nfit)<<"\n";
+		cout<<"avg: "<<avg<<", RMS: "<<rms<<", mean error: "<<rms/sqrt(nfit)<<"\n";
 
 		TString histTitle = filenames[i];
 		histTitle.Remove(0,histTitle.Index("Ramp")+5);

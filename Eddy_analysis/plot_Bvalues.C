@@ -134,6 +134,11 @@ void plot_Bvalues(){
 	h1_kick1_B2_ra->SetTitle("Kick 1 (3043 A)");
 	h1_kick1_B3_ra->SetTitle("Kick 1 (4353 A)");
 
+	h1_kick1_B0_ra->SetTitle(Form("%d A (%.2f T)",0, 1.45*0./5173.));
+	h1_kick1_B1_ra->SetTitle(Form("%d A (%.2f T)",5173, 1.45*5173./5173.));
+	h1_kick1_B2_ra->SetTitle(Form("%d A (%.2f T)",3043, 1.45*3043./5173.));
+	h1_kick1_B3_ra->SetTitle(Form("%d A (%.2f T)",4353, 1.45*4353./5173.));
+
 	h1_kick1_B1_B0_ra->SetTitle("5173A - 0A");
 	h1_kick1_B2_B0_ra->SetTitle("3043A - 0A");
 	h1_kick1_B3_B0_ra->SetTitle("4353A - 0A");

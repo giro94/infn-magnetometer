@@ -1,0 +1,348 @@
+#include "../analysis_tools.C"
+
+void plot_gain(){
+
+	TString folder = "../../data_2022/magnet_ramp-up_20220715/";
+	TString output_file = "output_ramp_2022_gain.root";
+	TString current_filename = "../../data_2022/current_ramp_2022jul15.csv";
+	current_filename="";
+
+	TGraphErrors* g_ramp = new TGraphErrors();
+	TGraph* g_rampA = new TGraph();
+	TGraph* g_rampB = new TGraph();
+	TGraph* g_rampC = new TGraph();
+	TGraph* g_rampAB = new TGraph();
+	TGraph* g_ramp_norm = new TGraph();
+	TGraph* g_current = new TGraph();
+
+
+	TGraphErrors* g_ramp_current = new TGraphErrors();
+	TGraph* g_rampA_current = new TGraph();
+	TGraph* g_rampB_current = new TGraph();
+	TGraph* g_rampC_current = new TGraph();
+	TGraph* g_rampAB_current = new TGraph();
+	TGraph* g_ramp_norm_current = new TGraph();
+
+
+	TGraph* g_diff_vs_C_nocut = new TGraph();
+	TGraph* g_diff_vs_C = new TGraph();
+	TGraph* g_diff_vs_C_residual = new TGraph();
+	g_diff_vs_C->SetTitle("RFout gain");
+	g_diff_vs_C->GetXaxis()->SetTitle("B-A [V]");
+	g_diff_vs_C->GetYaxis()->SetTitle("RFout [V]");
+	g_diff_vs_C_nocut->SetTitle("RFout gain (no cuts)");
+	g_diff_vs_C_nocut->GetXaxis()->SetTitle("B-A [V]");
+	g_diff_vs_C_nocut->GetYaxis()->SetTitle("RFout [V]");
+	g_diff_vs_C_residual->SetTitle("Fit residual");
+	g_diff_vs_C_residual->GetXaxis()->SetTitle("B-A [V]");
+	g_diff_vs_C_residual->GetYaxis()->SetTitle("Fit residual [V]");
+
+	map<int,double> map_time_current;
+	bool know_current_info = false;
+
+	if (current_filename != ""){
+		know_current_info = true;
+		ifstream file_current;
+		file_current.open(current_filename);
+		if (!file_current.is_open()){
+			cout<<"cannot open "<<current_filename<<"\n";
+			return;
+		}
+
+		char buff[256];
+		file_current.getline(buff,256); //Header
+		double time, current;
+		char comma;
+		while (!file_current.eof()){
+
+			file_current.getline(buff,256);
+			stringstream iss(buff);
+			string substr;
+			getline(iss,substr,',');
+			if (substr == "") continue;
+
+			int yy, mm, dd, hh, mi, ss;
+    		if (!(sscanf(substr.c_str(), "%d-%d-%dT%d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6)){
+        		cout<<"Can't extract time from string "<<substr<<"!\n";
+        		throw std::runtime_error{"failed to parse time string"};
+    		}
+    		TDatime this_time = TDatime(yy,mm,dd,hh,mi,ss);
+    		int time_stamp = this_time.Convert();
+
+			getline(iss,substr,',');
+			if (substr == "") continue;
+			current = stof(substr);
+
+			if (file_current.eof()) break;
+			map_time_current[time_stamp] = current;
+		}
+		file_current.close();
+	}
+
+	vector<TString> files = getListOfFiles(folder);
+	int Nfiles = files.size();
+
+	//Reading first file to get trace info
+	pair<int,map<TString,int>> headers = getFileLengthAndHeaders(Form("%s/%s",folder.Data(),files[0].Data()));
+	int Nlines = headers.first;
+	map<TString,int> map_varnames = headers.second;
+	int Nvars = map_varnames.size();
+
+	double ABref = 12.0;
+	for (int fi=0; fi<Nfiles; fi++){
+
+		TString fname = files[fi];
+		if (fi%100==0) cout<<"Reading file \""<<fname<<"\" ("<<fi+1<<" of "<<Nfiles<<")\n";
+
+		TString filepath = Form("%s/%s",folder.Data(),fname.Data());
+
+		vector<vector<double>> traces = readFileTraces(filepath,Nvars);
+		vector<double> trace_time = traces[map_varnames["Time"]];
+		vector<double> trace_A = traces[map_varnames["Channel A"]];
+		vector<double> trace_B = traces[map_varnames["Channel B"]];
+		vector<double> trace_diff = traces[map_varnames["average(B-A)"]];
+		vector<double> trace_C = traces[map_varnames["Channel C"]];
+
+		TDatime datetime = getFileTime(fname);
+		int time_stamp = datetime.Convert();
+
+		double current = fi;
+		if (current_filename != ""){
+			current = map_time_current[time_stamp];
+		}
+		
+		double A_avg = 0;
+		double B_avg = 0;
+		double C_avg = 0;
+		double ABsum = 0;
+		double ABdiff_avg = 0;
+		double ABdiff_avg_squared = 0;
+		double Npoints = trace_time.size();
+		for (int i=0; i<Npoints; i++){
+			A_avg += trace_A[i];
+			B_avg += trace_B[i];
+			C_avg += trace_C[i];
+			ABdiff_avg += trace_diff[i];
+			ABdiff_avg_squared += trace_diff[i]*trace_diff[i];
+		}
+		A_avg /= Npoints;
+		B_avg /= Npoints;
+		C_avg /= Npoints;
+		ABdiff_avg /= Npoints;
+		ABdiff_avg_squared /= Npoints;
+		double ABerr = sqrt(ABdiff_avg_squared - ABdiff_avg*ABdiff_avg);
+		ABsum = A_avg + B_avg;
+		//if (fi==0) ABref = ABsum;
+
+		int ipoint = g_ramp->GetN();
+		g_ramp->SetPoint(ipoint,time_stamp,ABdiff_avg);
+		g_ramp->SetPointError(ipoint,0,ABerr);
+		g_rampA->SetPoint(ipoint,time_stamp,A_avg);
+		g_rampB->SetPoint(ipoint,time_stamp,B_avg);
+		g_rampAB->SetPoint(ipoint,time_stamp,A_avg+B_avg);
+		g_ramp_norm->SetPoint(ipoint,time_stamp,ABdiff_avg*ABref/ABsum);
+		g_current->SetPoint(ipoint,time_stamp,current);
+		g_rampC->SetPoint(ipoint,time_stamp,C_avg);
+
+		g_ramp_current->SetPoint(ipoint,current,ABdiff_avg);
+		g_ramp_current->SetPointError(ipoint,0,ABerr);
+		g_rampA_current->SetPoint(ipoint,current,A_avg);
+		g_rampB_current->SetPoint(ipoint,current,B_avg);
+		g_rampAB_current->SetPoint(ipoint,current,A_avg+B_avg);
+		g_ramp_norm_current->SetPoint(ipoint,current,ABdiff_avg*ABref/ABsum);
+		g_rampC_current->SetPoint(ipoint,current,C_avg);
+
+		if (abs(C_avg) < 1000 && fi > 100){
+			g_diff_vs_C->SetPoint(g_diff_vs_C->GetN(),B_avg-A_avg,C_avg);
+		}
+		g_diff_vs_C_nocut->SetPoint(g_diff_vs_C_nocut->GetN(),B_avg-A_avg,C_avg);
+	}
+
+	new TCanvas();
+	g_ramp->SetName("Ramp");
+	g_ramp->SetTitle("Ramp");
+	g_ramp->GetXaxis()->SetTitle("Time");
+	g_ramp->GetYaxis()->SetTitle("B-A [V]");
+	g_ramp->GetXaxis()->SetTimeFormat("%H:%M");
+	g_ramp->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_ramp->GetXaxis()->SetTimeDisplay(1);
+	g_ramp->SetMarkerStyle(20);
+	g_ramp->Draw("APL");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	g_rampA->SetName("A");
+	g_rampA->SetTitle("A");
+	g_rampB->SetName("B");
+	g_rampB->SetTitle("B");
+	g_rampC->SetName("C");
+	g_rampC->SetTitle("C");
+	g_rampAB->SetName("AB");
+	g_rampAB->SetTitle("AB");
+	g_rampA->GetXaxis()->SetTitle("Time");
+	g_rampA->GetYaxis()->SetTitle("A [V]");
+	g_rampB->GetXaxis()->SetTitle("Time");
+	g_rampB->GetYaxis()->SetTitle("B [V]");
+	g_rampC->GetXaxis()->SetTitle("Time");
+	g_rampC->GetYaxis()->SetTitle("C [V]");
+	g_rampAB->GetXaxis()->SetTitle("Time");
+	g_rampAB->GetYaxis()->SetTitle("A+B [V]");
+	g_rampA->GetYaxis()->SetRangeUser(0,15);
+	g_rampB->GetYaxis()->SetRangeUser(0,15);
+	g_rampAB->GetYaxis()->SetRangeUser(0,15);
+	g_rampA->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampA->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampA->GetXaxis()->SetTimeDisplay(1);
+	g_rampB->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampB->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampB->GetXaxis()->SetTimeDisplay(1);
+	g_rampC->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampC->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampC->GetXaxis()->SetTimeDisplay(1);
+	g_rampAB->GetXaxis()->SetTimeFormat("%H:%M");
+	g_rampAB->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_rampAB->GetXaxis()->SetTimeDisplay(1);
+	g_rampA->SetMarkerStyle(20);
+	g_rampB->SetMarkerStyle(20);
+	g_rampAB->SetMarkerStyle(20);
+	g_rampA->SetMarkerColor(kBlue);
+	g_rampB->SetMarkerColor(kRed);
+	g_rampAB->SetMarkerColor(kBlack);
+	g_rampA->SetLineColor(kBlue);
+	g_rampB->SetLineColor(kRed);
+	g_rampAB->SetLineColor(kBlack);
+	g_rampA->Draw("APL");
+	g_rampB->Draw("PL");
+	g_rampAB->Draw("PL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_current->SetName("current");
+	g_current->SetTitle("current");
+	g_current->GetXaxis()->SetTitle("Time");
+	g_current->GetYaxis()->SetTitle("Magnet current [A]");
+	g_current->GetXaxis()->SetTimeFormat("%H:%M");
+	g_current->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_current->GetXaxis()->SetTimeDisplay(1);
+	g_current->SetMarkerStyle(20);
+	g_current->Draw("APL");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	g_ramp_norm->SetName("Ramp_norm");
+	g_ramp_norm->SetTitle("Ramp normalized");
+	g_ramp_norm->GetXaxis()->SetTitle("Time");
+	g_ramp_norm->GetYaxis()->SetTitle("(B-A)/(A+B)");
+	g_ramp_norm->GetXaxis()->SetTimeFormat("%H:%M");
+	g_ramp_norm->GetXaxis()->SetTimeOffset(-18000,"GMT");
+	g_ramp_norm->GetXaxis()->SetTimeDisplay(1);
+	g_ramp_norm->SetMarkerStyle(20);
+	g_ramp_norm->Draw("APL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_ramp_current->SetName("Ramp_current");
+	g_ramp_current->SetTitle("Ramp");
+	g_ramp_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp_current->GetYaxis()->SetTitle("B-A [V]");
+	g_ramp_current->SetMarkerStyle(20);
+	g_ramp_current->Draw("APL");
+	gPad->SetGridy();
+
+	new TCanvas();
+	g_rampA_current->SetName("A_current");
+	g_rampA_current->SetTitle("A");
+	g_rampB_current->SetName("B_current");
+	g_rampB_current->SetTitle("B");
+	g_rampC_current->SetName("C_current");
+	g_rampC_current->SetTitle("C");
+	g_rampAB_current->SetName("AB_current");
+	g_rampAB_current->SetTitle("AB");
+	g_rampA_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampA_current->GetYaxis()->SetTitle("A [V]");
+	g_rampB_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampB_current->GetYaxis()->SetTitle("B [V]");
+	g_rampC_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampC_current->GetYaxis()->SetTitle("C [V]");
+	g_rampAB_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_rampAB_current->GetYaxis()->SetTitle("A+B [V]");
+	g_rampA_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampB_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampAB_current->GetYaxis()->SetRangeUser(0,15);
+	g_rampA_current->SetMarkerStyle(20);
+	g_rampB_current->SetMarkerStyle(20);
+	g_rampAB_current->SetMarkerStyle(20);
+	g_rampA_current->SetMarkerColor(kBlue);
+	g_rampB_current->SetMarkerColor(kRed);
+	g_rampAB_current->SetMarkerColor(kBlack);
+	g_rampA_current->SetLineColor(kBlue);
+	g_rampB_current->SetLineColor(kRed);
+	g_rampAB_current->SetLineColor(kBlack);
+	g_rampA_current->Draw("APL");
+	g_rampB_current->Draw("PL");
+	g_rampAB_current->Draw("PL");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	g_ramp_norm_current->SetName("Ramp_norm_current");
+	g_ramp_norm_current->SetTitle("Ramp normalized");
+	g_ramp_norm_current->GetXaxis()->SetTitle(know_current_info?"Current [A]":"File number");
+	g_ramp_norm_current->GetYaxis()->SetTitle("(B-A) [V] (12 V)");
+	g_ramp_norm_current->SetMarkerStyle(20);
+	g_ramp_norm_current->Draw("APL");
+	gPad->SetGridy();
+
+
+	new TCanvas();
+	g_diff_vs_C->SetMarkerStyle(20);
+	g_diff_vs_C->Draw("AP");
+	g_diff_vs_C->Fit("pol1","S");
+	TF1* fit_func = (TF1*)g_diff_vs_C->GetFunction("pol1");
+
+	for (int i=0; i<g_diff_vs_C->GetN(); i++){
+		double x = g_diff_vs_C->GetPointX(i);
+		double y = g_diff_vs_C->GetPointY(i) - fit_func->Eval(x);
+		g_diff_vs_C_residual->SetPoint(i,x,y);
+	}
+
+	new TCanvas();
+	g_diff_vs_C_nocut->SetMarkerStyle(20);
+	g_diff_vs_C_nocut->Draw("AP");
+
+	new TCanvas();
+	g_diff_vs_C_residual->SetMarkerStyle(20);
+	g_diff_vs_C_residual->Draw("AP");
+
+
+
+	if (output_file != ""){
+		cout<<"Creating "<<output_file<<"\n";
+		TFile* fout = new TFile(output_file,"recreate");
+
+		g_ramp->Write();
+		g_rampA->Write();
+		g_rampB->Write();
+		g_rampC->Write();
+		g_rampAB->Write();
+		g_ramp_norm->Write();
+		g_current->Write();
+
+		g_ramp_current->Write();
+		g_rampA_current->Write();
+		g_rampB_current->Write();
+		g_rampC_current->Write();
+		g_rampAB_current->Write();
+		g_ramp_norm_current->Write();
+
+		g_diff_vs_C->Write();
+		g_diff_vs_C_nocut->Write();
+		g_diff_vs_C_residual->Write();
+
+		fout->Write();
+		fout->Close();
+	}
+
+}

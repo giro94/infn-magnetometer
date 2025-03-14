@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     if (sp=="") sp="flat";
     cout<<"Using "<<sp<<" spatial model"<<endl;
     
-    TFile *intFile = TFile::Open("INFN_UMass_hd.root");
+    TFile *intFile = TFile::Open("INFN_UMass_average_hd.root");
     gKick = (TH1D*)intFile->Get(hn.c_str());
 
     if(rs==0){
@@ -264,6 +264,10 @@ int main(int argc, char *argv[])
         }
         if(sp=="x2"){
             fSpace_x->SetParameters(-16.2, -0.063, 0); 
+            fSpace_y->SetParameters(-1., 0);
+        }
+        if(sp=="x2all"){
+            fSpace_x->SetParameters(-16.1, -0.0637, 0); 
             fSpace_y->SetParameters(-1., 0);
         }
         if(sp=="x2m2"){
