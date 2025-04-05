@@ -556,7 +556,7 @@ void plot_subtract_QWP(){
 	h1_kick1_pcX_ncY_k0Z_ra[best_calib_i][best_calib_j]->DrawCopy("HIST SAME");
 
 
-	new TCanvas();
+	new TCanvas("Full smoothed","Full smoothed");
 	h1_trace_pX_nY_k0Z_ra->Draw("HIST");
 
 

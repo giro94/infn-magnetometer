@@ -149,8 +149,8 @@ void plot_calibrations(){
 	};
 
 	vector<double> ramp_calibration = {
-		0.429,
-		0.429,
+		0.427,//0.429
+		0.427,//0.429
 		0.406,
 		0.406,
 		0.406,
@@ -167,8 +167,8 @@ void plot_calibrations(){
 	};
 
 	vector<double> ramp_calibration_error = {
-		0.019,
-		0.019,
+		0.008,//0.019
+		0.008,//0.019
 		0.013,
 		0.013,
 		0.013,
@@ -255,7 +255,7 @@ void plot_calibrations(){
 	TH1D** h1_trace_calibrated_ra = new TH1D* [Npoints];
 	for (int i=0; i<Npoints; i++){
 		cout<<filenames[i]<<"\n";
-		TFile* fin = TFile::Open("analysis/"+filenames[i]);
+		TFile* fin = TFile::Open(filenames[i]);
 
 		h1_trace_uncalibrated[i] = ((TProfile*)fin->Get("trace_kick1_ABnormalized"))->ProjectionX();
 		if (h1_trace_uncalibrated[i]->Interpolate(-0.3) < 0){

@@ -160,6 +160,9 @@ double orig00 = h2SpaceSiu->Interpolate(0, 0);
 double orig10 = h2SpaceSiu->Interpolate(17.5, 0);  
 double orig_10 = h2SpaceSiu->Interpolate(-17.5, 0);
 
+double ratio = norm10/norm00;
+double origratio = orig10/orig00;
+
 if (std::abs(orig10 - orig_10) > 1e-6) {
     cerr << "Errore: i valori originali a (17.5, 0) e (-17.5, 0) non corrispondono." << endl;
     return;

@@ -19,8 +19,8 @@
 
 using namespace std;
 
-#define NSLICESX 21
-#define NSLICESY 21
+#define NSLICESX 51
+#define NSLICESY 51
 
 int eInt(double e);
 TH1D *gKick = nullptr;
@@ -52,6 +52,7 @@ double spaceNormalizationFactor = 1.;
     x4m2: x^4 distrib with -2mm shift (for uncertainty)
     x4p2: x^4 distrib with +2mm shift (for uncertainty)
     hist: uses 2d histogram distribution in the file KickerSpaceModel_1.root named h2Space
+    umass: uses 2d histogram distribution in the file KickerSpaceModel_UMass.root named h2Space
 
  Kicker transient hist name follows the naming Paolo gave (see INFN_Umass_hd.root file):
     hist_name           Vibr    Smooth
@@ -218,7 +219,8 @@ int main(int argc, char *argv[])
     hIntegral = (TH1F*)fLM->Get("Jt");
     
     //string beamDistribFileName="BeamDistrib/BeamDistribution_3b.root";
-    string beamDistribFileName="BeamDistrib/beam_dists.root";
+    //string beamDistribFileName="BeamDistrib/beam_dists.root";
+    string beamDistribFileName="BeamDistrib/beam_dists_eva.root";
     TFile *fBD = TFile::Open(beamDistribFileName.c_str());
 
     string beamHistName = "h2_beam";
@@ -235,7 +237,7 @@ int main(int argc, char *argv[])
     TH2D *h2Space = nullptr;
 
     if(sp=="hist"){
-        TFile *fSP = TFile::Open("KickerSpaceModel_1.root");
+        TFile *fSP = TFile::Open("Tools/KickerSpaceModel_1.root");
         h2Space = (TH2D*) fSP->Get("h2Space");
 
         for (int i=1; i<=h2Space->GetNbinsY(); i++) {
@@ -246,8 +248,19 @@ int main(int argc, char *argv[])
                 if(x*x+y*y > pow(storageRadius, 2)) h2Space->SetBinContent(j, i, 0.);
             }
         }
-    }
-    else{
+    } else if (sp=="umass" || sp=="umassxp2" || sp=="umassyp2" || sp=="umassyp5"){
+        TFile *fSPumass = TFile::Open("Tools/KickerSpaceModel_UMass.root");
+        h2Space = (TH2D*) fSPumass->Get("h2Space");
+
+        for (int i=1; i<=h2Space->GetNbinsY(); i++) {
+            for (int j=1; j<=h2Space->GetNbinsX(); j++) {
+
+                double x=h2Space->GetXaxis()->GetBinCenter(j);
+                double y=h2Space->GetYaxis()->GetBinCenter(i);
+                if(x*x+y*y > pow(storageRadius, 2)) h2Space->SetBinContent(j, i, 0.);
+            }
+        }
+    }else{
         //La logica è di definire NSLICES funzioni in cui pesare N0 con la funzione di distribuzione del fascio, quindi N0/fSpace->Eval(r), mentre il fattore Bk con la parabola (il picco a 1 corrisponde a R0, quindi sarà normalizzato in questo modo)
         TF1 *fSpace_x = new TF1("fSpace_x", "[0] + [1]*x^2 + [2]*x^4", -45, 45); //x is radius in mm;
         TF1 *fSpace_y = new TF1("fSpace_y", "[0] + [1]*x^2", -45, 45); //x is radius in mm;
@@ -267,7 +280,7 @@ int main(int argc, char *argv[])
             fSpace_y->SetParameters(-1., 0);
         }
         if(sp=="x2all"){
-            fSpace_x->SetParameters(-16.1, -0.0637, 0); 
+            fSpace_x->SetParameters(-16.138, -0.063717, 0); 
             fSpace_y->SetParameters(-1., 0);
         }
         if(sp=="x2m2"){
@@ -303,7 +316,23 @@ int main(int argc, char *argv[])
     } 
 
 
-    h2Space->Scale(1./h2Space->GetBinContent(h2Space->GetXaxis()->FindBin(normalizationPoint.first), h2Space->GetYaxis()->FindBin(normalizationPoint.second)));
+    if (sp=="umass" || sp=="umassxp2" || sp=="umassyp2" || sp=="umassyp5"){ //Normalize for the vertical length of the crystals
+      if (hn=="h1_kick1_R0_ra" || hn=="h1_kick1_R0_p_ra" || hn=="h1_kick1_R1_ra" || hn=="h1_INFN_R0" || hn=="h1_INFN_R1_R0norm"){
+        if (sp=="umass"){
+          h2Space->Scale(1./0.741755);
+        } else if (sp=="umassxp2"){
+          h2Space->Scale(1./0.75046);
+        } else if (sp=="umassyp2"){
+          h2Space->Scale(1./0.7331);
+        } else if (sp=="umassyp5"){
+          h2Space->Scale(1./0.688467);
+        }
+      }else if (hn=="h1_K1_R0" || hn=="h1_K3_R0" || hn=="h1_UMass_K1_R0" || hn=="h1_UMass_K3_R0" || hn=="h1_UMass_K1_R0_2022"){
+        h2Space->Scale(1./0.782996);
+      }
+    } else {
+      h2Space->Scale(1./h2Space->GetBinContent(h2Space->GetXaxis()->FindBin(normalizationPoint.first), h2Space->GetYaxis()->FindBin(normalizationPoint.second)));
+    }
 
     cout<<"Integral of space distribution: "<<h2Space->Integral()<<endl;
     cout<<"Value at 0: "<<h2Space->Interpolate(0., 0.)<<" and at Normalization point ("<<normalizationPoint.first<<", "<<normalizationPoint.second<<"): "<<h2Space->Interpolate(normalizationPoint.first, normalizationPoint.second)<<endl;
@@ -478,6 +507,9 @@ int main(int argc, char *argv[])
     hDiff->Fill(error_EC-error);
     
     cout<<error<<" "<<error_EC<<endl;
+
+    cout<<"Final result:\n";
+    cout<<"Transient: "<<hn<<", model: "<<sp<<", dataset: "<<bd<<", Bk:"<<error_EC<<" ppb\n";
 
     h2Space->Write();
     h2Beam->Write();

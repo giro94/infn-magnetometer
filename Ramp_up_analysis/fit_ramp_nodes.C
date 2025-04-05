@@ -8,9 +8,9 @@ void fit_ramp_nodes(){
 		//"output_Rampup_R0_H25_oct20.root",
 		//"output_Rampup_R0_H25_oct21_B88-100.root",
 		//"output_Rampup_R0_H25_oct24_B0-100.root",
-		//"output_Rampup_R0_H30_oct16.root",
-		"output_Rampup_R1_H5_oct5.root",
-		//"output_Rampdown_R0_H25_oct19_B100%-25%.root",
+		"output_Rampup_R0_H30_oct16.root",
+		//"output_Rampup_R1_H5_oct5.root",
+		"output_Rampdown_R0_H25_oct19_B100%-25%.root",
 
 		//"output_RampDown_R0_H25_dec18.root",
 		//"output_Ramp_jan16_0to5175.root",
@@ -183,6 +183,8 @@ void fit_ramp_nodes(){
 	int Nsteps = (sine_th_max-sine_th_min)/sine_th_step;
 
 	TGraphErrors** g_slope = new TGraphErrors* [Nfiles];
+	TGraphErrors** g_slope_down = new TGraphErrors* [Nfiles];
+	TGraphErrors** g_slope_up = new TGraphErrors* [Nfiles];
 	TGraphErrors*** g_ramp_sine = new TGraphErrors** [Nfiles];
 	TGraphErrors** g_slope_sine = new TGraphErrors* [Nfiles];
 	TGraphErrors** g_chi2_sine = new TGraphErrors* [Nfiles];
@@ -190,6 +192,8 @@ void fit_ramp_nodes(){
 	TF1* f_sine = new TF1("f_sine","[0]*sin([1]*x+[2])",0,1.45);
 	for (int i=0; i<Nfiles; i++){
 		g_slope[i] = new TGraphErrors();
+		g_slope_down[i] = new TGraphErrors();
+		g_slope_up[i] = new TGraphErrors();
 
 		bool fast_diodes = (filenames[i].Contains("FD"));
 		
@@ -202,8 +206,13 @@ void fit_ramp_nodes(){
 		for (int j=0; j<nodes_down[i].size(); j++){
 			TFitResultPtr fit_res = g_ramp_down[i]->Fit("pol1","QS+","",nodes_down[i][j]-fit_range,nodes_down[i][j]+fit_range);
 			if (fit_res >= 0){
-				g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_down[i][j],(fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G));
-				g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,(fast_diodes?1:sensor_gain)*fit_res->ParError(1)/a_to_G);
+				double slope = (fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G);
+				double slopeerr = (fast_diodes?1:sensor_gain)*fit_res->ParError(1)/a_to_G;
+				if (slopeerr/slope > 0.01) continue;
+				g_slope_down[i]->SetPoint(g_slope_down[i]->GetN(),nodes_down[i][j],slope);
+				g_slope_down[i]->SetPointError(g_slope_down[i]->GetN()-1,0,slopeerr);
+				g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_down[i][j],slope);
+				g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,slopeerr);
 				h1_slope->Fill((fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G));
 			}
 		}
@@ -212,12 +221,18 @@ void fit_ramp_nodes(){
 		for (int j=0; j<nodes_up[i].size(); j++){
 			TFitResultPtr fit_res = g_ramp_up[i]->Fit("pol1","QS+","",nodes_up[i][j]-fit_range,nodes_up[i][j]+fit_range);
 			if (fit_res >= 0){
-				g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_up[i][j],(fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G));
-				g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,(fast_diodes?1:sensor_gain)*fit_res->ParError(1)/a_to_G);
+				double slope = (fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G);
+				double slopeerr = (fast_diodes?1:sensor_gain)*fit_res->ParError(1)/a_to_G;
+				if (slopeerr/slope > 0.01) continue;
+				g_slope_up[i]->SetPoint(g_slope_up[i]->GetN(),nodes_up[i][j],slope);
+				g_slope_up[i]->SetPointError(g_slope_up[i]->GetN()-1,0,slopeerr);
+				g_slope[i]->SetPoint(g_slope[i]->GetN(),nodes_up[i][j],slope);
+				g_slope[i]->SetPointError(g_slope[i]->GetN()-1,0,slopeerr);
 				h1_slope->Fill((fast_diodes?1:sensor_gain)*abs(fit_res->Parameter(1)/a_to_G));
 			}
 		}
 
+		/*
 		// Fit sine rampdown
 		g_ramp_sine[i] = new TGraphErrors* [Nsteps];
 		g_slope_sine[i] = new TGraphErrors();
@@ -240,13 +255,22 @@ void fit_ramp_nodes(){
 				g_chi2_sine[i]->SetPoint(g_chi2_sine[i]->GetN(),sine_th,fit_res->Chi2()/fit_res->Ndf());
 			}
 		}
+		*/
 	}
 
 
-	new TCanvas();
+	TCanvas* can_fit = new TCanvas("can_fit","",1800,600);
+	can_fit->Divide(3,1);
 	TLegend* leg_fit = new TLegend(0.5,0.7,0.9,0.9);
+	TLegend* leg_fit_down = new TLegend(0.5,0.7,0.9,0.9);
+	TLegend* leg_fit_up = new TLegend(0.5,0.7,0.9,0.9);
+	bool first_all = true;
+	bool first_down = true;
+	bool first_up = true;
 	for (int i=0; i<Nfiles; i++){
 		g_slope[i]->Sort();
+		g_slope_down[i]->Sort();
+		g_slope_up[i]->Sort();
 		
 		g_slope[i]->SetName(Form("g_slope_%d",i));
 		g_slope[i]->SetTitle(Form("g_slope_%d",i));
@@ -256,11 +280,31 @@ void fit_ramp_nodes(){
 		g_slope[i]->GetYaxis()->SetRangeUser(0.1,0.7);
 		g_slope[i]->SetMarkerStyle(20);
 		g_slope[i]->SetMarkerColor(i%8+1);
-		g_slope[i]->Draw(i==0?"APLZ":"PLZ");
 
+		g_slope_down[i]->SetName(Form("g_slope_down_%d",i));
+		g_slope_down[i]->SetTitle(Form("g_slope_down_%d",i));
+		g_slope_down[i]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
+		g_slope_down[i]->GetYaxis()->SetTitle("Slope [mV/mG]");
+		g_slope_down[i]->GetXaxis()->SetLimits(0,calibrate?1.5:5500);
+		g_slope_down[i]->GetYaxis()->SetRangeUser(0.1,0.7);
+		g_slope_down[i]->SetMarkerStyle(20);
+		g_slope_down[i]->SetMarkerColor(i%8+1);
+
+		g_slope_up[i]->SetName(Form("g_slope_up_%d",i));
+		g_slope_up[i]->SetTitle(Form("g_slope_up_%d",i));
+		g_slope_up[i]->GetXaxis()->SetTitle(calibrate?"Bfield [T]":"Current [A]");
+		g_slope_up[i]->GetYaxis()->SetTitle("Slope [mV/mG]");
+		g_slope_up[i]->GetXaxis()->SetLimits(0,calibrate?1.5:5500);
+		g_slope_up[i]->GetYaxis()->SetRangeUser(0.1,0.7);
+		g_slope_up[i]->SetMarkerStyle(20);
+		g_slope_up[i]->SetMarkerColor(i%8+1);
+
+
+		can_fit->cd(1);
+		g_slope[i]->Draw(first_all?"APLZ":"PLZ");
 		TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",calibrate?0.1:285,calibrate?1.4:4000);
-		//TFitResultPtr res = g_slope[i]->Fit("pol0","SQ+","",1,1.4);
-		cout<<"Slope fit: "<<res->Parameter(0)<<" +- "<<res->ParError(0)<<"\n";
+		if (res>=0) cout<<"Slope fit: "<<res->Parameter(0)<<" +- "<<res->ParError(0)<<"\n";
+		
 		double y=0;
 		double y2=0;
 		double nfit=0;
@@ -277,17 +321,41 @@ void fit_ramp_nodes(){
 		double rms = sqrt(y2 - y*y);
 		cout<<"avg: "<<avg<<", RMS: "<<rms<<", mean error: "<<rms/sqrt(nfit)<<"\n";
 
+		can_fit->cd(2);
+		g_slope_down[i]->Draw(first_down?"APLZ":"PLZ");
+		TFitResultPtr res_down = g_slope_down[i]->Fit("pol0","SQ+","",calibrate?0.1:285,calibrate?1.4:4000);
+		if (res_down>=0) cout<<"Slope down fit: "<<res_down->Parameter(0)<<" +- "<<res_down->ParError(0)<<"\n";
+		
+		can_fit->cd(3);
+		g_slope_up[i]->Draw(first_up?"APLZ":"PLZ");
+		TFitResultPtr res_up = g_slope_up[i]->Fit("pol0","SQ+","",calibrate?0.1:285,calibrate?1.4:4000);
+		if (res_up>=0) cout<<"Slope up fit: "<<res_up->Parameter(0)<<" +- "<<res_up->ParError(0)<<"\n";
+
 		TString histTitle = filenames[i];
 		histTitle.Remove(0,histTitle.Index("Ramp")+5);
-		leg_fit->AddEntry(g_slope[i],Form("%s | %.3f +- %.3f mV/mG",histTitle.Data(),res->Parameter(0),rms/sqrt(nfit)),"PL");
+		if (res>=0) leg_fit->AddEntry(g_slope[i],Form("%s | %.3f +- %.3f mV/mG",histTitle.Data(),res->Parameter(0),rms/sqrt(nfit)),"PL");
+		if (res_down>=0) leg_fit_down->AddEntry(g_slope_down[i],Form("%s | %.3f +- %.3f mV/mG",histTitle.Data(),res->Parameter(0),rms/sqrt(nfit)),"PL");
+		if (res_up>=0) leg_fit_up->AddEntry(g_slope_up[i],Form("%s | %.3f +- %.3f mV/mG",histTitle.Data(),res->Parameter(0),rms/sqrt(nfit)),"PL");
+
+		if (g_slope[i]->GetN()>0) first_all = false;
+		if (g_slope_down[i]->GetN()>0) first_down = false;
+		if (g_slope_up[i]->GetN()>0) first_up = false;
 	}
+	can_fit->cd(1);
 	leg_fit->Draw();
+	gPad->SetGridy();
+	can_fit->cd(2);
+	leg_fit_down->Draw();
+	gPad->SetGridy();
+	can_fit->cd(3);
+	leg_fit_up->Draw();
 	gPad->SetGridy();
 
 
 	new TCanvas();
 	h1_slope->Draw("HIST");
 
+/*
 	new TCanvas();
 	for (int i=0; i<Nfiles; i++){
 		g_slope_sine[i]->SetName(Form("g_slope_sine_%d",i));
@@ -342,7 +410,7 @@ void fit_ramp_nodes(){
 		g_ramp_sine[i][Nsteps-1]->Draw(i==0?"APLZ":"PLZ");
 	}
 
-
+*/
 
 
 

@@ -15,8 +15,10 @@ void plot_average(){
 
 	TH1D* h1_K1_R0 = (TH1D*)fin->Get("h1_K1_R0");
 	TH1D* h1_K3_R0 = (TH1D*)fin->Get("h1_K3_R0");
+	TH1D* h1_K1_R0_2022 = (TH1D*)fin->Get("h1_K1_R0_2022");
 	TH1D* h1_K1_R0_ra = smoothing(h1_K1_R0,"");
 	TH1D* h1_K3_R0_ra = smoothing(h1_K3_R0,"");
+	TH1D* h1_K1_R0_2022_ra = smoothing(h1_K1_R0_2022,"");
 
 	TF1* f_blumlein = new TF1("f_blumlein","[0]+[2]*(x-[1])*(x-[1])");
 	f_blumlein->SetParameters(125.0,-0.3,-1000.0);
@@ -39,16 +41,21 @@ void plot_average(){
 	f_blumlein->SetParameters(125.0,-0.32,-3000.0);
 	double blum_K1_R0 = 123.0;
 	double blum_K3_R0 = 126.3;
+	double blum_K1_R0_2022 = 124.8;
 	TFitResultPtr fit_blum_K1 = h1_K1_R0_ra->Fit("f_blumlein","WS0N","",xmin_blum,xmax_blum);
 	TFitResultPtr fit_blum_K3 = h1_K3_R0_ra->Fit("f_blumlein","WS0N","",xmin_blum,xmax_blum);
+	TFitResultPtr fit_blum_K1_2022 = h1_K1_R0_2022_ra->Fit("f_blumlein","WS0N","",xmin_blum,xmax_blum);
 	double blum_fit_K1 = fit_blum_K1->Parameter(0);
 	double blum_fit_K3 = fit_blum_K3->Parameter(0);
+	double blum_fit_K1_2022 = fit_blum_K1_2022->Parameter(0);
 	h1_K1_R0_ra->Scale(blum_K1_R0/blum_fit_K1);
 	h1_K3_R0_ra->Scale(blum_K3_R0/blum_fit_K3);
+	h1_K1_R0_2022_ra->Scale(blum_K1_R0_2022/blum_fit_K1_2022);
 	/////////
 
 	h1_K1_R0_ra->SetTitle(Form("%s (smoothed)", h1_K1_R0->GetTitle()));
 	h1_K3_R0_ra->SetTitle(Form("%s (smoothed)", h1_K3_R0->GetTitle()));
+	h1_K1_R0_2022_ra->SetTitle(Form("%s (smoothed)", h1_K1_R0_2022->GetTitle()));
 
 	double f_kickers = (53.1+53.0+55.0)/(3*55.0);
 
@@ -58,9 +65,17 @@ void plot_average(){
 	h1_K1_R0_norm->Scale(k1_to_k3);
 	h1_K1_R0_norm->SetTitle(Form("UMass %s", h1_K1_R0->GetTitle()));
 
+	TH1D* h1_K1_R0_2022_norm = (TH1D*)h1_K1_R0_2022->Clone("h1_K1_R0_2022_norm");
+	h1_K1_R0_2022_norm->Scale(k1_to_k3);
+	h1_K1_R0_2022_norm->SetTitle(Form("UMass %s", h1_K1_R0_2022->GetTitle()));
+
 	TH1D* h1_K1_R0_ra_norm = (TH1D*)h1_K1_R0_ra->Clone("h1_K1_R0_ra_norm");
 	h1_K1_R0_ra_norm->Scale(k1_to_k3);
 	h1_K1_R0_ra_norm->SetTitle(Form("UMass %s", h1_K1_R0->GetTitle()));
+
+	TH1D* h1_K1_R0_2022_ra_norm = (TH1D*)h1_K1_R0_2022_ra->Clone("h1_K1_R0_2022_ra_norm");
+	h1_K1_R0_2022_ra_norm->Scale(k1_to_k3);
+	h1_K1_R0_2022_ra_norm->SetTitle(Form("UMass %s", h1_K1_R0_2022->GetTitle()));
 
 
 	TH1D* h1_kick1_R1_ra_norm = (TH1D*)h1_kick1_R1_ra->Clone("h1_kick1_R1_ra_norm");
@@ -71,14 +86,18 @@ void plot_average(){
 	//Resample UMass K1 & K3 to match INFN binning (slightly larger)
 	TH1D* h1_K1_R0_resampled = (TH1D*)h1_kick1_R0_ra->Clone("h1_K1_R0_resampled");
 	TH1D* h1_K3_R0_resampled = (TH1D*)h1_kick1_R0_ra->Clone("h1_K3_R0_resampled");
+	TH1D* h1_K1_R0_2022_resampled = (TH1D*)h1_kick1_R0_ra->Clone("h1_K1_R0_2022_resampled");
 	h1_K1_R0_resampled->Reset();
 	h1_K3_R0_resampled->Reset();
+	h1_K1_R0_2022_resampled->Reset();
 	for (int bn=1; bn<=h1_kick1_R0_ra->GetNbinsX(); bn++){
 		double x = h1_kick1_R0_ra->GetBinCenter(bn);
 		double y1 = h1_K1_R0_ra_norm->Interpolate(x);
 		h1_K1_R0_resampled->SetBinContent(bn,y1);
 		double y3 = h1_K3_R0_ra->Interpolate(x);
 		h1_K3_R0_resampled->SetBinContent(bn,y3);
+		double y2 = h1_K1_R0_2022_ra_norm->Interpolate(x);
+		h1_K1_R0_2022_resampled->SetBinContent(bn,y2);
 	}
 
 
@@ -106,16 +125,19 @@ void plot_average(){
 	new TCanvas("","smoothed, rescaled, normalized",1200,1000);
 	h1_K1_R0_resampled->SetTitle("UMass K1 (rescaled for K3)");
 	h1_K3_R0_resampled->SetTitle("UMass K3");
+	h1_K1_R0_2022_resampled->SetTitle("UMass K1 2022 (rescaled for K3)");
 	h1_kick1_R0_ra->SetTitle("INFN K3");
 	h1_kick1_R1_ra_norm->SetTitle("INFN K3 R1 (rescaled for R0)");
 
 	h1_K1_R0_resampled->SetLineWidth(2);
 	h1_K3_R0_resampled->SetLineWidth(2);
+	h1_K1_R0_2022_resampled->SetLineWidth(2);
 	h1_kick1_R0_ra->SetLineWidth(2);
 	h1_kick1_R1_ra_norm->SetLineWidth(2);
 
 	h1_K1_R0_resampled->SetLineColor(kBlack);
 	h1_K3_R0_resampled->SetLineColor(kBlue);
+	h1_K1_R0_2022_resampled->SetLineColor(kGreen);
 	h1_kick1_R0_ra->SetLineColor(kRed);
 	h1_kick1_R1_ra_norm->SetLineColor(kViolet);
 
@@ -127,8 +149,9 @@ void plot_average(){
 
 	h1_K1_R0_resampled->Draw("HIST");
 	h1_K3_R0_resampled->Draw("HIST SAME");
+	h1_K1_R0_2022_resampled->Draw("HIST SAME");
 	h1_kick1_R0_ra->Draw("HIST SAME");
-	h1_kick1_R1_ra_norm->Draw("HIST SAME");
+	//h1_kick1_R1_ra_norm->Draw("HIST SAME");
 
 	TH1D* h1_lower = (TH1D*)h1_kick1_R0_ra->Clone("h1_lower");
 	TH1D* h1_middle = (TH1D*)h1_kick1_R0_ra->Clone("h1_middle");
@@ -144,9 +167,10 @@ void plot_average(){
 		double y1 = h1_K1_R0_resampled->GetBinContent(bn);
 		double y2 = h1_K3_R0_resampled->GetBinContent(bn);
 		double y3 = h1_kick1_R0_ra->GetBinContent(bn);
+		double y4 = h1_K1_R0_2022_resampled->GetBinContent(bn);
 
-		double ymin = min({y1,y2,y3});
-		double ymax = max({y1,y2,y3});
+		double ymin = min({y1,y2,y3,y4});
+		double ymax = max({y1,y2,y3,y4});
 		double ymiddle = 0.5*(ymin+ymax);
 		h1_lower->SetBinContent(bn,ymin);
 		h1_middle->SetBinContent(bn,ymiddle);
@@ -162,8 +186,9 @@ void plot_average(){
 		double y1 = h1_K1_R0_resampled->GetBinContent(bn);
 		double y2 = h1_K3_R0_resampled->GetBinContent(bn);
 		double y3 = h1_kick1_R0_ra->GetBinContent(bn);
+		double y4 = h1_K1_R0_2022_resampled->GetBinContent(bn);
 
-		double ymin = min({y1,y2,y3});
+		double ymin = min({y1,y2,y3,y4});
 		g_band->AddPoint(x,ymin);
 	}
 
@@ -273,6 +298,7 @@ void plot_average(){
 	TFile* fout = new TFile("INFN_UMass_average.root","recreate");
 	h1_K1_R0_resampled->Write("h1_UMass_K1_R0");
 	h1_K3_R0_resampled->Write("h1_UMass_K3_R0");
+	h1_K1_R0_2022_resampled->Write("h1_UMass_K1_R0_2022");
 	h1_kick1_R0_ra->Write("h1_INFN_R0");
 	h1_kick1_R1_ra_norm->Write("h1_INFN_R1_R0norm");
 	h1_lower->Write("h1_lower");

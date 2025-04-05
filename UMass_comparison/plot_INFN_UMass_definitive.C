@@ -633,20 +633,24 @@ void plot_INFN_UMass_definitive(){
 	g_UMass_ampintegral->GetYaxis()->SetTitle("Transient integral [30,700] #mus [mG]");
 	g_all_ampintegral->GetYaxis()->SetTitle("Transient integral [30,700] #mus [mG]");
 
-	g_INFN_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [mG]");
-	g_UMass_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [mG]");
-	g_all_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [mG]");
-	g_INFN_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [mG]");
-	g_UMass_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [mG]");
-	g_all_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [mG]");
-	g_INFN_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [mG]");
-	g_UMass_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [mG]");
-	g_all_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [mG]");
-	g_INFN_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [mG]");
-	g_UMass_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [mG]");
-	g_all_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [mG]");
+	g_INFN_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [arb. u.]");
+	g_UMass_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [arb. u.]");
+	g_all_blumlein_normalized->GetYaxis()->SetTitle("Blumlein [arb. u.]");
+	g_INFN_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [arb. u.]");
+	g_UMass_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [arb. u.]");
+	g_all_amp30_normalized->GetYaxis()->SetTitle("Transient at 30 #mus [arb. u.]");
+	g_INFN_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [arb. u.]");
+	g_UMass_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [arb. u.]");
+	g_all_ampexp_normalized->GetYaxis()->SetTitle("Transient amplitude at 30 #mus [arb. u.]");
+	g_INFN_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [arb. u.]");
+	g_UMass_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [arb. u.]");
+	g_all_ampintegral_normalized->GetYaxis()->SetTitle("Transient integral [30,700] #mus [arb. u.]");
 
 
+
+	//Get umass model
+	TFile* f_umass = TFile::Open("../Bk_calculation/UMass/UMass_model.root");
+	TH1D* h1_umass_y0 = (TH1D*)f_umass->Get("h1_y0");
 
 	// now draw and do parabolic fits
 	cout<<"\nDrawing \n";
@@ -717,6 +721,12 @@ void plot_INFN_UMass_definitive(){
 	//g_all_amp30_normalized->Draw("APZ");
 	//g_all_ampexp_normalized->Draw("P");
 
+	TGraph* g_normpoint = (TGraph*)g_INFN_ampexp_normalized->Clone("g_normpoint");
+	g_normpoint->Set(0);
+	g_normpoint->SetPoint(0,0,1);
+	g_normpoint->SetMarkerStyle(20);
+	g_normpoint->SetMarkerColor(7);
+
 	TCanvas* can = new TCanvas("","",1600,800);
 	can->Divide(2,1);
 	can->cd(1);
@@ -724,6 +734,7 @@ void plot_INFN_UMass_definitive(){
 	g_INFN_blumlein_normalized->Draw("PZ");
 	g_UMass_blumlein_normalized->Draw("PZ");
 	f_quadratic->SetParameters(1,0.001);
+	f_quadratic->SetLineColor(kViolet);
 	g_all_blumlein_normalized->Fit(f_quadratic);
 	gPad->SetGridx();
 	gPad->SetGridy();
@@ -732,20 +743,25 @@ void plot_INFN_UMass_definitive(){
 	leg1->AddEntry(g_UMass_blumlein_normalized,"UMass","PL");
 	leg1->AddEntry(f_quadratic,Form("%.2f+%.5fx^{2}",f_quadratic->GetParameter(0),f_quadratic->GetParameter(1)),"L");
 	leg1->Draw();
+	g_normpoint->Draw("P");
 	can->cd(2);
 	g_all_ampexp_normalized->Draw("APZ");
 	g_INFN_ampexp_normalized->Draw("PZ");
 	g_UMass_ampexp_normalized->Draw("PZ");
+	h1_umass_y0->SetLineColor(kGreen+2);
+	h1_umass_y0->Draw("HIST L SAME");
 	f_quadratic->SetParameters(1,0.005);
 	g_all_ampexp_normalized->Fit(f_quadratic);
+	f_quadratic->SetLineColor(kViolet);
 	gPad->SetGridx();
 	gPad->SetGridy();
 	TLegend* leg2 = new TLegend(0.35,0.6,0.65,0.8);
 	leg2->AddEntry(g_INFN_ampexp_normalized,"INFN","PL");
 	leg2->AddEntry(g_UMass_ampexp_normalized,"UMass","PL");
 	leg2->AddEntry(f_quadratic,Form("%.2f+%.5fx^{2}",f_quadratic->GetParameter(0),f_quadratic->GetParameter(1)),"L");
+	leg2->AddEntry(h1_umass_y0,"UMass radial model","L");
 	leg2->Draw();
-
+	g_normpoint->Draw("P");
 
 
 }
