@@ -27,6 +27,8 @@ void plot_subtract_QWP(){
 
 
 
+	//TFile* fout = TFile::Open("subtractQWP_output.root","recreate");
+
 
 	/////////////////////////////////////////////////
 
@@ -633,4 +635,5 @@ void plot_subtract_QWP(){
 	h1_kick1_pX_nY_k0Z[best_i][best_j]->DrawCopy("HIST");
 	h1_kick1_pX_nY_k0Z_ra[best_i][best_j]->DrawCopy("HIST SAME");
 	gPad->SetGridy();
+
 }

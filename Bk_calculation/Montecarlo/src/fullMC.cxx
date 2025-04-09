@@ -19,8 +19,8 @@
 
 using namespace std;
 
-#define NSLICESX 51
-#define NSLICESY 51
+#define NSLICESX 20
+#define NSLICESY 20
 
 int eInt(double e);
 TH1D *gKick = nullptr;
@@ -53,6 +53,7 @@ double spaceNormalizationFactor = 1.;
     x4p2: x^4 distrib with +2mm shift (for uncertainty)
     hist: uses 2d histogram distribution in the file KickerSpaceModel_1.root named h2Space
     umass: uses 2d histogram distribution in the file KickerSpaceModel_UMass.root named h2Space
+    umassVC: uses 2d histogram distribution in the file KickerSpaceModel_UMassVC.root named h2Space
 
  Kicker transient hist name follows the naming Paolo gave (see INFN_Umass_hd.root file):
     hist_name           Vibr    Smooth
@@ -260,6 +261,18 @@ int main(int argc, char *argv[])
                 if(x*x+y*y > pow(storageRadius, 2)) h2Space->SetBinContent(j, i, 0.);
             }
         }
+    } else if (sp=="umassVC" || sp=="umassVCxp2" || sp=="umassVCyp2" || sp=="umassVCyp5"){
+        TFile *fSPumassVC = TFile::Open("Tools/KickerSpaceModel_UMassVC.root");
+        h2Space = (TH2D*) fSPumassVC->Get("h2Space");
+
+        for (int i=1; i<=h2Space->GetNbinsY(); i++) {
+            for (int j=1; j<=h2Space->GetNbinsX(); j++) {
+
+                double x=h2Space->GetXaxis()->GetBinCenter(j);
+                double y=h2Space->GetYaxis()->GetBinCenter(i);
+                if(x*x+y*y > pow(storageRadius, 2)) h2Space->SetBinContent(j, i, 0.);
+            }
+        }
     }else{
         //La logica è di definire NSLICES funzioni in cui pesare N0 con la funzione di distribuzione del fascio, quindi N0/fSpace->Eval(r), mentre il fattore Bk con la parabola (il picco a 1 corrisponde a R0, quindi sarà normalizzato in questo modo)
         TF1 *fSpace_x = new TF1("fSpace_x", "[0] + [1]*x^2 + [2]*x^4", -45, 45); //x is radius in mm;
@@ -316,7 +329,7 @@ int main(int argc, char *argv[])
     } 
 
 
-    if (sp=="umass" || sp=="umassxp2" || sp=="umassyp2" || sp=="umassyp5"){ //Normalize for the vertical length of the crystals
+    if (sp=="umass" || sp=="umassxp2" || sp=="umassyp2" || sp=="umassyp5" || sp=="umassVC" || sp=="umassVCxp2" || sp=="umassVCyp2" || sp=="umassVCyp5"){ //Normalize for the vertical length of the crystals
       if (hn=="h1_kick1_R0_ra" || hn=="h1_kick1_R0_p_ra" || hn=="h1_kick1_R1_ra" || hn=="h1_INFN_R0" || hn=="h1_INFN_R1_R0norm"){
         if (sp=="umass"){
           h2Space->Scale(1./0.741755);
@@ -326,9 +339,21 @@ int main(int argc, char *argv[])
           h2Space->Scale(1./0.7331);
         } else if (sp=="umassyp5"){
           h2Space->Scale(1./0.688467);
+        } else if (sp=="umassVC"){
+          h2Space->Scale(1./0.982761);
+        } else if (sp=="umassVCxp2"){
+          h2Space->Scale(1./0.983059);
+        } else if (sp=="umassVCyp2"){
+          h2Space->Scale(1./0.982471);
+        } else if (sp=="umassVCyp5"){
+          h2Space->Scale(1./0.981077);
         }
       }else if (hn=="h1_K1_R0" || hn=="h1_K3_R0" || hn=="h1_UMass_K1_R0" || hn=="h1_UMass_K3_R0" || hn=="h1_UMass_K1_R0_2022"){
-        h2Space->Scale(1./0.782996);
+        if (sp=="umass"){
+            h2Space->Scale(1./0.782996);
+        } else if (sp=="umassVC"){
+            h2Space->Scale(1./0.985109);
+        }
       }
     } else {
       h2Space->Scale(1./h2Space->GetBinContent(h2Space->GetXaxis()->FindBin(normalizationPoint.first), h2Space->GetYaxis()->FindBin(normalizationPoint.second)));

@@ -1,8 +1,8 @@
 {
 
-TH2F *h2SpaceSiu = new TH2F("h2Space", "", 89, -110, 110, 65, -80, 80);
+TH2F *h2SpaceSiu = new TH2F("h2Space", "", 180,-45,45,180,-45,45);
 
-std::ifstream file("umass_2025_03_17.txt");
+std::ifstream file("umass_2025_03_17_0p5.txt");
 if (!file.is_open()) {
     std::cerr << "Errore: impossibile aprire il file " << std::endl;
     return;
@@ -28,9 +28,6 @@ h2SpaceSiu->Draw("colz");
 
 TH2F *h2SpaceNorm = (TH2F*)h2SpaceSiu->Clone();
 h2SpaceNorm->SetName("h2SpaceNorm"); 
-
-double norm00 = -16.2 / 0.74; //-21.89
-double norm10 = -35.4 / 0.678; //-52.21
 
 double orig00 = h2SpaceSiu->Interpolate(0, 0);
 

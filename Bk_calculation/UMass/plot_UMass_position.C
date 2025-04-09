@@ -1,11 +1,8 @@
 {
 
-	TFile* fin = TFile::Open("UMass_model_0p1.root");
+	TFile* fin = TFile::Open("UMass_model_0p5.root");
 
 	TH2D* h2 = (TH2D*)fin->Get("h2");
-	TH2D* h1_x0 = (TH2D*)fin->Get("h1_x0");
-	TH2D* h1_x17p5 = (TH2D*)fin->Get("h1_x17p5");
-	TH2D* h1_y0 = (TH2D*)fin->Get("h1_y0");
 
 	double B00 = h2->Interpolate(0,0);
 	double B10 = h2->Interpolate(17.5,0);

@@ -63,34 +63,90 @@ def transient(xin,yin):
 ##  try out the prediction at some points in (x,y)
 
 ## scan across x with y= 0
-for j in range (0,33):
-    x = -4.0+0.25*j
-    y = 0.0
-    BBy = transient(x,y)
-    print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+#for j in range (0,33):
+#    x = -4.0+0.25*j
+#    y = 0.0
+#    BBy = transient(x,y)
+#    print("%5.3f %5.3f %8.5f" %(x,y,BBy))
    
    
 ## scan over INFN crystal from y=-1.6 to y=+1.6 cm at x=0.0 cm
 sum = 0.0
-for j in range (0,32):
+for j in range (0,321):
     x = 0.00
-    y = -1.6+(j+0.5)*0.1
+    y = -1.6+j*0.01
     BBy = transient(x,y)
-    print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
     sum=sum+BBy
    
-print("INFN crystal at x=0.0",sum/32)
+print("INFN crystal at x=0.0",sum/321)
+
+## scan over UMass crystal from y=-1.45 to y=+1.45 cm at x=2.9 cm
+sum = 0.0
+for j in range (0,291):
+    x = 0.00
+    y = -1.45+j*0.01
+    BBy = transient(x,y)
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    sum=sum+BBy
+   
+print("UMass crystal at x=0.0",sum/291)
+
+## scan over UMass crystal from y=-1.45 to y=+1.45 cm at x=2.9 cm
+#sum = 0.0
+#for j in range (0,59):
+#    x = 0.00
+#    y = -1.45+j*(2.9/58.0)
+#    BBy = transient(x,y)
+#    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+#    sum=sum+BBy
+#   
+#print("UMass crystal at x=0.0 (59 steps)",sum/59)
 
 ## scan over INFN crystal from y=-1.6 to y=+1.6 cm at x=1.75 cm
 sum = 0.0
-for j in range (0,32):
+for j in range (0,321):
     x = 1.75
-    y = -1.6+(j+0.5)*0.1
+    y = -1.6+j*0.01
     BBy = transient(x,y)
-    print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
     sum=sum+BBy
    
-print("INFN crystal at x=1.75",sum/32)
+print("INFN crystal at x=1.75",sum/321)
+
+
+## scan over INFN crystal from y=-1.6 to y=+1.6 cm at x=1.75 cm
+sum = 0.0
+for j in range (0,321):
+    x = 0.2
+    y = -1.6+j*0.01
+    BBy = transient(x,y)
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    sum=sum+BBy
+   
+print("INFN crystal at x=0.2",sum/321)
+
+## scan over INFN crystal from y=-1.6 to y=+1.6 cm at x=1.75 cm
+sum = 0.0
+for j in range (0,321):
+    x = 0.0
+    y = -1.6+j*0.01 +0.2
+    BBy = transient(x,y)
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    sum=sum+BBy
+   
+print("INFN crystal at x=0.0, y+0.2",sum/321)
+
+## scan over INFN crystal from y=-1.6 to y=+1.6 cm at x=1.75 cm
+sum = 0.0
+for j in range (0,321):
+    x = 0.0
+    y = -1.6+j*0.01 +0.5
+    BBy = transient(x,y)
+    #print("%5.3f %5.3f %8.5f" %(x,y,BBy))
+    sum=sum+BBy
+   
+print("INFN crystal at x=0.0, y+0.5",sum/321)
 
 ## print full map with 0.5 mm resolution
 #for x in np.arange(-45, 45.5, 0.5):
