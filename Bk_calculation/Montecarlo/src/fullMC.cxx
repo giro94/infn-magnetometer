@@ -19,8 +19,7 @@
 
 using namespace std;
 
-#define NSLICESX 20
-#define NSLICESY 20
+int NSLICES = 30;
 
 int eInt(double e);
 TH1D *gKick = nullptr;
@@ -40,7 +39,7 @@ double spaceNormalizationFactor = 1.;
 
 /*********************************************
  Usage:
- ./bin/fullMC <radius [0, 1]> <space model> <kicker transient hist name> <beam hist name>
+ ./bin/fullMC <radius [0, 1]> <space model> <kicker transient hist name> <beam hist name> [nslices]
  Radius 0 is at the magic radius, 1 is at 17.5 mm
  Space model can be:
     flat: flat space distribution, no kick weighting
@@ -178,6 +177,11 @@ Double_t fitFunc5Par_EC(Double_t *x, Double_t *par){
 
 int main(int argc, char *argv[])
 {
+
+    if (argc > 5){
+        NSLICES = stoi(argv[5]);
+    }
+
     int rs = stoi(argv[1]);
     string hn = argv[3];
     pair<double, double> normalizationPoint = {0., 0.};
@@ -372,11 +376,11 @@ int main(int argc, char *argv[])
     
     double r_min = -storageRadius;
     double r_max = storageRadius;
-    double delta_r = (r_max - r_min)/NSLICESX;
+    double delta_r = (r_max - r_min)/NSLICES;
     
     double y_min = -storageRadius;
     double y_max = storageRadius;
-    double delta_y = (y_max - y_min)/NSLICESY;
+    double delta_y = (y_max - y_min)/NSLICES;
 
     double y = y_min+delta_y/2.;
     
@@ -384,7 +388,7 @@ int main(int argc, char *argv[])
     int bin_beam_x0, bin_beam_x1, bin_beam_y0, bin_beam_y1;
     int bin_space_x0, bin_space_x1, bin_space_y0, bin_space_y1;
 
-    for (int i=0; i<NSLICESY; i++) {
+    for (int i=0; i<NSLICES; i++) {
 
         yVec.push_back(y);
         double radius = r_min+delta_r/2.;
@@ -394,7 +398,7 @@ int main(int argc, char *argv[])
         bin_space_y0 = h2Space->GetYaxis()->FindBin(y-delta_y/2.);
         bin_space_y1 = h2Space->GetYaxis()->FindBin(y+delta_y/2.) -1;
 
-        for(int j=0; j<NSLICESX; j++){
+        for(int j=0; j<NSLICES; j++){
 
             if(j==0) radiusVec.push_back(radius);
             
@@ -471,8 +475,8 @@ int main(int argc, char *argv[])
         double N_EC = 0;
         double N = 0;
 
-        for (int i=0; i<NSLICESY; i++) {
-            for(int j=0; j<NSLICESX; j++){
+        for (int i=0; i<NSLICES; i++) {
+            for(int j=0; j<NSLICES; j++){
                 //N_beam = h3Beam->GetBinContent(x, y, t);
                 N_EC += fWiggle_EC[i][j]->Eval(t); //* N_beam;
                 N += fWiggle[i][j]->Eval(t);
@@ -486,6 +490,19 @@ int main(int argc, char *argv[])
         hWiggle_EC->SetBinContent(k, dy);
         hWiggle_EC->SetBinError(k, sqrt(dy));
     }
+
+
+//    for (int i=0; i<NSLICES; i++) {
+//        for(int j=0; j<NSLICES; j++){
+//            hWiggle_EC->Add(fWiggle_EC[i][j]);
+//            hWiggle->Add(fWiggle[i][j]);
+//        }
+//    }
+//
+//    for (int k=1; k<=nBins; k++) {
+//        hWiggle->SetBinError(k, sqrt(hWiggle->GetBinContent(k)));
+//        hWiggle_EC->SetBinError(k, sqrt(hWiggle_EC->GetBinContent(k)));
+//    }
 
     
     //set the fitting function
@@ -534,7 +551,7 @@ int main(int argc, char *argv[])
     cout<<error<<" "<<error_EC<<endl;
 
     cout<<"Final result:\n";
-    cout<<"Transient: "<<hn<<", model: "<<sp<<", dataset: "<<bd<<", Bk:"<<error_EC<<" ppb\n";
+    cout<<"Transient: "<<hn<<", model: "<<sp<<", dataset: "<<bd<<", Nslices: "<<NSLICES<<", Bk: "<<error_EC<<" ppb\n";
 
     h2Space->Write();
     h2Beam->Write();
